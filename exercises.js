@@ -104,7 +104,7 @@ const EXERCISES = [
     ],
     "m": "Quads / Glute Max",
     "region": "lower",
-    "gif": "",
+    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2021/11/squat.gif?resize=600%2C600&ssl=1",
     "notes": ""
   },
   {
@@ -130,7 +130,7 @@ const EXERCISES = [
     ],
     "m": "Chest / Triceps",
     "region": "upper",
-    "gif": "",
+    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2021/09/bench-press.gif?resize=600%2C600&ssl=1",
     "notes": ""
   },
   {
@@ -273,7 +273,7 @@ const EXERCISES = [
     ],
     "m": "Chest / Triceps",
     "region": "upper",
-    "gif": "",
+    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/03/cable-chest-press.gif?resize=600%2C600&ssl=1",
     "notes": ""
   },
   {
@@ -1600,7 +1600,7 @@ const EXERCISES = [
     ],
     "m": "Quads / Glute Max",
     "region": "lower",
-    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2023/11/zercher-squat.gif?resize=600%2C600&ssl=1",
+    "gif": "https://drive.google.com/file/d/1opuSfWxe55zxmFgESiOpm6EnwnSd7J9o/view",
     "notes": "Brace core."
   },
   {
