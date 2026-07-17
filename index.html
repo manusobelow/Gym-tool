@@ -134,6 +134,12 @@
   }
 
   function roundW(w) { return Math.round(w/5)*5; }
+  function friendlyDate(iso) {
+    const d = new Date(iso + 'T00:00:00');
+    if (isNaN(d)) return iso;
+    const wd = d.toLocaleDateString(undefined, {weekday:'short'});
+    return `${wd} ${iso}`;
+  }
 
   // ---------- STATE ----------
   let state = { equip: new Set(EQUIP), pattern: new Set(PATTERNS), view: 'list', activeId: null, saveMsg: '' };
@@ -292,7 +298,7 @@
   // ---------- RENDER: DETAIL VIEW (mobility) ----------
   function renderMobilityDetail(x) {
     const hist = (LOGS[x.id] || []).slice(-6).reverse();
-    const histHtml = hist.length ? hist.map(l => `<div class="grr-history-row"><span>${l.date}</span><span>✅ Done</span></div>`).join('')
+    const histHtml = hist.length ? hist.map(l => `<div class="grr-history-row"><span>${friendlyDate(l.date)}</span><span>✅ Done</span></div>`).join('')
       : `<div style="color:var(--muted);font-size:12px;">Not logged yet.</div>`;
 
     root.innerHTML = `
@@ -358,7 +364,7 @@
     else ssHtml = `<div style="color:var(--muted);font-size:12px;">No matching partner exercise with current equipment.</div>`;
 
     let histHtml = hist.length ? hist.map(l => `
-      <div class="grr-history-row"><span>${l.date}</span><span>${l.sets.map(s=>s.success?'✅':'❌').join('')} ${l.tmAction==='increase'?'⬆️':''}</span></div>
+      <div class="grr-history-row"><span>${friendlyDate(l.date)}</span><span>${l.sets.map(s=>s.success?'✅':'❌').join('')} ${l.tmAction==='increase'?'⬆️':''}</span></div>
     `).join('') : `<div style="color:var(--muted);font-size:12px;">No sessions logged yet.</div>`;
 
     root.innerHTML = `
@@ -477,12 +483,20 @@
   }
 
   // ---------- RENDER: LOG / EXPORT VIEW ----------
-  function toCSV() {
-    const rows = [["date","exercise","pattern","set","target","weight","reps","success"]];
-    Object.values(LOGS).flat().sort((a,b)=>a.date.localeCompare(b.date)).forEach(entry => {
-      entry.sets.forEach((s,i) => {
-        rows.push([entry.date, entry.exercise, entry.pattern, i+1, s.target, s.weight ?? '', s.reps ?? '', s.success ? 'yes':'no']);
-      });
+  function toCSV(entries, includeHeader) {
+    const rows = [];
+    if (includeHeader) rows.push(["date","exercise","pattern","top_weight","sets","result"]);
+    entries.sort((a,b)=>a.date.localeCompare(b.date)).forEach(entry => {
+      const weights = entry.sets.map(s => parseFloat(s.weight)).filter(w => !isNaN(w));
+      const topWeight = weights.length ? Math.max(...weights) : '';
+      const setsStr = entry.sets.map(s => {
+        let label = '';
+        if (s.weight !== null && s.weight !== undefined && s.weight !== '') label += s.weight + 'lb';
+        if (s.reps !== null && s.reps !== undefined && s.reps !== '') label += (label ? ' x ' : '') + s.reps + 'reps';
+        if (!label) label = (s.target === 'Done') ? 'Done' : (s.target || '');
+        return label + (s.success ? ' ✓' : ' ✗');
+      }).join(' | ');
+      rows.push([entry.date, entry.exercise, entry.pattern, topWeight, setsStr, entry.allSuccess ? '✅' : '⚠']);
     });
     return rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
   }
@@ -509,7 +523,7 @@
         const div = document.createElement('div');
         div.className = 'grr-log-entry';
         div.innerHTML = `
-          <div class="grr-log-entry-top"><span>${e.exercise}</span><span>${e.date}</span></div>
+          <div class="grr-log-entry-top"><span>${e.exercise}</span><span>${friendlyDate(e.date)}</span></div>
           <div class="grr-log-entry-meta">${e.pattern} · ${e.sets.map(s=>s.success?'✅':'❌').join('')} ${e.tmAction==='increase' ? '· TM increased' : ''}</div>
         `;
         container.appendChild(div);
@@ -517,7 +531,7 @@
     }
     root.querySelector('#grr-download').onclick = () => {
       try {
-        const blob = new Blob([toCSV()], {type:'text/csv'});
+        const blob = new Blob([toCSV(allEntries, true)], {type:'text/csv'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url; a.download = 'gym-log.csv';
@@ -530,7 +544,7 @@
     };
     root.querySelector('#grr-copy').onclick = async () => {
       try {
-        await navigator.clipboard.writeText(toCSV());
+        await navigator.clipboard.writeText(toCSV(allEntries, true));
         root.querySelector('#grr-log-msg').textContent = 'Copied — paste into a Sheet or Notes.';
       } catch (err) {
         root.querySelector('#grr-log-msg').textContent = 'Copy failed in this browser.';
