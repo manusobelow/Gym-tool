@@ -1523,8 +1523,8 @@ const EXERCISES = [
     "notes": ""
   },
   {
-    "id": "TRICEPS_ROPEDOWN",
-    "n": "Triceps Rope Pushdown (Cable)",
+    "id": "TRICEPS_EXT",
+    "n": "Triceps Extension (Cable)",
     "p": "Isolation",
     "scheme": "hypertrophy",
     "eq": [
