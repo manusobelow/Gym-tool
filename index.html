@@ -12,53 +12,52 @@
 </style>
 </head>
 <body>
-<div id="gym-ref-root"></div>
+<div id="gym-ref-root">Loading…</div>
 <style>
   #gym-ref-root {
     --bg: #131313; --surface: #1d1d1d; --surface-2: #262626; --line: #333333;
-    --chalk: #f2f0ea; --muted: #8f8c86; --yellow: #e8b93a; --steel: #5b84b8;
-    --green: #6fae6f; --red: #d97757;
+    --chalk: #f2f0ea; --muted: #8f8c86; --brand: #c8362a; --steel: #5b84b8;
+    --green: #6fae6f; --red: #7a3b34;
     background: var(--bg); color: var(--chalk);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     min-height: 100vh; max-width: 480px; margin: 0 auto; padding-bottom: 60px;
   }
   #gym-ref-root * { box-sizing: border-box; }
-  .grr-header { padding: 16px 16px 10px; border-bottom: 3px solid var(--yellow); position: sticky; top: 0; background: var(--bg); z-index: 30; display:flex; justify-content:space-between; align-items:center; }
+  .grr-header { padding: 16px 16px 10px; border-bottom: 3px solid var(--brand); position: sticky; top: 0; background: var(--bg); z-index: 30; display:flex; justify-content:space-between; align-items:center; }
   .grr-title { font-size: 20px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; margin:0; }
-  .grr-title .grr-title-accent { color: var(--yellow); }
+  .grr-title .grr-title-accent { color: var(--brand); }
   .grr-navbtn { font-size: 11px; font-weight:700; text-transform:uppercase; color: var(--steel); border:1px solid var(--steel); border-radius:999px; padding:5px 10px; cursor:pointer; background:none; }
   .grr-section-label { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); padding: 12px 16px 6px; font-weight: 700; }
-  .grr-equip-row, .grr-tabs { display:flex; flex-wrap:wrap; gap:6px; padding: 0 16px 10px; }
-  .grr-tabs { flex-wrap:nowrap; overflow-x:auto; position:sticky; top:53px; background:var(--bg); z-index:29; scrollbar-width:none; padding-top:4px; }
-  .grr-tabs::-webkit-scrollbar{display:none;}
-  .grr-chip, .grr-tab { border:1px solid var(--line); background:var(--surface); color:var(--muted); font-size:12px; font-weight:700; padding:6px 10px; border-radius:999px; cursor:pointer; user-select:none; white-space:nowrap; }
-  .grr-chip.active { background:var(--yellow); color:#1a1a1a; border-color:var(--yellow); }
+  .grr-equip-row { display:flex; flex-wrap:wrap; gap:6px; padding: 0 16px 10px; }
+  .grr-chip { border:1px solid var(--line); background:var(--surface); color:var(--muted); font-size:12px; font-weight:700; padding:6px 10px; border-radius:999px; cursor:pointer; user-select:none; white-space:nowrap; }
+  .grr-chip.active { background:var(--brand); color:#fff; border-color:var(--brand); }
   .grr-chip-all.active { background:var(--steel); color:#fff; border-color:var(--steel); }
-  .grr-tab.active { background:var(--chalk); color:#131313; border-color:var(--chalk); }
   .grr-list { padding: 4px 16px 8px; display:flex; flex-direction:column; gap:8px; }
   .grr-card { background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--steel); border-radius:4px; padding:10px 12px; cursor:pointer; }
-  .grr-card.main { border-left-color: var(--yellow); }
+  .grr-card.main { border-left-color: var(--brand); }
   .grr-card-top { display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
   .grr-card-name { font-weight:700; font-size:14.5px; }
   .grr-badge { font-size:9.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; padding:2px 6px; border-radius:3px; white-space:nowrap; background:var(--steel); color:#fff; }
-  .grr-badge.main { background: var(--yellow); color:#1a1a1a; }
-  .grr-badge.hyp { background: #6b5b95; }
+  .grr-badge.main { background: var(--brand); color:#fff; }
+  .grr-badge.mobility { background: #4a4a4a; }
   .grr-card-meta { font-size:11.5px; color:var(--muted); margin-top:3px; }
-  .grr-card-tm { font-size:11px; color:var(--yellow); margin-top:4px; font-weight:700; }
+  .grr-card-tm { font-size:11px; color:var(--brand); margin-top:4px; font-weight:700; }
   .grr-empty { color:var(--muted); font-size:13px; padding:24px 16px; text-align:center; }
   .grr-collapse { margin:10px 16px 0; border:1px solid var(--line); border-radius:4px; background:var(--surface); overflow:hidden; }
-  .grr-collapse-head { padding:12px; font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:.04em; display:flex; justify-content:space-between; cursor:pointer; color:var(--yellow); }
+  .grr-collapse-head { padding:12px; font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:.04em; display:flex; justify-content:space-between; cursor:pointer; color:var(--brand); }
   .grr-collapse-body { padding:0 12px 12px; font-size:12.5px; line-height:1.55; display:none; }
   .grr-collapse.open .grr-collapse-body { display:block; }
-  .grr-collapse-body b { color:var(--yellow); }
+  .grr-collapse-body b { color:var(--brand); }
   .grr-row-pair { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid var(--line); }
   .grr-row-pair:last-child { border-bottom:none; }
 
-  /* Detail view */
   .grr-detail { padding: 8px 16px 24px; }
   .grr-back { color: var(--steel); font-size:12px; font-weight:700; cursor:pointer; margin-bottom:10px; display:inline-block; }
   .grr-detail-name { font-size:20px; font-weight:800; }
-  .grr-detail-meta { color:var(--muted); font-size:12.5px; margin-top:2px; margin-bottom:14px; }
+  .grr-detail-meta { color:var(--muted); font-size:12.5px; margin-top:2px; margin-bottom:10px; }
+  .grr-notes { background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:10px 12px; font-size:12.5px; color:var(--chalk); margin-bottom:12px; line-height:1.5; }
+  .grr-gif { width:100%; border-radius:6px; margin-bottom:12px; display:block; background:var(--surface); }
+  .grr-gif-link { display:inline-block; margin-bottom:12px; color:var(--steel); font-size:12px; font-weight:700; }
   .grr-tm-box { background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:10px 12px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
   .grr-tm-box label { font-size:11px; text-transform:uppercase; color:var(--muted); font-weight:700; }
   .grr-tm-box input { width:80px; background:var(--bg); border:1px solid var(--line); color:var(--chalk); font-size:15px; padding:6px 8px; border-radius:4px; text-align:right; }
@@ -71,7 +70,7 @@
   .grr-toggle button { border:1px solid var(--line); background:var(--bg); color:var(--muted); font-size:15px; width:36px; height:32px; border-radius:4px; cursor:pointer; }
   .grr-toggle button.on-yes { background:var(--green); color:#111; border-color:var(--green); }
   .grr-toggle button.on-no { background:var(--red); color:#111; border-color:var(--red); }
-  .grr-save-btn { width:100%; background:var(--yellow); color:#1a1a1a; border:none; font-weight:800; font-size:14px; text-transform:uppercase; letter-spacing:.04em; padding:12px; border-radius:6px; margin-top:6px; cursor:pointer; }
+  .grr-save-btn { width:100%; background:var(--brand); color:#fff; border:none; font-weight:800; font-size:14px; text-transform:uppercase; letter-spacing:.04em; padding:12px; border-radius:6px; margin-top:6px; cursor:pointer; }
   .grr-save-msg { text-align:center; font-size:12px; color:var(--green); margin-top:8px; min-height:16px; }
   .grr-superset-box { margin-top:16px; }
   .grr-superset-chip { display:inline-block; background:var(--surface-2); border:1px solid var(--line); color:var(--chalk); font-size:12px; padding:5px 9px; border-radius:6px; margin:0 6px 6px 0; }
@@ -79,7 +78,6 @@
   .grr-history-row { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); padding:6px 0; border-bottom:1px solid var(--line); }
   .grr-history-row span:last-child { color:var(--chalk); }
 
-  /* Log view (all history + export) */
   .grr-export-btn { width:100%; background:var(--steel); color:#fff; border:none; font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.04em; padding:12px; border-radius:6px; cursor:pointer; margin-bottom:8px; }
   .grr-copy-btn { width:100%; background:var(--surface); color:var(--chalk); border:1px solid var(--line); font-weight:700; font-size:13px; padding:10px; border-radius:6px; cursor:pointer; margin-bottom:14px; }
   .grr-log-entry { background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:10px 12px; margin-bottom:8px; }
@@ -87,124 +85,25 @@
   .grr-log-entry-meta { font-size:11.5px; color:var(--muted); margin-top:2px; }
 </style>
 
+<script src="exercises.js"></script>
 <script>
 (function() {
   const root = document.getElementById('gym-ref-root');
 
-  const PATTERNS = ["Squat","Hinge","Lunge","Push Horizontal","Pull Horizontal","Push Vertical","Pull Vertical","Core / Carry","Isolation"];
+  if (typeof EXERCISES === 'undefined') {
+    root.innerHTML = '<div style="padding:24px;color:#f2f0ea;font-family:sans-serif;">Could not load exercises.js — make sure it is uploaded in the same folder as this file.</div>';
+    return;
+  }
+
+  const PATTERNS = ["Squat","Hinge","Lunge","Push Horizontal","Pull Horizontal","Push Vertical","Pull Vertical","Core / Carry","Isolation","Warm-up / Mobility","Conditioning"];
   const EQUIP = ["barbell","dumbbell","kettlebell","cable","machine","bodyweight","band","trapbar","landmine"];
   const EQUIP_LABEL = {barbell:"Barbell",dumbbell:"DB",kettlebell:"KB",cable:"Cable",machine:"Machine",bodyweight:"Bodyweight",band:"Band",trapbar:"Trap Bar",landmine:"Landmine"};
   const PAIR_MAP = {"Push Horizontal":"Pull Horizontal","Pull Horizontal":"Push Horizontal","Push Vertical":"Pull Vertical","Pull Vertical":"Push Vertical"};
   const NO_SUPERSET_PATTERNS = new Set(["Squat","Hinge","Lunge"]);
 
-  // scheme: 'main' (3 sets, TM-based) | 'accStrength' (2 sets, TM-based) | 'hyp' (drop set, no TM)
-  // region: 'lower' | 'upper' -> increment size for main/accStrength
-  let idCounter = 0;
-  function ex(n,p,t,eq,m,scheme,region) {
-    idCounter++;
-    return {id:'ex'+idCounter, n, p, t, eq, m, scheme, region: region||'upper'};
-  }
-
-  const EX = [
-    ex("Barbell Back Squat","Squat","main",["barbell"],"Quads / Glutes","main","lower"),
-    ex("Barbell Front Squat","Squat","main",["barbell"],"Quads / Glutes","main","lower"),
-    ex("Zercher Squat","Squat","main",["barbell"],"Quads / Glutes","main","lower"),
-    ex("Hack Squat Machine","Squat","accessory",["machine"],"Quads / Glutes","accStrength","lower"),
-    ex("45° Leg Press","Squat","accessory",["machine"],"Quads / Glutes","accStrength","lower"),
-    ex("Smith Machine Squat","Squat","accessory",["machine"],"Quads / Glutes","accStrength","lower"),
-    ex("Goblet Squat","Squat","accessory",["dumbbell","kettlebell"],"Quads / Glutes","accStrength","lower"),
-    ex("Kettlebell Front Squat","Squat","accessory",["kettlebell"],"Quads / Glutes","accStrength","lower"),
-    ex("Cossack Squat","Squat","accessory",["bodyweight","dumbbell"],"Adductors / Glutes","hyp","lower"),
-
-    ex("Trap Bar Deadlift","Hinge","main",["trapbar"],"Hamstrings / Glutes","main","lower"),
-    ex("Conventional Deadlift","Hinge","main",["barbell"],"Hamstrings / Glutes","main","lower"),
-    ex("Romanian Deadlift","Hinge","accessory",["barbell","dumbbell"],"Hamstrings / Glutes","accStrength","lower"),
-    ex("Barbell Hip Thrust","Hinge","main",["barbell"],"Glutes / Hamstrings","main","lower"),
-    ex("Hip Thrust / Glute Bridge","Hinge","accessory",["bodyweight","barbell"],"Glutes / Hamstrings","accStrength","lower"),
-    ex("Good Morning","Hinge","accessory",["barbell"],"Hamstrings / Spinal Erectors","accStrength","lower"),
-    ex("Single-Leg RDL (DB)","Hinge","accessory",["dumbbell"],"Hamstrings / Glutes","accStrength","lower"),
-    ex("45° Back / Hip Extension","Hinge","accessory",["machine"],"Spinal Erectors / Glutes","hyp","lower"),
-    ex("Kettlebell Swing","Hinge","accessory",["kettlebell"],"Glutes / Hamstrings","hyp","lower"),
-    ex("Jefferson Curl","Hinge","accessory",["barbell","dumbbell"],"Spinal Erectors / Hamstrings","hyp","lower"),
-
-    ex("Lunge Carries","Lunge","main",["dumbbell","kettlebell"],"Glutes / Forearms","main","lower"),
-    ex("Barbell Lunge","Lunge","accessory",["barbell"],"Glutes / Quads","accStrength","lower"),
-    ex("Bulgarian Split Squat","Lunge","accessory",["dumbbell","barbell"],"Glutes / Quads","accStrength","lower"),
-    ex("Reverse Lunge","Lunge","accessory",["dumbbell","bodyweight"],"Glutes / Quads","accStrength","lower"),
-    ex("Walking Lunge","Lunge","accessory",["dumbbell","bodyweight"],"Glutes / Quads","accStrength","lower"),
-    ex("Rotational Split Squat (Hip-Driven)","Lunge","accessory",["dumbbell","bodyweight"],"Glutes / Quads","hyp","lower"),
-    ex("Knee-Over-Toe Split Squat","Lunge","accessory",["dumbbell","bodyweight"],"Quads / Glutes","hyp","lower"),
-
-    ex("Barbell Bench Press","Push Horizontal","main",["barbell"],"Chest / Triceps","main","upper"),
-    ex("Incline Barbell Bench","Push Horizontal","accessory",["barbell"],"Chest / Front Delts","accStrength","upper"),
-    ex("JM Press (Close-Grip Bench)","Push Horizontal","main",["barbell"],"Triceps / Chest","main","upper"),
-    ex("Dumbbell Bench Press","Push Horizontal","accessory",["dumbbell"],"Chest / Triceps","accStrength","upper"),
-    ex("Incline Dumbbell Bench","Push Horizontal","accessory",["dumbbell"],"Chest / Front Delts","accStrength","upper"),
-    ex("Chest Press Machine","Push Horizontal","accessory",["machine"],"Chest / Triceps","accStrength","upper"),
-    ex("Incline Chest Press Machine","Push Horizontal","accessory",["machine"],"Chest / Front Delts","accStrength","upper"),
-    ex("Cable Chest Press","Push Horizontal","accessory",["cable"],"Chest / Triceps","accStrength","upper"),
-    ex("DB Floor Press","Push Horizontal","accessory",["dumbbell"],"Chest / Triceps","accStrength","upper"),
-    ex("Push-Up","Push Horizontal","accessory",["bodyweight"],"Chest / Triceps","hyp","upper"),
-    ex("Dip","Push Horizontal","accessory",["bodyweight"],"Chest / Triceps","hyp","upper"),
-    ex("Cable Fly (High-to-Low)","Push Horizontal","accessory",["cable"],"Chest / Front Delts","hyp","upper"),
-    ex("Flat / Incline DB Fly","Push Horizontal","accessory",["dumbbell"],"Chest / Front Delts","hyp","upper"),
-    ex("Pec Deck Fly Machine","Push Horizontal","accessory",["machine"],"Chest / Front Delts","hyp","upper"),
-
-    ex("Barbell Row","Pull Horizontal","main",["barbell"],"Upper Back / Biceps","main","upper"),
-    ex("Chest-Supported DB Row","Pull Horizontal","accessory",["dumbbell"],"Upper Back / Biceps","accStrength","upper"),
-    ex("DB Bent-Over Row","Pull Horizontal","accessory",["dumbbell"],"Upper Back / Biceps","accStrength","upper"),
-    ex("Single-Arm DB Row","Pull Horizontal","accessory",["dumbbell"],"Upper Back / Biceps","accStrength","upper"),
-    ex("DB Staggered Stance Row","Pull Horizontal","accessory",["dumbbell","kettlebell"],"Upper Back / Biceps","accStrength","upper"),
-    ex("Single-Arm Cable Row","Pull Horizontal","accessory",["cable"],"Upper Back / Biceps","accStrength","upper"),
-    ex("Seated Cable Row","Pull Horizontal","accessory",["cable"],"Upper Back / Biceps","accStrength","upper"),
-    ex("Seated Row Machine","Pull Horizontal","accessory",["machine"],"Upper Back / Biceps","accStrength","upper"),
-    ex("Face Pull","Pull Horizontal","accessory",["cable","band"],"Rear Delts / Upper Back","hyp","upper"),
-    ex("Prone T-Raise / Reverse Fly","Pull Horizontal","accessory",["dumbbell"],"Rhomboids / Rear Delts","hyp","upper"),
-    ex("DB High Row to ER (Cuban Press)","Pull Horizontal","accessory",["dumbbell","kettlebell"],"Rotator Cuff / Rear Delts","hyp","upper"),
-
-    ex("Barbell Overhead Press","Push Vertical","main",["barbell"],"Front Delts / Triceps","main","upper"),
-    ex("Single-Arm DB OHP (Half-Kneeling)","Push Vertical","accessory",["dumbbell"],"Front Delts / Triceps","accStrength","upper"),
-    ex("Shoulder Press Machine","Push Vertical","accessory",["machine"],"Front Delts / Triceps","accStrength","upper"),
-    ex("Single-Arm Z Press","Push Vertical","accessory",["dumbbell","kettlebell"],"Front Delts / Triceps","hyp","upper"),
-    ex("One-Arm KB Push Press","Push Vertical","accessory",["kettlebell"],"Front Delts / Triceps","hyp","upper"),
-    ex("Landmine Clean to Rotational Press","Push Vertical","accessory",["landmine"],"Front Delts / Obliques","hyp","upper"),
-
-    ex("Weighted Pull-Up","Pull Vertical","main",["bodyweight"],"Lats / Biceps","main","upper"),
-    ex("Chin-Up","Pull Vertical","accessory",["bodyweight"],"Lats / Biceps","hyp","upper"),
-    ex("Lat Pulldown","Pull Vertical","accessory",["cable","machine"],"Lats / Biceps","accStrength","upper"),
-    ex("Neutral-Grip Lat Pulldown","Pull Vertical","accessory",["machine"],"Lats / Biceps","accStrength","upper"),
-
-    ex("Pallof Press","Core / Carry","accessory",["cable","band"],"Obliques","hyp","upper"),
-    ex("Hanging Knee/Leg Raise","Core / Carry","accessory",["bodyweight"],"Abs / Hip Flexors","hyp","upper"),
-    ex("Ab Wheel Roll-Out","Core / Carry","accessory",["bodyweight"],"Abs / Lats","hyp","upper"),
-    ex("Standing / Kneeling Cable Crunch","Core / Carry","accessory",["cable"],"Abs","hyp","upper"),
-    ex("Plank Hold","Core / Carry","accessory",["bodyweight"],"Abs / Serratus","hyp","upper"),
-    ex("Farmer's Carry","Core / Carry","accessory",["dumbbell","kettlebell"],"Forearms / Traps","hyp","upper"),
-    ex("Suitcase Carry","Core / Carry","accessory",["dumbbell","kettlebell"],"Obliques / Forearms","hyp","upper"),
-    ex("Half-Kneeling Cable Chop","Core / Carry","accessory",["cable"],"Obliques / Lats","hyp","upper"),
-
-    ex("DB / EZ Bar Curl","Isolation","accessory",["dumbbell","barbell"],"Biceps","hyp","upper"),
-    ex("Hammer Curl","Isolation","accessory",["dumbbell"],"Biceps / Forearms","hyp","upper"),
-    ex("Cable Biceps Curl","Isolation","accessory",["cable"],"Biceps","hyp","upper"),
-    ex("Triceps Pushdown / Ropedown","Isolation","accessory",["cable"],"Triceps","hyp","upper"),
-    ex("DB Overhead Triceps Extension","Isolation","accessory",["dumbbell"],"Triceps","hyp","upper"),
-    ex("EZ Bar Triceps Extension","Isolation","accessory",["barbell"],"Triceps","hyp","upper"),
-    ex("DB Lateral Raise","Isolation","accessory",["dumbbell"],"Side Delts","hyp","upper"),
-    ex("Cable Lateral Raise","Isolation","accessory",["cable"],"Side Delts","hyp","upper"),
-    ex("DB Rear Delt Fly","Isolation","accessory",["dumbbell"],"Rear Delts","hyp","upper"),
-    ex("DB Shrug","Isolation","accessory",["dumbbell"],"Traps","hyp","upper"),
-    ex("Leg Extension Machine","Isolation","accessory",["machine"],"Quads","hyp","lower"),
-    ex("Lying / Seated Leg Curl Machine","Isolation","accessory",["machine"],"Hamstrings","hyp","lower"),
-    ex("Hip Abduction Machine","Isolation","accessory",["machine"],"Glute Med","hyp","lower"),
-    ex("Hip Adduction Machine","Isolation","accessory",["machine"],"Adductors","hyp","lower"),
-    ex("Glute Kickback / Donkey Kick Machine","Isolation","accessory",["machine"],"Glutes","hyp","lower"),
-    ex("Standing / Single-Leg Calf Raise","Isolation","accessory",["machine","bodyweight"],"Calves","hyp","lower"),
-    ex("Tibialis Raise (Wall)","Isolation","accessory",["bodyweight"],"Tibialis Anterior","hyp","lower"),
-  ];
+  const EX = EXERCISES;
   const EX_BY_ID = Object.fromEntries(EX.map(x => [x.id, x]));
 
-  // TIER: last-set % tier for major lifts -> '80' or '85'
-  // HYP: {weight, tier} per hypertrophy exercise -> tier '6-8' or '8-10'
   function targetsFor(x, tierState, hypState) {
     if (x.scheme === 'main') {
       const lastPct = (tierState === '85') ? 0.85 : 0.80;
@@ -215,18 +114,17 @@
         {label:'Set 3 (test set)', pct:lastPct, reps:6, isTestSet:true},
       ];
     }
-    if (x.scheme === 'accStrength') return [
+    if (x.scheme === 'strength') return [
       {label:'Warm-up', pct:0.50, reps:5},
       {label:'Set 1', pct:0.85, reps:7},
       {label:'Set 2 (test set)', pct:0.85, reps:7, isTestSet:true},
     ];
     // hypertrophy
     const tier = (hypState && hypState.tier) || '6-8';
-    const repLabel = tier === '8-10' ? '8-10' : '6-8';
     const w = (hypState && hypState.weight) || null;
     return [
-      {label:'Set 1 (to failure)', reps:repLabel, fixedWeight:w, isMainHypSet:true},
-      {label:'Set 2 (to failure)', reps:repLabel, fixedWeight:w, isMainHypSet:true},
+      {label:'Set 1 (to failure)', reps:tier, fixedWeight:w, isMainHypSet:true},
+      {label:'Set 2 (to failure)', reps:tier, fixedWeight:w, isMainHypSet:true},
       {label:'Set 3 — drop weight (to failure)', reps:'8-10', fixedWeight: w ? roundW(w*0.85) : null},
     ];
   }
@@ -234,42 +132,53 @@
   function roundW(w) { return Math.round(w/5)*5; }
 
   // ---------- STATE ----------
-  let state = { equip: new Set(EQUIP), pattern: PATTERNS[0], view: 'list', activeId: null, saveMsg: '' };
-  let TM = {};      // { exId: number }
-  let TIER = {};    // { exId: '80' | '85' }  -- major-lift test-set tier
-  let HYP = {};     // { exId: {weight, tier: '6-8'|'8-10'} }
-  let LOGS = {};    // { exId: [ {date, sets:[{target,weight,reps,success}], allSuccess} ] }
+  let state = { equip: new Set(EQUIP), pattern: new Set(PATTERNS), view: 'list', activeId: null, saveMsg: '' };
+  let TM = {};
+  let TIER = {};
+  let HYP = {};
+  let LOGS = {};
 
-  async function loadAll() {
+  function loadAll() {
     try { const a = JSON.parse(localStorage.getItem('gym-ref-equip')); if (a && a.length) state.equip = new Set(a); } catch(e){}
+    try { const a = JSON.parse(localStorage.getItem('gym-ref-pattern')); if (a) state.pattern = new Set(a); } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-tm')); if (v) TM = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-tier')); if (v) TIER = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-hyp')); if (v) HYP = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-logs')); if (v) LOGS = v; } catch(e){}
     render();
   }
-  async function saveEquip() { try { localStorage.setItem('gym-ref-equip', JSON.stringify([...state.equip])); } catch(e){} }
-  async function saveTM() { try { localStorage.setItem('gym-tm', JSON.stringify(TM)); } catch(e){} }
-  async function saveTier() { try { localStorage.setItem('gym-tier', JSON.stringify(TIER)); } catch(e){} }
-  async function saveHyp() { try { localStorage.setItem('gym-hyp', JSON.stringify(HYP)); } catch(e){} }
-  async function saveLogs() { try { localStorage.setItem('gym-logs', JSON.stringify(LOGS)); } catch(e){} }
+  function saveEquip() { try { localStorage.setItem('gym-ref-equip', JSON.stringify([...state.equip])); } catch(e){} }
+  function savePattern() { try { localStorage.setItem('gym-ref-pattern', JSON.stringify([...state.pattern])); } catch(e){} }
+  function saveTM() { try { localStorage.setItem('gym-tm', JSON.stringify(TM)); } catch(e){} }
+  function saveTier() { try { localStorage.setItem('gym-tier', JSON.stringify(TIER)); } catch(e){} }
+  function saveHyp() { try { localStorage.setItem('gym-hyp', JSON.stringify(HYP)); } catch(e){} }
+  function saveLogs() { try { localStorage.setItem('gym-logs', JSON.stringify(LOGS)); } catch(e){} }
 
   function toggleEquip(e) { state.equip.has(e) ? state.equip.delete(e) : state.equip.add(e); saveEquip(); render(); }
   function setAllEquip(on) { state.equip = on ? new Set(EQUIP) : new Set(); saveEquip(); render(); }
+  function togglePattern(p) { state.pattern.has(p) ? state.pattern.delete(p) : state.pattern.add(p); savePattern(); render(); }
+  function setAllPatterns() { state.pattern = new Set(PATTERNS); savePattern(); render(); }
+  function activePatterns() { return state.pattern.size ? state.pattern : new Set(PATTERNS); }
 
   function supersetSuggestions(x) {
     if (NO_SUPERSET_PATTERNS.has(x.p)) return {note:"Best done alone — don't superset squat/hinge/lunge main work.", list:[]};
     const targetPattern = PAIR_MAP[x.p] || x.p;
-    const list = EX.filter(o => o.id !== x.id && o.p === targetPattern && o.eq.some(e => state.equip.has(e))).slice(0,5);
+    const list = EX.filter(o => o.id !== x.id && o.p === targetPattern && o.scheme !== 'mobility' && o.eq.some(e => state.equip.has(e))).slice(0,5);
     return {note: null, list};
+  }
+
+  function gifBlock(x) {
+    if (!x.gif) return '';
+    if (x.gif.includes('drive.google.com')) {
+      return `<a class="grr-gif-link" href="${x.gif}" target="_blank" rel="noopener">View demo ↗</a>`;
+    }
+    return `<img class="grr-gif" src="${x.gif}" alt="${x.n} demo" loading="lazy" onerror="this.style.display='none'"/>`;
   }
 
   // ---------- RENDER: LIST VIEW ----------
   function renderList() {
-    const filtered = EX.filter(x => x.p === state.pattern && x.eq.some(e => state.equip.has(e)));
-    filtered.sort((a,b) => (a.t === b.t ? 0 : a.t === 'main' ? -1 : 1));
-
-    let html = `
+    const pats = activePatterns();
+    root.innerHTML = `
       <div class="grr-header">
         <div class="grr-title">GYM <span class="grr-title-accent">REFERENCE</span></div>
         <button class="grr-navbtn" id="grr-goto-history">Log / Export</button>
@@ -279,7 +188,10 @@
         <div class="grr-chip grr-chip-all" data-all="1">ALL</div>
         <div class="grr-chip grr-chip-all" data-none="1">NONE</div>
       </div>
-      <div class="grr-tabs" id="grr-tabs"></div>
+      <div class="grr-section-label">Movement pattern</div>
+      <div class="grr-equip-row" id="grr-pattern-row">
+        <div class="grr-chip grr-chip-all" data-pall="1">ALL</div>
+      </div>
       <div class="grr-list" id="grr-list"></div>
       <div class="grr-collapse" id="grr-superset">
         <div class="grr-collapse-head">Superset pairing guide ▾</div>
@@ -300,15 +212,15 @@
         </div>
       </div>
       <div class="grr-collapse" id="grr-scheme">
-        <div class="grr-collapse-head">Strength &amp; hypertrophy scheme ▾</div>
+        <div class="grr-collapse-head">Scheme reference ▾</div>
         <div class="grr-collapse-body">
-          <b>Strength — 2–3 min rest.</b> Warm-up 5@50%, Set 1 6@85%, Set 2 6@85%. Major lifts add a 3rd (test) set: starts at 80%, and once you hit it, moves to 85% next session. Hit the test set at 85% → training max goes up (+5 lb lower body, +2.5 lb upper body) and the test set resets to 80%.<br/><br/>
+          <b>Strength — 2–3 min rest.</b> Warm-up 5@50%, Set 1 6@85%, Set 2 6@85%. Major lifts add a 3rd (test) set: starts at 80%, moves to 85% next session once hit. Hit the test set at 85% → training max goes up (+5 lb lower body, +2.5 lb upper body), test set resets to 80%.<br/><br/>
           <b>Major lifts:</b> Squat, Deadlift, BB Bench Press / JM Press, BB Overhead Press, Weighted Pull-up, Barbell Row, Hip Thrust, Lunge Carries.<br/><br/>
-          <b>Hypertrophy — 1 min rest, drop set.</b> Sets 1–2 to failure at 6–8 reps, Set 3 drop the weight, 8–10 to failure. Hit sets 1–2 → next session reps move to 8–10 at the same weight. Hit 8–10 → add weight and reset to 6–8.
+          <b>Hypertrophy — 1 min rest, drop set.</b> Sets 1–2 to failure at 6–8, Set 3 drop weight, 8–10 to failure. Hit sets 1–2 → next session reps move to 8–10 at same weight. Hit 8–10 → add weight, reset to 6–8.<br/><br/>
+          <b>Mobility/Warm-up.</b> No weight tracked — just marked done for the day.
         </div>
       </div>
     `;
-    root.innerHTML = html;
 
     const eqRow = root.querySelector('#grr-equip-row');
     EQUIP.forEach(e => {
@@ -321,25 +233,35 @@
     eqRow.querySelector('[data-all]').onclick = () => setAllEquip(true);
     eqRow.querySelector('[data-none]').onclick = () => setAllEquip(false);
 
-    const tabs = root.querySelector('#grr-tabs');
+    const patRow = root.querySelector('#grr-pattern-row');
     PATTERNS.forEach(p => {
-      const tab = document.createElement('div');
-      tab.className = 'grr-tab' + (state.pattern === p ? ' active' : '');
-      tab.textContent = p;
-      tab.onclick = () => { state.pattern = p; render(); };
-      tabs.appendChild(tab);
+      const chip = document.createElement('div');
+      chip.className = 'grr-chip' + (pats.has(p) ? ' active' : '');
+      chip.textContent = p;
+      chip.onclick = () => togglePattern(p);
+      patRow.appendChild(chip);
     });
+    patRow.querySelector('[data-pall]').onclick = () => setAllPatterns();
 
     const list = root.querySelector('#grr-list');
-    if (!filtered.length) {
-      list.innerHTML = `<div class="grr-empty">No matches with the equipment selected.</div>`;
-    } else {
-      filtered.forEach(x => {
+    list.innerHTML = '';
+    let anyShown = false;
+    PATTERNS.filter(p => pats.has(p)).forEach(p => {
+      const group = EX.filter(x => x.p === p && x.eq.some(e => state.equip.has(e)));
+      if (!group.length) return;
+      anyShown = true;
+      group.sort((a,b) => (a.scheme === b.scheme ? 0 : a.scheme === 'main' ? -1 : 1));
+      const header = document.createElement('div');
+      header.className = 'grr-section-label';
+      header.style.padding = '10px 0 4px';
+      header.textContent = p;
+      list.appendChild(header);
+      group.forEach(x => {
         const card = document.createElement('div');
-        card.className = 'grr-card ' + x.t;
-        const schemeLabel = x.scheme === 'main' ? 'Major Lift' : x.scheme === 'accStrength' ? 'Strength' : 'Hypertrophy';
-        const badgeClass = x.scheme === 'main' ? 'main' : x.scheme === 'hyp' ? 'hyp' : '';
-        const tmLine = (x.scheme !== 'hyp' && TM[x.id]) ? `<div class="grr-card-tm">TM: ${TM[x.id]} lb</div>` : '';
+        card.className = 'grr-card ' + x.scheme;
+        const schemeLabel = {main:'Major Lift', strength:'Strength', hypertrophy:'Hypertrophy', mobility:'Mobility'}[x.scheme];
+        const badgeClass = x.scheme === 'main' ? 'main' : x.scheme === 'mobility' ? 'mobility' : '';
+        const tmLine = (x.scheme !== 'hypertrophy' && x.scheme !== 'mobility' && TM[x.id]) ? `<div class="grr-card-tm">TM: ${TM[x.id]} lb</div>` : '';
         card.innerHTML = `
           <div class="grr-card-top">
             <div class="grr-card-name">${x.n}</div>
@@ -351,7 +273,9 @@
         card.onclick = () => { state.view = 'detail'; state.activeId = x.id; state.saveMsg=''; render(); };
         list.appendChild(card);
       });
-    }
+    });
+    if (!anyShown) list.innerHTML = `<div class="grr-empty">No matches with the equipment selected.</div>`;
+
     ['grr-superset','grr-template','grr-scheme'].forEach(id => {
       const el = root.querySelector('#' + id);
       el.querySelector('.grr-collapse-head').onclick = () => el.classList.toggle('open');
@@ -359,9 +283,41 @@
     root.querySelector('#grr-goto-history').onclick = () => { state.view = 'log'; render(); };
   }
 
+  // ---------- RENDER: DETAIL VIEW (mobility) ----------
+  function renderMobilityDetail(x) {
+    const hist = (LOGS[x.id] || []).slice(-6).reverse();
+    const histHtml = hist.length ? hist.map(l => `<div class="grr-history-row"><span>${l.date}</span><span>✅ Done</span></div>`).join('')
+      : `<div style="color:var(--muted);font-size:12px;">Not logged yet.</div>`;
+
+    root.innerHTML = `
+      <div class="grr-detail">
+        <span class="grr-back" id="grr-back">← Back to list</span>
+        <div class="grr-detail-name">${x.n}</div>
+        <div class="grr-detail-meta">${x.p} · ${x.m}</div>
+        ${gifBlock(x)}
+        ${x.notes ? `<div class="grr-notes">${x.notes}</div>` : ''}
+        <button class="grr-save-btn" id="grr-save">Mark Done Today</button>
+        <div class="grr-save-msg">${state.saveMsg}</div>
+        <div class="grr-section-label" style="padding-left:0;">Recent history</div>
+        <div class="grr-history">${histHtml}</div>
+      </div>
+    `;
+    root.querySelector('#grr-back').onclick = () => { state.view = 'list'; render(); };
+    root.querySelector('#grr-save').onclick = () => {
+      const entry = {date: new Date().toISOString().slice(0,10), exercise: x.n, pattern: x.p, sets:[{target:'Done', weight:null, reps:null, success:true}], allSuccess:true, tmAction:'none'};
+      if (!LOGS[x.id]) LOGS[x.id] = [];
+      LOGS[x.id].push(entry);
+      saveLogs();
+      state.saveMsg = 'Marked done for today.';
+      render();
+    };
+  }
+
   // ---------- RENDER: DETAIL VIEW ----------
   function renderDetail() {
     const x = EX_BY_ID[state.activeId];
+    if (x.scheme === 'mobility') { renderMobilityDetail(x); return; }
+
     const tm = TM[x.id] || null;
     const tierState = TIER[x.id] || '80';
     const hypState = HYP[x.id] || {weight: null, tier: '6-8'};
@@ -404,8 +360,10 @@
         <span class="grr-back" id="grr-back">← Back to list</span>
         <div class="grr-detail-name">${x.n}</div>
         <div class="grr-detail-meta">${x.p} · ${x.m}</div>
+        ${gifBlock(x)}
+        ${x.notes ? `<div class="grr-notes">${x.notes}</div>` : ''}
 
-        ${x.scheme !== 'hyp' ? `
+        ${x.scheme !== 'hypertrophy' ? `
         <div class="grr-tm-box">
           <div>
             <label>Training Max</label>
@@ -434,7 +392,7 @@
     `;
 
     root.querySelector('#grr-back').onclick = () => { state.view = 'list'; render(); };
-    if (x.scheme !== 'hyp') {
+    if (x.scheme !== 'hypertrophy') {
       root.querySelector('#grr-tm-input').onchange = (e) => {
         const v = parseFloat(e.target.value);
         if (!isNaN(v) && v > 0) { TM[x.id] = v; saveTM(); render(); }
@@ -452,7 +410,7 @@
       b.classList.add('on-no'); b.parentElement.querySelector('.grr-yes').classList.remove('on-yes');
     });
 
-    root.querySelector('#grr-save').onclick = async () => {
+    root.querySelector('#grr-save').onclick = () => {
       const rows = root.querySelectorAll('.grr-set-row');
       const sets = [];
       rows.forEach((row, i) => {
@@ -468,33 +426,33 @@
         const testOK = sets[testSetIdx] && sets[testSetIdx].success;
         if (testOK) {
           if (tierState === '80') {
-            TIER[x.id] = '85'; await saveTier();
+            TIER[x.id] = '85'; saveTier();
             msg = 'Saved. Test set hit at 80% — next session it moves to 85%.';
           } else {
             const inc = x.region === 'lower' ? 5 : 2.5;
             TM[x.id] = tm + inc; TIER[x.id] = '80';
-            await saveTM(); await saveTier();
+            saveTM(); saveTier();
             msg = `Saved. Test set hit at 85% — training max bumped to ${TM[x.id]} lb, test set resets to 80%.`;
           }
         }
-      } else if (x.scheme === 'accStrength' && tm) {
+      } else if (x.scheme === 'strength' && tm) {
         const testSetIdx = targets.findIndex(t => t.isTestSet);
         const testOK = sets[testSetIdx] && sets[testSetIdx].success;
         if (testOK) {
           const inc = x.region === 'lower' ? 5 : 2.5;
-          TM[x.id] = tm + inc; await saveTM();
+          TM[x.id] = tm + inc; saveTM();
           msg = `Saved. Both sets hit — training max bumped to ${TM[x.id]} lb.`;
         }
-      } else if (x.scheme === 'hyp') {
+      } else if (x.scheme === 'hypertrophy') {
         const mainHypIdx = targets.map((t,i)=>t.isMainHypSet?i:-1).filter(i=>i>=0);
         const mainHypOK = mainHypIdx.length && mainHypIdx.every(i => sets[i] && sets[i].success);
         if (mainHypOK && hypState.weight) {
           if (hypState.tier === '6-8') {
-            HYP[x.id] = {weight: hypState.weight, tier: '8-10'}; await saveHyp();
+            HYP[x.id] = {weight: hypState.weight, tier: '8-10'}; saveHyp();
             msg = 'Saved. Sets 1-2 complete — rep target moves to 8-10 next session.';
           } else {
             const inc = x.region === 'lower' ? 5 : 2.5;
-            HYP[x.id] = {weight: hypState.weight + inc, tier: '6-8'}; await saveHyp();
+            HYP[x.id] = {weight: hypState.weight + inc, tier: '6-8'}; saveHyp();
             msg = `Saved. Hit 8-10 — weight bumped to ${HYP[x.id].weight} lb, rep target resets to 6-8.`;
           }
         }
@@ -503,7 +461,7 @@
       const entry = {date: new Date().toISOString().slice(0,10), exercise: x.n, pattern: x.p, sets, allSuccess: sets.every(s=>s.success), tmAction: msg.includes('bumped') ? 'increase' : 'none'};
       if (!LOGS[x.id]) LOGS[x.id] = [];
       LOGS[x.id].push(entry);
-      await saveLogs();
+      saveLogs();
       state.saveMsg = msg;
       render();
     };
