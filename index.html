@@ -483,20 +483,24 @@
   }
 
   // ---------- RENDER: LOG / EXPORT VIEW ----------
-  function toCSV(entries, includeHeader) {
+  function toCSV(entries) {
     const rows = [];
-    if (includeHeader) rows.push(["date","exercise","pattern","top_weight","sets","result"]);
     entries.sort((a,b)=>a.date.localeCompare(b.date)).forEach(entry => {
-      const weights = entry.sets.map(s => parseFloat(s.weight)).filter(w => !isNaN(w));
-      const topWeight = weights.length ? Math.max(...weights) : '';
-      const setsStr = entry.sets.map(s => {
-        let label = '';
-        if (s.weight !== null && s.weight !== undefined && s.weight !== '') label += s.weight + 'lb';
-        if (s.reps !== null && s.reps !== undefined && s.reps !== '') label += (label ? ' x ' : '') + s.reps + 'reps';
-        if (!label) label = (s.target === 'Done') ? 'Done' : (s.target || '');
-        return label + (s.success ? ' ✓' : ' ✗');
-      }).join(' | ');
-      rows.push([entry.date, entry.exercise, entry.pattern, topWeight, setsStr, entry.allSuccess ? '✅' : '⚠']);
+      const exObj = EX.find(x => x.n === entry.exercise);
+      const isBodyweightOnly = exObj && exObj.eq.length === 1 && exObj.eq[0] === 'bodyweight';
+      const isMobility = exObj && exObj.scheme === 'mobility';
+      entry.sets.forEach(s => {
+        let weight, reps;
+        if (isMobility) {
+          weight = 'BW/time';
+          reps = 'Done';
+        } else {
+          const hasWeight = s.weight !== null && s.weight !== undefined && s.weight !== '';
+          weight = hasWeight ? s.weight : (isBodyweightOnly ? 'BW' : '');
+          reps = (s.reps !== null && s.reps !== undefined && s.reps !== '') ? s.reps : '';
+        }
+        rows.push([entry.date, entry.exercise, weight, reps]);
+      });
     });
     return rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
   }
@@ -531,7 +535,7 @@
     }
     root.querySelector('#grr-download').onclick = () => {
       try {
-        const blob = new Blob([toCSV(allEntries, true)], {type:'text/csv'});
+        const blob = new Blob([toCSV(allEntries)], {type:'text/csv'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url; a.download = 'gym-log.csv';
@@ -544,7 +548,7 @@
     };
     root.querySelector('#grr-copy').onclick = async () => {
       try {
-        await navigator.clipboard.writeText(toCSV(allEntries, true));
+        await navigator.clipboard.writeText(toCSV(allEntries));
         root.querySelector('#grr-log-msg').textContent = 'Copied — paste into a Sheet or Notes.';
       } catch (err) {
         root.querySelector('#grr-log-msg').textContent = 'Copy failed in this browser.';
