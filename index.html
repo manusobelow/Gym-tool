@@ -124,12 +124,12 @@
       {label:'Set 2 (test set)', pct:0.85, reps:7, isTestSet:true},
     ];
     // hypertrophy
-    const tier = (hypState && hypState.tier) || '6-8';
+    const tier = (hypState && hypState.tier) || 8;
     const w = (hypState && hypState.weight) || null;
     return [
       {label:'Set 1 (to failure)', reps:tier, fixedWeight:w, isMainHypSet:true},
       {label:'Set 2 (to failure)', reps:tier, fixedWeight:w, isMainHypSet:true},
-      {label:'Set 3 — drop weight (to failure)', reps:'8-10', fixedWeight: w ? roundW(w*0.85) : null},
+      {label:'Set 3 — drop weight (to failure)', reps:10, fixedWeight: w ? roundW(w*0.85) : null},
     ];
   }
 
@@ -154,6 +154,10 @@
     try { const v = JSON.parse(localStorage.getItem('gym-tm')); if (v) TM = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-tier')); if (v) TIER = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-hyp')); if (v) HYP = v; } catch(e){}
+    Object.keys(HYP).forEach(id => {
+      if (HYP[id].tier === '6-8') HYP[id].tier = 8;
+      else if (HYP[id].tier === '8-10') HYP[id].tier = 10;
+    });
     try { const v = JSON.parse(localStorage.getItem('gym-logs')); if (v) LOGS = v; } catch(e){}
     render();
   }
@@ -228,7 +232,7 @@
         <div class="grr-collapse-body">
           <b>Strength — 2–3 min rest.</b> Warm-up 5@50%, Set 1 6@85%, Set 2 6@85%. Major lifts add a 3rd (test) set: starts at 80%, moves to 85% next session once hit. Hit the test set at 85% → your 1RM goes up (+5 lb lower body, +2.5 lb upper body), test set resets to 80%.<br/><br/>
           <b>Major lifts:</b> Squat, Deadlift, BB Bench Press / JM Press, BB Overhead Press, Weighted Pull-up, Barbell Row, Hip Thrust, Lunge Carries.<br/><br/>
-          <b>Hypertrophy — 1 min rest, drop set.</b> Sets 1–2 to failure at 6–8, Set 3 drop weight, 8–10 to failure. Hit sets 1–2 → next session reps move to 8–10 at same weight. Hit 8–10 → add weight, reset to 6–8.<br/><br/>
+          <b>Hypertrophy — 1 min rest, drop set.</b> Sets 1–2 to failure, target starts at 8 reps. Set 3 drops the weight, targets 10 reps to failure. Hit sets 1–2 at 8 → next session the target becomes 10 at the same weight. Hit 10 → add weight, target resets to 8.<br/><br/>
           <b>Mobility/Warm-up.</b> No weight tracked — just marked done for the day.
         </div>
       </div>
@@ -332,7 +336,7 @@
 
     const tm = TM[x.id] || null;
     const tierState = TIER[x.id] || '80';
-    const hypState = HYP[x.id] || {weight: null, tier: '6-8'};
+    const hypState = HYP[x.id] || {weight: null, tier: 8};
     const targets = targetsFor(x, tierState, hypState);
     const ss = supersetSuggestions(x);
     const hist = (LOGS[x.id] || []).slice(-5).reverse();
@@ -386,7 +390,7 @@
         <div class="grr-tm-box">
           <div>
             <label>Working Weight</label>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px;">Rep target currently ${hypState.tier} · rest 1 min</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">Rep target currently ${hypState.tier} reps · rest 1 min</div>
           </div>
           <input type="number" id="grr-hyp-weight-input" value="${hypState.weight || ''}" placeholder="e.g. 40"/>
         </div>`}
@@ -462,13 +466,13 @@
         const mainHypIdx = targets.map((t,i)=>t.isMainHypSet?i:-1).filter(i=>i>=0);
         const mainHypOK = mainHypIdx.length && mainHypIdx.every(i => sets[i] && sets[i].success);
         if (mainHypOK && hypState.weight) {
-          if (hypState.tier === '6-8') {
-            HYP[x.id] = {weight: hypState.weight, tier: '8-10'}; saveHyp();
-            msg = 'Saved. Sets 1-2 complete — rep target moves to 8-10 next session.';
+          if (hypState.tier === 8) {
+            HYP[x.id] = {weight: hypState.weight, tier: 10}; saveHyp();
+            msg = 'Saved. Sets 1-2 complete — rep target moves to 10 next session.';
           } else {
             const inc = x.region === 'lower' ? 5 : 2.5;
-            HYP[x.id] = {weight: hypState.weight + inc, tier: '6-8'}; saveHyp();
-            msg = `Saved. Hit 8-10 — weight bumped to ${HYP[x.id].weight} lb, rep target resets to 6-8.`;
+            HYP[x.id] = {weight: hypState.weight + inc, tier: 8}; saveHyp();
+            msg = `Saved. Hit 10 reps — weight bumped to ${HYP[x.id].weight} lb, rep target resets to 8.`;
           }
         }
       }
