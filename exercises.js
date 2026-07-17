@@ -17,6 +17,17 @@ const EXERCISES = [
     "notes": "Roll out to strong brace; no low-back sag, smooth return."
   },
   {
+  "id": "AB_CRUNCH",
+  "n": "Basic Ab Crunch",
+  "p": "Core / Carry",
+  "scheme": "hypertrophy",
+  "eq": ["bodyweight"],
+  "m": "Abs / Obliques",
+  "region": "upper",
+  "gif": "",
+  "notes": "Feet flat or knees bent, curl shoulders off the floor, don't pull with your neck."
+},
+  {
     "id": "ASSISTED_GLUTE_PRESSDOWN",
     "n": "Machine Glute Pressdown (Single-Leg)",
     "p": "Isolation",
