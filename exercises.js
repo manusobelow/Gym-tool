@@ -1017,7 +1017,7 @@ const EXERCISES = [
     "p": "Push Vertical",
     "scheme": "strength",
     "eq": [
-      "landmine"
+      "barbell"
     ],
     "m": "Front Delts / Obliques",
     "region": "upper",
