@@ -218,7 +218,7 @@
       <div class="grr-collapse" id="grr-scheme">
         <div class="grr-collapse-head">Scheme reference ▾</div>
         <div class="grr-collapse-body">
-          <b>Strength — 2–3 min rest.</b> Warm-up 5@50%, Set 1 6@85%, Set 2 6@85%. Major lifts add a 3rd (test) set: starts at 80%, moves to 85% next session once hit. Hit the test set at 85% → training max goes up (+5 lb lower body, +2.5 lb upper body), test set resets to 80%.<br/><br/>
+          <b>Strength — 2–3 min rest.</b> Warm-up 5@50%, Set 1 6@85%, Set 2 6@85%. Major lifts add a 3rd (test) set: starts at 80%, moves to 85% next session once hit. Hit the test set at 85% → your 1RM goes up (+5 lb lower body, +2.5 lb upper body), test set resets to 80%.<br/><br/>
           <b>Major lifts:</b> Squat, Deadlift, BB Bench Press / JM Press, BB Overhead Press, Weighted Pull-up, Barbell Row, Hip Thrust, Lunge Carries.<br/><br/>
           <b>Hypertrophy — 1 min rest, drop set.</b> Sets 1–2 to failure at 6–8, Set 3 drop weight, 8–10 to failure. Hit sets 1–2 → next session reps move to 8–10 at same weight. Hit 8–10 → add weight, reset to 6–8.<br/><br/>
           <b>Mobility/Warm-up.</b> No weight tracked — just marked done for the day.
@@ -265,7 +265,7 @@
         card.className = 'grr-card ' + x.scheme;
         const schemeLabel = {main:'Major Lift', strength:'Strength', hypertrophy:'Hypertrophy', mobility:'Mobility'}[x.scheme];
         const badgeClass = x.scheme === 'main' ? 'main' : x.scheme === 'mobility' ? 'mobility' : '';
-        const tmLine = (x.scheme !== 'hypertrophy' && x.scheme !== 'mobility' && TM[x.id]) ? `<div class="grr-card-tm">TM: ${TM[x.id]} lb</div>` : '';
+        const tmLine = (x.scheme !== 'hypertrophy' && x.scheme !== 'mobility' && TM[x.id]) ? `<div class="grr-card-tm">1RM: ${TM[x.id]} lb</div>` : '';
         card.innerHTML = `
           <div class="grr-card-top">
             <div class="grr-card-name">${x.n}</div>
@@ -370,7 +370,7 @@
         ${x.scheme !== 'hypertrophy' ? `
         <div class="grr-tm-box">
           <div>
-            <label>Training Max</label>
+            <label>1RM</label>
             <div style="font-size:11px;color:var(--muted);margin-top:2px;">${x.scheme==='main' ? `Test set currently at ${tierState}%` : 'Rest 2–3 min between sets'}</div>
           </div>
           <input type="number" id="grr-tm-input" value="${tm || ''}" placeholder="e.g. 135"/>
@@ -439,7 +439,7 @@
             const inc = x.region === 'lower' ? 5 : 2.5;
             TM[x.id] = tm + inc; TIER[x.id] = '80';
             saveTM(); saveTier();
-            msg = `Saved. Test set hit at 85% — training max bumped to ${TM[x.id]} lb, test set resets to 80%.`;
+            msg = `Saved. Test set hit at 85% — 1RM bumped to ${TM[x.id]} lb, test set resets to 80%.`;
           }
         }
       } else if (x.scheme === 'strength' && tm) {
@@ -448,7 +448,7 @@
         if (testOK) {
           const inc = x.region === 'lower' ? 5 : 2.5;
           TM[x.id] = tm + inc; saveTM();
-          msg = `Saved. Both sets hit — training max bumped to ${TM[x.id]} lb.`;
+          msg = `Saved. Both sets hit — 1RM bumped to ${TM[x.id]} lb.`;
         }
       } else if (x.scheme === 'hypertrophy') {
         const mainHypIdx = targets.map((t,i)=>t.isMainHypSet?i:-1).filter(i=>i>=0);
