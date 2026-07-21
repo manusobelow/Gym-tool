@@ -333,6 +333,11 @@
         <div class="grr-chip grr-chip-all" data-pall="1">ALL</div>
         <div class="grr-chip grr-chip-all" data-pnone="1">NONE</div>
       </div>
+      ${state.muscle.size < ALL_MUSCLE_IDS.length ? `
+      <div style="margin:0 16px 10px;background:var(--brand);color:#fff;border-radius:6px;padding:8px 12px;font-size:12.5px;font-weight:700;display:flex;justify-content:space-between;align-items:center;">
+        <span>Targeting: ${[...state.muscle].map(m=>MUSCLE_LABELS[m]).join(', ')}</span>
+        <span id="grr-clear-muscle" style="cursor:pointer;text-decoration:underline;font-weight:800;">Clear</span>
+      </div>` : ''}
       <div class="grr-list" id="grr-list"></div>
       <div class="grr-collapse" id="grr-superset">
         <div class="grr-collapse-head">Superset pairing guide ▾</div>
@@ -364,6 +369,8 @@
     `;
 
     const eqRow = root.querySelector('#grr-equip-row');
+    const clearMuscleBtn = root.querySelector('#grr-clear-muscle');
+    if (clearMuscleBtn) clearMuscleBtn.onclick = () => setAllMuscle(true);
     EQUIP.forEach(e => {
       const chip = document.createElement('div');
       chip.className = 'grr-chip' + (state.equip.has(e) ? ' active' : '');
@@ -814,10 +821,10 @@
   // "goal hit" here rather than "caution."
   function setsEquivalent(points) { return points / 3; }
   function colorForScore(n) {
-    if (!n) return '#3a3a3a';
+    if (!n) return '#e0b3a0'; // untrained — light flesh tone
     const se = setsEquivalent(n);
-    if (se < 8) return '#d9a441';
-    if (se < 15) return '#e2793a';
+    if (se < 8) return '#eb9a3d';
+    if (se < 15) return '#e2692f';
     return '#c8362a';
   }
 
@@ -829,34 +836,21 @@
         <div class="grr-detail-meta" id="grr-muscle-meta">Loading…</div>
         <div id="grr-muscle-svg-wrap" style="background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:14px;"></div>
         <div class="grr-timer-presets" style="justify-content:flex-start;margin-bottom:6px;">
-          <span class="grr-timer-chip" style="background:#3a3a3a;cursor:default;">0 sets</span>
-          <span class="grr-timer-chip" style="background:#d9a441;color:#1a1a1a;cursor:default;">&lt; 8 (low)</span>
-          <span class="grr-timer-chip" style="background:#e2793a;color:#1a1a1a;cursor:default;">8–14 (medium)</span>
+          <span class="grr-timer-chip" style="background:#e0b3a0;color:#1a1a1a;cursor:default;">0 sets</span>
+          <span class="grr-timer-chip" style="background:#eb9a3d;color:#1a1a1a;cursor:default;">&lt; 8 (low)</span>
+          <span class="grr-timer-chip" style="background:#e2692f;color:#fff;cursor:default;">8–14 (medium)</span>
           <span class="grr-timer-chip" style="background:#c8362a;color:#fff;cursor:default;">15+ (optimal)</span>
         </div>
         <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Sets-equivalent per muscle over your last 3 sessions, calibrated to Schoenfeld et al.'s hypertrophy dose-response research. "Set" = primary-mover credit; secondary/tertiary involvement counts as partial credit.</div>
         <div class="grr-section-label" style="padding-left:0;">All muscle tallies (last 3 sessions)</div>
         <div style="font-size:11px;color:var(--muted);padding:0 0 6px;">If a number here is &gt;0 but its region stayed gray above, that muscle's SVG id guess was wrong — tell me the real one and I'll fix just that line.</div>
         <div id="grr-muscle-extra" style="font-size:12.5px;color:var(--muted);line-height:1.7;"></div>
-        <div class="grr-section-label" style="padding-left:0;">Filter which muscles show on the diagram</div>
-        <div class="grr-equip-row" id="grr-muscle-row" style="padding:0 0 4px;">
-          <div class="grr-chip grr-chip-all" data-mall="1">ALL</div>
-          <div class="grr-chip grr-chip-all" data-mnone="1">NONE</div>
-        </div>
+        <div class="grr-section-label" style="padding-left:0;">Tap a muscle to find exercises for it</div>
+        <div style="font-size:11px;color:var(--muted);padding:0 0 6px;">Jumps straight to the exercise list, filtered to just that muscle — log something, then come back to see this update.</div>
+        <div class="grr-equip-row" id="grr-muscle-row" style="padding:0 0 4px;"></div>
       </div>
     `;
     root.querySelector('#grr-back').onclick = () => { state.view = 'list'; render(); };
-
-    const muscleRow = root.querySelector('#grr-muscle-row');
-    ALL_MUSCLE_IDS.forEach(m => {
-      const chip = document.createElement('div');
-      chip.className = 'grr-chip' + (state.muscle.has(m) ? ' active' : '');
-      chip.textContent = MUSCLE_LABELS[m];
-      chip.onclick = () => toggleMuscle(m);
-      muscleRow.appendChild(chip);
-    });
-    muscleRow.querySelector('[data-mall]').onclick = () => setAllMuscle(true);
-    muscleRow.querySelector('[data-mnone]').onclick = () => setAllMuscle(false);
 
     const dates = last3SessionDates();
     root.querySelector('#grr-muscle-meta').textContent = dates.length
@@ -870,6 +864,22 @@
       .sort((a,b) => (tally[b]||0) - (tally[a]||0))
       .map(id => `${MUSCLE_LABELS[id]}: ${setsEquivalent(tally[id] || 0).toFixed(1)} sets`);
     extraWrap.innerHTML = extraLines.join(' · ') || 'None';
+
+    // muscle chips sorted lowest-trained first, colored to match their own status —
+    // makes the undertrained ones (the ones worth tapping) easy to spot at a glance
+    const muscleRow = root.querySelector('#grr-muscle-row');
+    Object.keys(MUSCLE_LABELS)
+      .sort((a,b) => (tally[a]||0) - (tally[b]||0))
+      .forEach(m => {
+        const chip = document.createElement('div');
+        chip.className = 'grr-chip';
+        chip.style.background = colorForScore(tally[m] || 0);
+        chip.style.color = (tally[m]||0) === 0 ? '#1a1a1a' : '#fff';
+        chip.style.border = 'none';
+        chip.textContent = MUSCLE_LABELS[m];
+        chip.onclick = () => { state.muscle = new Set([m]); saveMuscle(); state.view = 'list'; render(); };
+        muscleRow.appendChild(chip);
+      });
 
     const wrap = root.querySelector('#grr-muscle-svg-wrap');
     try {
@@ -893,7 +903,7 @@
         const el = findMuscleEl(wrap, spec);
         if (el) {
           matchedCount++;
-          el.style.fill = state.muscle.has(muscleId) ? colorForScore(tally[muscleId] || 0) : '#2a2a2a';
+          el.style.fill = colorForScore(tally[muscleId] || 0);
           el.style.fillOpacity = '1';
         }
       });
