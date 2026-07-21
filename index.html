@@ -148,6 +148,14 @@
     const wd = d.toLocaleDateString(undefined, {weekday:'short'});
     return `${wd} ${iso}`;
   }
+  function todayLocal() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
+  }
+  function newLogId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
 
   // ---------- REST TIMER ----------
   let TIMER = { seconds: 120, total: 120, running: false, handle: null, exId: null };
@@ -229,7 +237,7 @@
   }
 
   // ---------- STATE ----------
-  let state = { equip: new Set(EQUIP), pattern: new Set(PATTERNS), view: 'list', activeId: null, saveMsg: '' };
+  let state = { equip: new Set(EQUIP), pattern: new Set(PATTERNS), view: 'list', activeId: null, saveMsg: '', logFilter: '' };
   let TM = {};
   let TIER = {};
   let HYP = {};
@@ -246,6 +254,12 @@
       else if (HYP[id].tier === '8-10') HYP[id].tier = 10;
     });
     try { const v = JSON.parse(localStorage.getItem('gym-logs')); if (v) LOGS = v; } catch(e){}
+    Object.keys(LOGS).forEach(exId => {
+      (LOGS[exId] || []).forEach((e, i) => {
+        if (!e.exId) e.exId = exId;
+        if (!e.logId) e.logId = exId + '-' + i;
+      });
+    });
     render();
   }
   function saveEquip() { try { localStorage.setItem('gym-ref-equip', JSON.stringify([...state.equip])); } catch(e){} }
@@ -254,6 +268,11 @@
   function saveTier() { try { localStorage.setItem('gym-tier', JSON.stringify(TIER)); } catch(e){} }
   function saveHyp() { try { localStorage.setItem('gym-hyp', JSON.stringify(HYP)); } catch(e){} }
   function saveLogs() { try { localStorage.setItem('gym-logs', JSON.stringify(LOGS)); } catch(e){} }
+  function deleteLogEntry(exId, logId) {
+    if (!LOGS[exId]) return;
+    LOGS[exId] = LOGS[exId].filter(e => e.logId !== logId);
+    saveLogs();
+  }
 
   function toggleEquip(e) { state.equip.has(e) ? state.equip.delete(e) : state.equip.add(e); saveEquip(); render(); }
   function setAllEquip(on) { state.equip = on ? new Set(EQUIP) : new Set(); saveEquip(); render(); }
@@ -407,7 +426,7 @@
     `;
     root.querySelector('#grr-back').onclick = () => { state.view = 'list'; render(); };
     root.querySelector('#grr-save').onclick = () => {
-      const entry = {date: new Date().toISOString().slice(0,10), exercise: x.n, pattern: x.p, sets:[{target:'Done', weight:null, reps:null, success:true}], allSuccess:true, tmAction:'none'};
+      const entry = {date: todayLocal(), exercise: x.n, pattern: x.p, exId: x.id, logId: newLogId(), sets:[{target:'Done', weight:null, reps:null, success:true}], allSuccess:true, tmAction:'none'};
       if (!LOGS[x.id]) LOGS[x.id] = [];
       LOGS[x.id].push(entry);
       saveLogs();
@@ -567,7 +586,7 @@
         }
       }
 
-      const entry = {date: new Date().toISOString().slice(0,10), exercise: x.n, pattern: x.p, sets, allSuccess: sets.every(s=>s.success), tmAction: msg.includes('bumped') ? 'increase' : 'none'};
+      const entry = {date: todayLocal(), exercise: x.n, pattern: x.p, exId: x.id, logId: newLogId(), sets, allSuccess: sets.every(s=>s.success), tmAction: msg.includes('bumped') ? 'increase' : 'none'};
       if (!LOGS[x.id]) LOGS[x.id] = [];
       LOGS[x.id].push(entry);
       saveLogs();
@@ -601,32 +620,67 @@
 
   function renderLog() {
     const allEntries = Object.values(LOGS).flat().sort((a,b) => b.date.localeCompare(a.date));
+
     root.innerHTML = `
       <div class="grr-detail">
         <span class="grr-back" id="grr-back">← Back to list</span>
         <div class="grr-detail-name">Log &amp; Export</div>
         <div class="grr-detail-meta">${allEntries.length} sessions logged</div>
-        <button class="grr-export-btn" id="grr-download">Download CSV</button>
+        <input type="text" id="grr-log-filter" placeholder="Filter by exercise name…" value="${state.logFilter}"
+          style="width:100%;background:var(--surface);border:1px solid var(--line);color:var(--chalk);font-size:14px;padding:9px 10px;border-radius:6px;margin-bottom:10px;box-sizing:border-box;"/>
+        <button class="grr-export-btn" id="grr-download">Download CSV (all)</button>
         <button class="grr-copy-btn" id="grr-copy">Copy CSV to clipboard</button>
         <div class="grr-save-msg" id="grr-log-msg"></div>
         <div id="grr-entries"></div>
       </div>
     `;
     root.querySelector('#grr-back').onclick = () => { state.view = 'list'; render(); };
-    const container = root.querySelector('#grr-entries');
-    if (!allEntries.length) {
-      container.innerHTML = `<div class="grr-empty">No sessions logged yet — log a set from any exercise page.</div>`;
-    } else {
-      allEntries.forEach(e => {
+
+    function currentFiltered() {
+      const filterText = state.logFilter.trim().toLowerCase();
+      return filterText ? allEntries.filter(e => e.exercise.toLowerCase().includes(filterText)) : allEntries;
+    }
+
+    function refreshEntries() {
+      const filterText = state.logFilter.trim().toLowerCase();
+      const filtered = currentFiltered();
+      root.querySelector('#grr-copy').textContent = filterText
+        ? `Copy CSV to clipboard (${filtered.length} matching)`
+        : `Copy CSV to clipboard (all ${allEntries.length})`;
+
+      const container = root.querySelector('#grr-entries');
+      container.innerHTML = '';
+      if (!filtered.length) {
+        container.innerHTML = `<div class="grr-empty">${allEntries.length ? 'No sessions match that filter.' : 'No sessions logged yet — log a set from any exercise page.'}</div>`;
+        return;
+      }
+      filtered.forEach(e => {
         const div = document.createElement('div');
         div.className = 'grr-log-entry';
         div.innerHTML = `
-          <div class="grr-log-entry-top"><span>${e.exercise}</span><span>${friendlyDate(e.date)}</span></div>
+          <div class="grr-log-entry-top">
+            <span>${e.exercise}</span>
+            <span style="display:flex;align-items:center;gap:8px;">${friendlyDate(e.date)} <span class="grr-log-delete" data-exid="${e.exId||''}" data-logid="${e.logId||''}" style="cursor:pointer;color:var(--red);font-weight:800;">✕</span></span>
+          </div>
           <div class="grr-log-entry-meta">${e.pattern} · ${e.sets.map(s=>s.success?'✅':'❌').join('')} ${e.tmAction==='increase' ? '· TM increased' : ''}</div>
         `;
         container.appendChild(div);
       });
+      container.querySelectorAll('.grr-log-delete').forEach(btn => {
+        btn.onclick = () => {
+          const exId = btn.dataset.exid, logId = btn.dataset.logid;
+          if (!exId || !logId) { root.querySelector('#grr-log-msg').textContent = "Can't delete this entry (older format)."; return; }
+          if (confirm('Delete this logged session? This cannot be undone.')) {
+            deleteLogEntry(exId, logId);
+            state.view = 'log'; render();
+          }
+        };
+      });
     }
+
+    root.querySelector('#grr-log-filter').oninput = (e) => { state.logFilter = e.target.value; refreshEntries(); };
+    refreshEntries();
+
     root.querySelector('#grr-download').onclick = () => {
       try {
         const blob = new Blob([toCSV(allEntries)], {type:'text/csv'});
@@ -635,15 +689,19 @@
         a.href = url; a.download = 'gym-log.csv';
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        root.querySelector('#grr-log-msg').textContent = 'Downloaded.';
+        root.querySelector('#grr-log-msg').textContent = 'Downloaded full history.';
       } catch (err) {
         root.querySelector('#grr-log-msg').textContent = 'Download blocked here — try Copy instead.';
       }
     };
     root.querySelector('#grr-copy').onclick = async () => {
+      const filtered = currentFiltered();
+      const filterText = state.logFilter.trim();
       try {
-        await navigator.clipboard.writeText(toCSV(allEntries));
-        root.querySelector('#grr-log-msg').textContent = 'Copied — paste into a Sheet or Notes.';
+        await navigator.clipboard.writeText(toCSV(filtered));
+        root.querySelector('#grr-log-msg').textContent = filterText
+          ? `Copied ${filtered.length} session(s) for "${filterText}".`
+          : 'Copied everything — paste into a Sheet or Notes.';
       } catch (err) {
         root.querySelector('#grr-log-msg').textContent = 'Copy failed in this browser.';
       }
