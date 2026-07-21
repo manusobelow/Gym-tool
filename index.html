@@ -333,11 +333,6 @@
         <div class="grr-chip grr-chip-all" data-pall="1">ALL</div>
         <div class="grr-chip grr-chip-all" data-pnone="1">NONE</div>
       </div>
-      <div class="grr-section-label">Muscle group</div>
-      <div class="grr-equip-row" id="grr-muscle-row">
-        <div class="grr-chip grr-chip-all" data-mall="1">ALL</div>
-        <div class="grr-chip grr-chip-all" data-mnone="1">NONE</div>
-      </div>
       <div class="grr-list" id="grr-list"></div>
       <div class="grr-collapse" id="grr-superset">
         <div class="grr-collapse-head">Superset pairing guide ▾</div>
@@ -389,17 +384,6 @@
     });
     patRow.querySelector('[data-pall]').onclick = () => setAllPatterns(true);
     patRow.querySelector('[data-pnone]').onclick = () => setAllPatterns(false);
-
-    const muscleRow = root.querySelector('#grr-muscle-row');
-    ALL_MUSCLE_IDS.forEach(m => {
-      const chip = document.createElement('div');
-      chip.className = 'grr-chip' + (state.muscle.has(m) ? ' active' : '');
-      chip.textContent = MUSCLE_LABELS[m];
-      chip.onclick = () => toggleMuscle(m);
-      muscleRow.appendChild(chip);
-    });
-    muscleRow.querySelector('[data-mall]').onclick = () => setAllMuscle(true);
-    muscleRow.querySelector('[data-mnone]').onclick = () => setAllMuscle(false);
 
     const list = root.querySelector('#grr-list');
     list.innerHTML = '';
@@ -813,18 +797,16 @@
   }
 
   // Color zones are calibrated to real hypertrophy-volume research (Schoenfeld et al. 2017 dose-response
-  // meta-analysis; RP volume landmarks): under ~8 sets/muscle/week = below the minimum effective range;
-  // 8–20 sets/week = the well-supported optimal range for most trained lifters; 20+ = past where most
-  // research shows reliably added benefit, with rising fatigue cost. A "set" here means a set where that
-  // muscle is the PRIMARY mover (weight 3) — secondary/tertiary involvement (weight 2/1) counts as partial
-  // credit, matching how lifters informally count "direct vs indirect" volume. Since our points scale
-  // maxes at 3 per set, points ÷ 3 ≈ sets-equivalent.
+  // meta-analysis; RP volume landmarks). A "set" here means a set where that muscle is the PRIMARY mover
+  // (weight 3) — secondary/tertiary involvement (weight 2/1) counts as partial credit. Points ÷ 3 ≈ sets-equivalent.
+  // Red = optimal (the well-supported 15-20+ zone), not "too much" — this is a deliberate choice: red reads as
+  // "goal hit" here rather than "caution."
   function setsEquivalent(points) { return points / 3; }
   function colorForScore(n) {
     if (!n) return '#3a3a3a';
     const se = setsEquivalent(n);
     if (se < 8) return '#d9a441';
-    if (se <= 20) return '#e2793a';
+    if (se < 15) return '#e2793a';
     return '#c8362a';
   }
 
@@ -837,17 +819,33 @@
         <div id="grr-muscle-svg-wrap" style="background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:14px;"></div>
         <div class="grr-timer-presets" style="justify-content:flex-start;margin-bottom:6px;">
           <span class="grr-timer-chip" style="background:#3a3a3a;cursor:default;">0 sets</span>
-          <span class="grr-timer-chip" style="background:#d9a441;color:#1a1a1a;cursor:default;">&lt; 8 (under target)</span>
-          <span class="grr-timer-chip" style="background:#e2793a;color:#1a1a1a;cursor:default;">8–20 (optimal)</span>
-          <span class="grr-timer-chip" style="background:#c8362a;color:#fff;cursor:default;">20+ (very high)</span>
+          <span class="grr-timer-chip" style="background:#d9a441;color:#1a1a1a;cursor:default;">&lt; 8 (low)</span>
+          <span class="grr-timer-chip" style="background:#e2793a;color:#1a1a1a;cursor:default;">8–14 (medium)</span>
+          <span class="grr-timer-chip" style="background:#c8362a;color:#fff;cursor:default;">15+ (optimal)</span>
         </div>
         <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Sets-equivalent per muscle over your last 3 sessions, calibrated to Schoenfeld et al.'s hypertrophy dose-response research. "Set" = primary-mover credit; secondary/tertiary involvement counts as partial credit.</div>
         <div class="grr-section-label" style="padding-left:0;">All muscle tallies (last 3 sessions)</div>
         <div style="font-size:11px;color:var(--muted);padding:0 0 6px;">If a number here is &gt;0 but its region stayed gray above, that muscle's SVG id guess was wrong — tell me the real one and I'll fix just that line.</div>
         <div id="grr-muscle-extra" style="font-size:12.5px;color:var(--muted);line-height:1.7;"></div>
+        <div class="grr-section-label" style="padding-left:0;">Filter which muscles show on the diagram</div>
+        <div class="grr-equip-row" id="grr-muscle-row" style="padding:0 0 4px;">
+          <div class="grr-chip grr-chip-all" data-mall="1">ALL</div>
+          <div class="grr-chip grr-chip-all" data-mnone="1">NONE</div>
+        </div>
       </div>
     `;
     root.querySelector('#grr-back').onclick = () => { state.view = 'list'; render(); };
+
+    const muscleRow = root.querySelector('#grr-muscle-row');
+    ALL_MUSCLE_IDS.forEach(m => {
+      const chip = document.createElement('div');
+      chip.className = 'grr-chip' + (state.muscle.has(m) ? ' active' : '');
+      chip.textContent = MUSCLE_LABELS[m];
+      chip.onclick = () => toggleMuscle(m);
+      muscleRow.appendChild(chip);
+    });
+    muscleRow.querySelector('[data-mall]').onclick = () => setAllMuscle(true);
+    muscleRow.querySelector('[data-mnone]').onclick = () => setAllMuscle(false);
 
     const dates = last3SessionDates();
     root.querySelector('#grr-muscle-meta').textContent = dates.length
@@ -882,7 +880,7 @@
       Object.entries(MUSCLE_TO_SVG).forEach(([muscleId, svgId]) => {
         const el = wrap.querySelector('#' + CSS.escape(svgId));
         if (el) {
-          el.style.fill = colorForScore(tally[muscleId] || 0);
+          el.style.fill = state.muscle.has(muscleId) ? colorForScore(tally[muscleId] || 0) : '#2a2a2a';
           el.style.fillOpacity = '1';
         }
       });
