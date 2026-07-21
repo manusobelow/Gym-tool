@@ -118,7 +118,7 @@
     'calves':'Calves','quads':'Quads','glute-max':'Glute Max','glute-med':'Glute Med','chest':'Chest',
     'neck':'Neck','forearms':'Forearms','biceps':'Biceps','obliques':'Obliques','front-delts':'Front Delts',
     'triceps':'Triceps','spinal-erectors':'Spinal Erectors','upper-traps':'Upper Traps','lats':'Lats',
-    'teres-major':'Teres Major','rhomboids':'Rhomboids',
+    'teres-major':'Teres Major','rhomboids':'Rhomboids','rotator-cuff':'Rotator Cuff',
   };
   const ALL_MUSCLE_IDS = Object.keys(MUSCLE_LABELS);
   const PAIR_MAP = {"Push Horizontal":"Pull Horizontal","Pull Horizontal":"Push Horizontal","Push Vertical":"Pull Vertical","Pull Vertical":"Push Vertical"};
@@ -771,6 +771,7 @@
     'lats': {id: 'Lats'},
     'teres-major': {id: 'Teres_Major'},
     'rhomboids': {id: 'Rhomboids'},
+    'rotator-cuff': {label: 'Rotator Cuff'},
   };
   function findMuscleEl(root, spec) {
     if (spec.id) return root.querySelector('#' + CSS.escape(spec.id));

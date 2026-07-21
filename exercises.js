@@ -2,7 +2,7 @@
 // Edit this file to add/remove/change exercises. Re-upload just this file to GitHub — no need to touch index.html.
 // Fields: id (unique), n (name), p (movement pattern), scheme (main|strength|hypertrophy|mobility),
 // eq (equipment array), m (muscle text, display label), region (lower|upper), gif (image URL, optional), notes (optional),
-// muscles (weighted body-map targets: [{id, w}], w=3 primary/2 secondary/1 tertiary, id matches the 28-muscle SVG taxonomy)
+// muscles (weighted body-map targets: [{id, w}], w=3 primary/2 secondary/1 tertiary, id matches the muscle SVG taxonomy)
 const EXERCISES = [
   {
     "id": "AB_WHEEL_KNEE",
@@ -118,11 +118,11 @@ const EXERCISES = [
     "notes": "Standing band ER; elbow fixed, rotate from shoulder only.",
     "muscles": [
       {
-        "id": "rear-delts",
-        "w": 2
+        "id": "rotator-cuff",
+        "w": 3
       },
       {
-        "id": "teres-major",
+        "id": "rear-delts",
         "w": 1
       }
     ]
@@ -1078,7 +1078,7 @@ const EXERCISES = [
         "w": 3
       },
       {
-        "id": "teres-major",
+        "id": "rotator-cuff",
         "w": 2
       },
       {
@@ -2634,11 +2634,11 @@ const EXERCISES = [
     "notes": "Side-lying cuff work; slow tempo, no cheating from torso.",
     "muscles": [
       {
-        "id": "rear-delts",
-        "w": 2
+        "id": "rotator-cuff",
+        "w": 3
       },
       {
-        "id": "teres-major",
+        "id": "rear-delts",
         "w": 1
       }
     ]
