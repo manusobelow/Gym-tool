@@ -1,7 +1,8 @@
 // Gym Reference — exercise data
 // Edit this file to add/remove/change exercises. Re-upload just this file to GitHub — no need to touch index.html.
 // Fields: id (unique), n (name), p (movement pattern), scheme (main|strength|hypertrophy|mobility),
-// eq (equipment array), m (muscle text), region (lower|upper — sizes training-max increments), gif (image URL, optional), notes (optional)
+// eq (equipment array), m (muscle text, display label), region (lower|upper), gif (image URL, optional), notes (optional),
+// muscles (weighted body-map targets: [{id, w}], w=3 primary/2 secondary/1 tertiary, id matches the 28-muscle SVG taxonomy)
 const EXERCISES = [
   {
     "id": "AB_WHEEL_KNEE",
@@ -14,19 +15,22 @@ const EXERCISES = [
     "m": "Abs / Lats",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/05/kneeling-ab-wheel.gif?resize=600%2C600&ssl=1",
-    "notes": "Roll out to strong brace; no low-back sag, smooth return."
+    "notes": "Roll out to strong brace; no low-back sag, smooth return.",
+    "muscles": [
+      {
+        "id": "abs",
+        "w": 3
+      },
+      {
+        "id": "obliques",
+        "w": 2
+      },
+      {
+        "id": "lats",
+        "w": 1
+      }
+    ]
   },
-  {
-  "id": "AB_CRUNCH",
-  "n": "Basic Ab Crunch",
-  "p": "Core / Carry",
-  "scheme": "hypertrophy",
-  "eq": ["bodyweight"],
-  "m": "Abs / Obliques",
-  "region": "upper",
-  "gif": "",
-  "notes": "Feet flat or knees bent, curl shoulders off the floor, don't pull with your neck."
-},
   {
     "id": "ASSISTED_GLUTE_PRESSDOWN",
     "n": "Machine Glute Pressdown (Single-Leg)",
@@ -38,7 +42,17 @@ const EXERCISES = [
     "m": "Glute Max / Hamstrings",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2025/04/single-leg-glute-push-down.gif?resize=700%2C700&ssl=1",
-    "notes": "Per leg. Use the knee pad/lever to press down; slight forward hinge; squeeze glute hard at bottom."
+    "notes": "Per leg. Use the knee pad/lever to press down; slight forward hinge; squeeze glute hard at bottom.",
+    "muscles": [
+      {
+        "id": "glute-max",
+        "w": 3
+      },
+      {
+        "id": "hamstrings",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "ATG_SPLIT_SQUAT_MOB",
@@ -51,7 +65,17 @@ const EXERCISES = [
     "m": "Quads / Hip Flexors",
     "region": "upper",
     "gif": "",
-    "notes": "~6 reps per side (use elevation if needed)."
+    "notes": "~6 reps per side (use elevation if needed).",
+    "muscles": [
+      {
+        "id": "quads",
+        "w": 2
+      },
+      {
+        "id": "hip-flexors",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "BACK_EXT_45",
@@ -64,7 +88,21 @@ const EXERCISES = [
     "m": "Spinal Erectors / Glute Max",
     "region": "lower",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/05/back-extension-frontloaded.gif?resize=600%2C600&ssl=1",
-    "notes": "Neutral spine; control down, extend to neutral (no hyperextension)."
+    "notes": "Neutral spine; control down, extend to neutral (no hyperextension).",
+    "muscles": [
+      {
+        "id": "spinal-erectors",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "hamstrings",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "BAND_ER",
@@ -77,7 +115,17 @@ const EXERCISES = [
     "m": "Rotator Cuff / Rear Delts",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/12/Band-shoulder-external-rotation.gif?resize=600%2C600&ssl=1",
-    "notes": "Standing band ER; elbow fixed, rotate from shoulder only."
+    "notes": "Standing band ER; elbow fixed, rotate from shoulder only.",
+    "muscles": [
+      {
+        "id": "rear-delts",
+        "w": 2
+      },
+      {
+        "id": "teres-major",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "BAND_FP",
@@ -90,7 +138,21 @@ const EXERCISES = [
     "m": "Rear Delts / Upper Back",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/05/face-pull.gif?resize=600%2C600&ssl=1",
-    "notes": "Elbows high."
+    "notes": "Elbows high.",
+    "muscles": [
+      {
+        "id": "rear-delts",
+        "w": 3
+      },
+      {
+        "id": "rhomboids",
+        "w": 2
+      },
+      {
+        "id": "upper-back",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "BAND_PA",
@@ -103,7 +165,17 @@ const EXERCISES = [
     "m": "Upper Back / Rear Delts",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/04/Band-Pull-Apart.gif?resize=600%2C600&ssl=1",
-    "notes": "Smooth reps."
+    "notes": "Smooth reps.",
+    "muscles": [
+      {
+        "id": "upper-back",
+        "w": 2
+      },
+      {
+        "id": "rear-delts",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "BB_BACK_SQUAT",
@@ -116,7 +188,21 @@ const EXERCISES = [
     "m": "Quads / Glute Max",
     "region": "lower",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2021/11/squat.gif?resize=600%2C600&ssl=1",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "quads",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "adductors",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "BB_BENCH_INCLINE",
@@ -129,7 +215,21 @@ const EXERCISES = [
     "m": "Chest / Front Delts",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "chest",
+        "w": 3
+      },
+      {
+        "id": "front-delts",
+        "w": 2
+      },
+      {
+        "id": "triceps",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "BB_BENCH_PRESS",
@@ -142,7 +242,21 @@ const EXERCISES = [
     "m": "Chest / Triceps",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2021/09/bench-press.gif?resize=600%2C600&ssl=1",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "chest",
+        "w": 3
+      },
+      {
+        "id": "triceps",
+        "w": 2
+      },
+      {
+        "id": "front-delts",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "BB_DEADLIFT",
@@ -155,7 +269,21 @@ const EXERCISES = [
     "m": "Hamstrings / Glute Max",
     "region": "lower",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "hamstrings",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "spinal-erectors",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "BB_FRONT_SQUAT",
@@ -168,7 +296,21 @@ const EXERCISES = [
     "m": "Quads / Glute Max",
     "region": "lower",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "quads",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "adductors",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "BB_GOOD_MORNING",
@@ -181,7 +323,21 @@ const EXERCISES = [
     "m": "Hamstrings / Spinal Erectors",
     "region": "lower",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "hamstrings",
+        "w": 3
+      },
+      {
+        "id": "spinal-erectors",
+        "w": 2
+      },
+      {
+        "id": "glute-max",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "BB_HIP_THRUST",
@@ -194,7 +350,21 @@ const EXERCISES = [
     "m": "Glute Max / Hamstrings",
     "region": "lower",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "glute-max",
+        "w": 3
+      },
+      {
+        "id": "hamstrings",
+        "w": 2
+      },
+      {
+        "id": "adductors",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "BB_LUNGE",
@@ -207,7 +377,21 @@ const EXERCISES = [
     "m": "Glute Max / Quads",
     "region": "lower",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "quads",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "adductors",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "BB_OHP",
@@ -220,7 +404,21 @@ const EXERCISES = [
     "m": "Front Delts / Triceps",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "front-delts",
+        "w": 3
+      },
+      {
+        "id": "triceps",
+        "w": 2
+      },
+      {
+        "id": "upper-traps",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "BB_RDL",
@@ -233,7 +431,21 @@ const EXERCISES = [
     "m": "Hamstrings / Glute Max",
     "region": "lower",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "hamstrings",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "spinal-erectors",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "BB_ROW",
@@ -246,7 +458,21 @@ const EXERCISES = [
     "m": "Upper Back / Biceps",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "lats",
+        "w": 3
+      },
+      {
+        "id": "rhomboids",
+        "w": 2
+      },
+      {
+        "id": "biceps",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "BREATH_360",
@@ -259,7 +485,17 @@ const EXERCISES = [
     "m": "Transverse Abdominis / Abs",
     "region": "upper",
     "gif": "",
-    "notes": "Count = breaths."
+    "notes": "Count = breaths.",
+    "muscles": [
+      {
+        "id": "transverse-abdominal",
+        "w": 2
+      },
+      {
+        "id": "abs",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "CABLE_BICEPS_CURL",
@@ -272,7 +508,17 @@ const EXERCISES = [
     "m": "Biceps / Forearms",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "biceps",
+        "w": 3
+      },
+      {
+        "id": "forearms",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "CABLE_CHEST_PRESS",
@@ -285,7 +531,21 @@ const EXERCISES = [
     "m": "Chest / Triceps",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/03/cable-chest-press.gif?resize=600%2C600&ssl=1",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "chest",
+        "w": 3
+      },
+      {
+        "id": "triceps",
+        "w": 2
+      },
+      {
+        "id": "front-delts",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "CABLE_CRUNCH",
@@ -298,7 +558,17 @@ const EXERCISES = [
     "m": "Abs / Hip Flexors",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "abs",
+        "w": 3
+      },
+      {
+        "id": "hip-flexors",
+        "w": 2
+      }
+    ]
   },
   {
     "id": "CABLE_CRUNCH_KNEEL",
@@ -311,7 +581,17 @@ const EXERCISES = [
     "m": "Abs / Hip Flexors",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/03/cable-crunch.gif?resize=600%2C600&ssl=1",
-    "notes": "Ribs to pelvis; don't just pull with arms, controlled spinal flexion."
+    "notes": "Ribs to pelvis; don't just pull with arms, controlled spinal flexion.",
+    "muscles": [
+      {
+        "id": "abs",
+        "w": 3
+      },
+      {
+        "id": "hip-flexors",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "CABLE_FLY_HIGH2LOW",
@@ -324,7 +604,17 @@ const EXERCISES = [
     "m": "Chest / Front Delts",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "chest",
+        "w": 3
+      },
+      {
+        "id": "front-delts",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "CABLE_LAT_PRAYER",
@@ -337,7 +627,17 @@ const EXERCISES = [
     "m": "Lats / Upper Back",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "lats",
+        "w": 3
+      },
+      {
+        "id": "teres-major",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "CABLE_LATERAL_RAISE",
@@ -350,7 +650,17 @@ const EXERCISES = [
     "m": "Side Delts / Upper Traps",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "side-delts",
+        "w": 3
+      },
+      {
+        "id": "upper-traps",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "CABLE_ROW_1ARM",
@@ -363,7 +673,21 @@ const EXERCISES = [
     "m": "Upper Back / Biceps",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "lats",
+        "w": 3
+      },
+      {
+        "id": "rhomboids",
+        "w": 2
+      },
+      {
+        "id": "biceps",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "CALF_1LEG",
@@ -376,7 +700,17 @@ const EXERCISES = [
     "m": "Calves / Tibialis Anterior",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/03/calf-raise-standing.gif?resize=600%2C600&ssl=1",
-    "notes": "Per leg. Full ROM."
+    "notes": "Per leg. Full ROM.",
+    "muscles": [
+      {
+        "id": "calves",
+        "w": 3
+      },
+      {
+        "id": "tibialis-anterior",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "CALF_RAISE_MACHINE_STAND",
@@ -389,7 +723,17 @@ const EXERCISES = [
     "m": "Calves / Tibialis Anterior",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/03/calf-raise-standing.gif?resize=600%2C600&ssl=1",
-    "notes": "Full ROM. Big toe pressure; slow eccentric; brief pause at stretch."
+    "notes": "Full ROM. Big toe pressure; slow eccentric; brief pause at stretch.",
+    "muscles": [
+      {
+        "id": "calves",
+        "w": 3
+      },
+      {
+        "id": "tibialis-anterior",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "CAT_COW",
@@ -402,7 +746,17 @@ const EXERCISES = [
     "m": "Spinal Erectors / Transverse Abdominis",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2025/09/cat-cow.gif?resize=700%2C700&ssl=1",
-    "notes": "Spine & rib prep."
+    "notes": "Spine & rib prep.",
+    "muscles": [
+      {
+        "id": "spinal-erectors",
+        "w": 2
+      },
+      {
+        "id": "transverse-abdominal",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "CHEST_PRESS_MACHINE",
@@ -415,7 +769,21 @@ const EXERCISES = [
     "m": "Chest / Triceps",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "chest",
+        "w": 3
+      },
+      {
+        "id": "triceps",
+        "w": 2
+      },
+      {
+        "id": "front-delts",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "CHINUP",
@@ -428,7 +796,21 @@ const EXERCISES = [
     "m": "Lats / Biceps",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "lats",
+        "w": 3
+      },
+      {
+        "id": "biceps",
+        "w": 2
+      },
+      {
+        "id": "teres-major",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "CLAMSHELL",
@@ -441,7 +823,17 @@ const EXERCISES = [
     "m": "Glute Med / Glute Max",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2024/01/clamshell.gif?resize=600%2C600&ssl=1",
-    "notes": "Per side. Left first."
+    "notes": "Per side. Left first.",
+    "muscles": [
+      {
+        "id": "glute-med",
+        "w": 2
+      },
+      {
+        "id": "glute-max",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "COBRA_DN_DOG",
@@ -454,7 +846,17 @@ const EXERCISES = [
     "m": "Spinal Erectors / Hamstrings",
     "region": "upper",
     "gif": "",
-    "notes": "~6-8 reps (scale ROM as needed)."
+    "notes": "~6-8 reps (scale ROM as needed).",
+    "muscles": [
+      {
+        "id": "spinal-erectors",
+        "w": 2
+      },
+      {
+        "id": "hamstrings",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "COSSACK",
@@ -467,7 +869,21 @@ const EXERCISES = [
     "m": "Adductors / Glute Max",
     "region": "lower",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2024/10/cossack-squat.gif?resize=600%2C600&ssl=1",
-    "notes": "Mobility + adductors."
+    "notes": "Mobility + adductors.",
+    "muscles": [
+      {
+        "id": "adductors",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "quads",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "DB_BENCH_FLAT",
@@ -480,7 +896,21 @@ const EXERCISES = [
     "m": "Chest / Triceps",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "chest",
+        "w": 3
+      },
+      {
+        "id": "triceps",
+        "w": 2
+      },
+      {
+        "id": "front-delts",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "DB_BENCH_INCLINE",
@@ -493,7 +923,21 @@ const EXERCISES = [
     "m": "Chest / Front Delts",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "chest",
+        "w": 3
+      },
+      {
+        "id": "front-delts",
+        "w": 2
+      },
+      {
+        "id": "triceps",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "DB_CURL",
@@ -506,7 +950,17 @@ const EXERCISES = [
     "m": "Biceps / Forearms",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/02/Hantelcurl.gif?resize=600%2C600&ssl=1",
-    "notes": "Superset-friendly."
+    "notes": "Superset-friendly.",
+    "muscles": [
+      {
+        "id": "biceps",
+        "w": 3
+      },
+      {
+        "id": "forearms",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "DB_FLOOR_PRESS",
@@ -519,7 +973,21 @@ const EXERCISES = [
     "m": "Chest / Triceps",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2022/09/dumbbell-floor-press.gif?resize=600%2C600&ssl=1",
-    "notes": "Costo-friendly range."
+    "notes": "Costo-friendly range.",
+    "muscles": [
+      {
+        "id": "chest",
+        "w": 3
+      },
+      {
+        "id": "triceps",
+        "w": 2
+      },
+      {
+        "id": "front-delts",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "DB_FLY",
@@ -532,7 +1000,17 @@ const EXERCISES = [
     "m": "Chest / Front Delts",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "chest",
+        "w": 3
+      },
+      {
+        "id": "front-delts",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "DB_FLY_INCLINE",
@@ -545,7 +1023,17 @@ const EXERCISES = [
     "m": "Chest / Front Delts",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "chest",
+        "w": 3
+      },
+      {
+        "id": "front-delts",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "DB_FRONT_RAISE_ALT",
@@ -559,7 +1047,17 @@ const EXERCISES = [
     "m": "Front Delts / Upper Traps",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "front-delts",
+        "w": 3
+      },
+      {
+        "id": "upper-traps",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "DB_HIGH_ROW_ER",
@@ -573,7 +1071,21 @@ const EXERCISES = [
     "m": "Rotator Cuff / Rear Delts",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2024/10/cuban-press.gif?resize=600%2C600&ssl=1",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "rear-delts",
+        "w": 3
+      },
+      {
+        "id": "teres-major",
+        "w": 2
+      },
+      {
+        "id": "upper-traps",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "DB_INC_CURL",
@@ -587,7 +1099,17 @@ const EXERCISES = [
     "m": "Biceps / Forearms",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/10/Incline-Dumbbell-Curl.gif?resize=600%2C600&ssl=1",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "biceps",
+        "w": 3
+      },
+      {
+        "id": "forearms",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "DB_OHP_1ARM",
@@ -600,7 +1122,21 @@ const EXERCISES = [
     "m": "Front Delts / Triceps",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/02/Dumbbell-shoulder-press.gif?resize=600%2C600&ssl=1",
-    "notes": "Per arm. Stacked ribs."
+    "notes": "Per arm. Stacked ribs.",
+    "muscles": [
+      {
+        "id": "front-delts",
+        "w": 3
+      },
+      {
+        "id": "triceps",
+        "w": 2
+      },
+      {
+        "id": "obliques",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "DB_REAR_DELT_FLY",
@@ -613,7 +1149,17 @@ const EXERCISES = [
     "m": "Rear Delts / Upper Back",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "rear-delts",
+        "w": 3
+      },
+      {
+        "id": "upper-back",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "DB_ROW_1ARM",
@@ -626,7 +1172,21 @@ const EXERCISES = [
     "m": "Upper Back / Biceps",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/03/Dumbbell-Row.gif?resize=600%2C600&ssl=1",
-    "notes": "Start left. Control."
+    "notes": "Start left. Control.",
+    "muscles": [
+      {
+        "id": "lats",
+        "w": 3
+      },
+      {
+        "id": "rhomboids",
+        "w": 2
+      },
+      {
+        "id": "biceps",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "DB_ROW_2ARM",
@@ -639,7 +1199,21 @@ const EXERCISES = [
     "m": "Upper Back / Biceps",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "lats",
+        "w": 3
+      },
+      {
+        "id": "rhomboids",
+        "w": 2
+      },
+      {
+        "id": "biceps",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "DB_ROW_CHESTSUP",
@@ -652,7 +1226,21 @@ const EXERCISES = [
     "m": "Upper Back / Biceps",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "lats",
+        "w": 3
+      },
+      {
+        "id": "rhomboids",
+        "w": 2
+      },
+      {
+        "id": "biceps",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "DB_ROW_STAGGER",
@@ -666,7 +1254,21 @@ const EXERCISES = [
     "m": "Upper Back / Biceps",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/03/Dumbbell-Row.gif?resize=600%2C600&ssl=1",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "lats",
+        "w": 3
+      },
+      {
+        "id": "rhomboids",
+        "w": 2
+      },
+      {
+        "id": "biceps",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "DB_SHRUG",
@@ -679,7 +1281,17 @@ const EXERCISES = [
     "m": "Upper Traps / Forearms",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "upper-traps",
+        "w": 3
+      },
+      {
+        "id": "forearms",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "DB_TRICEPS_OH_EXT",
@@ -692,7 +1304,17 @@ const EXERCISES = [
     "m": "Triceps / Front Delts",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "triceps",
+        "w": 3
+      },
+      {
+        "id": "front-delts",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "DIP",
@@ -705,7 +1327,21 @@ const EXERCISES = [
     "m": "Chest / Triceps",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "triceps",
+        "w": 3
+      },
+      {
+        "id": "chest",
+        "w": 2
+      },
+      {
+        "id": "front-delts",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "EZ_CURL",
@@ -718,7 +1354,17 @@ const EXERCISES = [
     "m": "Biceps / Forearms",
     "region": "upper",
     "gif": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Z-Bar-Preacher-Curl.gif",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "biceps",
+        "w": 3
+      },
+      {
+        "id": "forearms",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "EZ_TRI_EXT",
@@ -731,7 +1377,17 @@ const EXERCISES = [
     "m": "Triceps / Forearms",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2025/10/lying-triceps-extension-with-ez-bar.gif?resize=600%2C600&ssl=1",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "triceps",
+        "w": 3
+      },
+      {
+        "id": "forearms",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "FACE_PULL",
@@ -745,7 +1401,21 @@ const EXERCISES = [
     "m": "Rear Delts / Upper Back",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/05/face-pull.gif?resize=600%2C600&ssl=1",
-    "notes": "Light, clean reps."
+    "notes": "Light, clean reps.",
+    "muscles": [
+      {
+        "id": "rear-delts",
+        "w": 3
+      },
+      {
+        "id": "rhomboids",
+        "w": 2
+      },
+      {
+        "id": "upper-back",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "FARMERS_CARRY",
@@ -759,7 +1429,21 @@ const EXERCISES = [
     "m": "Forearms / Upper Traps",
     "region": "upper",
     "gif": "",
-    "notes": "Distance or time in Notes."
+    "notes": "Distance or time in Notes.",
+    "muscles": [
+      {
+        "id": "forearms",
+        "w": 3
+      },
+      {
+        "id": "upper-traps",
+        "w": 2
+      },
+      {
+        "id": "abs",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "GLUTE_BRIDGE",
@@ -772,7 +1456,17 @@ const EXERCISES = [
     "m": "Glute Max / Hamstrings",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2025/09/glutebridge.gif?resize=700%2C700&ssl=1",
-    "notes": "Pause 2 sec at top."
+    "notes": "Pause 2 sec at top.",
+    "muscles": [
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "hamstrings",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "GLUTE_KICKBACK_MACHINE",
@@ -785,7 +1479,17 @@ const EXERCISES = [
     "m": "Glute Max / Hamstrings",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2023/01/Standing-glute-kickback-in-machine-1.gif?resize=600%2C600&ssl=1",
-    "notes": "Per leg. Drive through heel; keep ribs down, no low-back arch."
+    "notes": "Per leg. Drive through heel; keep ribs down, no low-back arch.",
+    "muscles": [
+      {
+        "id": "glute-max",
+        "w": 3
+      },
+      {
+        "id": "hamstrings",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "GOBLET_SITIN",
@@ -799,7 +1503,21 @@ const EXERCISES = [
     "m": "Quads / Glute Max",
     "region": "lower",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/02/Goblet-squat.gif?resize=600%2C600&ssl=1",
-    "notes": "Hold seconds."
+    "notes": "Hold seconds.",
+    "muscles": [
+      {
+        "id": "quads",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "adductors",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "HACK_SQUAT",
@@ -812,7 +1530,17 @@ const EXERCISES = [
     "m": "Quads / Glute Max",
     "region": "lower",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "quads",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "HAMMER_CURL",
@@ -825,7 +1553,17 @@ const EXERCISES = [
     "m": "Biceps / Forearms",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "biceps",
+        "w": 3
+      },
+      {
+        "id": "forearms",
+        "w": 2
+      }
+    ]
   },
   {
     "id": "HANG_KNEE_RAISE",
@@ -838,7 +1576,17 @@ const EXERCISES = [
     "m": "Abs / Hip Flexors",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/03/hanging-knee-raise.gif?resize=600%2C600&ssl=1",
-    "notes": "Posterior pelvic tilt; raise knees without swinging, control down."
+    "notes": "Posterior pelvic tilt; raise knees without swinging, control down.",
+    "muscles": [
+      {
+        "id": "abs",
+        "w": 3
+      },
+      {
+        "id": "hip-flexors",
+        "w": 2
+      }
+    ]
   },
   {
     "id": "HIIT_BIKE",
@@ -851,7 +1599,17 @@ const EXERCISES = [
     "m": "Quads / Glute Max",
     "region": "upper",
     "gif": "https://fitnessprogramer.com/wp-content/uploads/2022/06/Assault-AirBike.gif",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "quads",
+        "w": 2
+      },
+      {
+        "id": "glute-max",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "HIP_ABD_MACHINE",
@@ -864,7 +1622,17 @@ const EXERCISES = [
     "m": "Glute Med / Glute Max",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/03/hip-abduction-machine.gif?resize=600%2C600&ssl=1",
-    "notes": "Slow and controlled; pause at peak abduction. Don't rock torso."
+    "notes": "Slow and controlled; pause at peak abduction. Don't rock torso.",
+    "muscles": [
+      {
+        "id": "glute-med",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "HIP_ADDUCTION_MACHINE",
@@ -877,7 +1645,17 @@ const EXERCISES = [
     "m": "Adductors / Glute Max",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "adductors",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "HIP_THRUST",
@@ -891,7 +1669,21 @@ const EXERCISES = [
     "m": "Glute Max / Hamstrings",
     "region": "lower",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/02/Hip-thrust.gif?resize=600%2C600&ssl=1",
-    "notes": "Pause/squeeze at top."
+    "notes": "Pause/squeeze at top.",
+    "muscles": [
+      {
+        "id": "glute-max",
+        "w": 3
+      },
+      {
+        "id": "hamstrings",
+        "w": 2
+      },
+      {
+        "id": "adductors",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "HK_CABLE_CHOP",
@@ -904,7 +1696,21 @@ const EXERCISES = [
     "m": "Obliques / Lats",
     "region": "upper",
     "gif": "https://fitnessprogramer.com/wp-content/uploads/2022/02/Cable-Half-Kneeling-Pallof-Press.gif",
-    "notes": "Half-kneeling; rotate through ribs/hips, resist low-back twist, smooth power."
+    "notes": "Half-kneeling; rotate through ribs/hips, resist low-back twist, smooth power.",
+    "muscles": [
+      {
+        "id": "obliques",
+        "w": 3
+      },
+      {
+        "id": "lats",
+        "w": 2
+      },
+      {
+        "id": "abs",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "HK_HIPFLEX_STRETCH",
@@ -917,7 +1723,17 @@ const EXERCISES = [
     "m": "Hip Flexors / Quads",
     "region": "upper",
     "gif": "",
-    "notes": "Posterior pelvic tilt + glute squeeze; gentle hip-flexor/quad stretch."
+    "notes": "Posterior pelvic tilt + glute squeeze; gentle hip-flexor/quad stretch.",
+    "muscles": [
+      {
+        "id": "hip-flexors",
+        "w": 2
+      },
+      {
+        "id": "quads",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "INCLINE_CHEST_PRESS_MACHINE",
@@ -930,7 +1746,21 @@ const EXERCISES = [
     "m": "Chest / Front Delts",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "chest",
+        "w": 3
+      },
+      {
+        "id": "front-delts",
+        "w": 2
+      },
+      {
+        "id": "triceps",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "JEFFERSON_CURL",
@@ -944,7 +1774,17 @@ const EXERCISES = [
     "m": "Spinal Erectors / Hamstrings",
     "region": "lower",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2023/09/Jefferson-Curl.gif?resize=576%2C1024&ssl=1",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "spinal-erectors",
+        "w": 3
+      },
+      {
+        "id": "hamstrings",
+        "w": 2
+      }
+    ]
   },
   {
     "id": "JM_PRESS",
@@ -957,7 +1797,21 @@ const EXERCISES = [
     "m": "Triceps / Chest",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2021/09/Close-grip-bench-press.gif?resize=600%2C600&ssl=1",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "triceps",
+        "w": 3
+      },
+      {
+        "id": "chest",
+        "w": 2
+      },
+      {
+        "id": "front-delts",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "KB_CLEAN",
@@ -970,7 +1824,21 @@ const EXERCISES = [
     "m": "Glute Max / Upper Back",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2025/03/Kettlebell-Clean.gif?resize=700%2C700&ssl=1",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "glute-max",
+        "w": 3
+      },
+      {
+        "id": "hamstrings",
+        "w": 2
+      },
+      {
+        "id": "upper-back",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "KB_FRONT_SQUAT",
@@ -983,7 +1851,21 @@ const EXERCISES = [
     "m": "Quads / Glute Max",
     "region": "lower",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2025/09/Kettlebell-frontsquat.gif?resize=700%2C700&ssl=1",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "quads",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "adductors",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "KB_PUSH_PRESS_1ARM",
@@ -996,7 +1878,21 @@ const EXERCISES = [
     "m": "Front Delts / Triceps",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2025/09/kettlebell-pushpress-one-arm.gif?resize=700%2C700&ssl=1",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "front-delts",
+        "w": 3
+      },
+      {
+        "id": "triceps",
+        "w": 2
+      },
+      {
+        "id": "quads",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "KB_SWING",
@@ -1009,7 +1905,21 @@ const EXERCISES = [
     "m": "Glute Max / Hamstrings",
     "region": "lower",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/02/Kettlebellsving.gif?resize=600%2C600&ssl=1",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "glute-max",
+        "w": 3
+      },
+      {
+        "id": "hamstrings",
+        "w": 2
+      },
+      {
+        "id": "spinal-erectors",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "LANDMINE_CLEAN_ROT_PRESS",
@@ -1017,12 +1927,26 @@ const EXERCISES = [
     "p": "Push Vertical",
     "scheme": "strength",
     "eq": [
-      "barbell"
+      "landmine"
     ],
     "m": "Front Delts / Obliques",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2024/10/landmine-press.gif?resize=600%2C600&ssl=1",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "front-delts",
+        "w": 3
+      },
+      {
+        "id": "obliques",
+        "w": 2
+      },
+      {
+        "id": "triceps",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "LAT_LINE_STRETCH",
@@ -1035,7 +1959,17 @@ const EXERCISES = [
     "m": "Lats / Obliques",
     "region": "upper",
     "gif": "",
-    "notes": "~5-6 reps with ~5-sec holds per side."
+    "notes": "~5-6 reps with ~5-sec holds per side.",
+    "muscles": [
+      {
+        "id": "lats",
+        "w": 2
+      },
+      {
+        "id": "obliques",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "LAT_PULLDOWN",
@@ -1049,7 +1983,21 @@ const EXERCISES = [
     "m": "Lats / Biceps",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "lats",
+        "w": 3
+      },
+      {
+        "id": "biceps",
+        "w": 2
+      },
+      {
+        "id": "teres-major",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "LAT_PULLDOWN_NEUTRAL",
@@ -1062,7 +2010,21 @@ const EXERCISES = [
     "m": "Lats / Biceps",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "lats",
+        "w": 3
+      },
+      {
+        "id": "biceps",
+        "w": 2
+      },
+      {
+        "id": "teres-major",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "LAT_RAISE",
@@ -1075,7 +2037,17 @@ const EXERCISES = [
     "m": "Side Delts / Upper Traps",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/12/Dumbbell-Lateral-Raise.gif?resize=600%2C600&ssl=1",
-    "notes": "Keep it strict."
+    "notes": "Keep it strict.",
+    "muscles": [
+      {
+        "id": "side-delts",
+        "w": 3
+      },
+      {
+        "id": "upper-traps",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "LAT_RAISE_SIDELY",
@@ -1088,7 +2060,17 @@ const EXERCISES = [
     "m": "Side Delts / Upper Traps",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/12/Dumbbell-Lateral-Raise.gif?resize=600%2C600&ssl=1",
-    "notes": "Side-lying; small DB, raise in arc slightly forward, no shoulder pinch."
+    "notes": "Side-lying; small DB, raise in arc slightly forward, no shoulder pinch.",
+    "muscles": [
+      {
+        "id": "side-delts",
+        "w": 3
+      },
+      {
+        "id": "upper-traps",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "LEG_CURL_LYING",
@@ -1101,7 +2083,17 @@ const EXERCISES = [
     "m": "Hamstrings / Calves",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "hamstrings",
+        "w": 3
+      },
+      {
+        "id": "calves",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "LEG_CURL_SEATED",
@@ -1114,7 +2106,17 @@ const EXERCISES = [
     "m": "Hamstrings / Calves",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "hamstrings",
+        "w": 3
+      },
+      {
+        "id": "calves",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "LEG_EXTENSION",
@@ -1127,7 +2129,17 @@ const EXERCISES = [
     "m": "Quads / Hip Flexors",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "quads",
+        "w": 3
+      },
+      {
+        "id": "hip-flexors",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "LEG_PRESS",
@@ -1140,7 +2152,21 @@ const EXERCISES = [
     "m": "Quads / Glute Max",
     "region": "lower",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "quads",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "hamstrings",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "LEG_PRESS_CALF_RAISE",
@@ -1153,7 +2179,17 @@ const EXERCISES = [
     "m": "Calves / Tibialis Anterior",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2025/10/calf-raise-in-leg-press.gif?resize=700%2C700&ssl=1",
-    "notes": "Balls of feet on platform edge; deep stretch; don't bounce. Control reps."
+    "notes": "Balls of feet on platform edge; deep stretch; don't bounce. Control reps.",
+    "muscles": [
+      {
+        "id": "calves",
+        "w": 3
+      },
+      {
+        "id": "tibialis-anterior",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "OPEN_BOOK",
@@ -1166,7 +2202,17 @@ const EXERCISES = [
     "m": "Upper Back / Obliques",
     "region": "upper",
     "gif": "",
-    "notes": "Side-lying thoracic rotation; follow hand with eyes."
+    "notes": "Side-lying thoracic rotation; follow hand with eyes.",
+    "muscles": [
+      {
+        "id": "upper-back",
+        "w": 2
+      },
+      {
+        "id": "obliques",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "PALLOF",
@@ -1180,7 +2226,17 @@ const EXERCISES = [
     "m": "Obliques / Transverse Abdominis",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2025/04/pallof-press.gif?ssl=1&w=700",
-    "notes": "Per side. Don't rotate."
+    "notes": "Per side. Don't rotate.",
+    "muscles": [
+      {
+        "id": "obliques",
+        "w": 3
+      },
+      {
+        "id": "transverse-abdominal",
+        "w": 2
+      }
+    ]
   },
   {
     "id": "PEC_DECK",
@@ -1193,7 +2249,17 @@ const EXERCISES = [
     "m": "Chest / Front Delts",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "chest",
+        "w": 3
+      },
+      {
+        "id": "front-delts",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "PEC_ROLL_OPENER",
@@ -1206,7 +2272,17 @@ const EXERCISES = [
     "m": "Chest / Front Delts",
     "region": "upper",
     "gif": "https://fitnessprogramer.com/wp-content/uploads/2022/02/Foam-Roller-Chest-Stretch.gif",
-    "notes": "Lie lengthwise on roller; arms in T/goalpost, relax into opening."
+    "notes": "Lie lengthwise on roller; arms in T/goalpost, relax into opening.",
+    "muscles": [
+      {
+        "id": "chest",
+        "w": 2
+      },
+      {
+        "id": "front-delts",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "PEC_STRETCH",
@@ -1219,7 +2295,17 @@ const EXERCISES = [
     "m": "Chest / Front Delts",
     "region": "upper",
     "gif": "https://fitnessprogramer.com/wp-content/uploads/2021/01/Doorway-chest-and-sshoulder-stretch.gif",
-    "notes": "Doorway pec stretch; gentle, don't crank shoulder joint."
+    "notes": "Doorway pec stretch; gentle, don't crank shoulder joint.",
+    "muscles": [
+      {
+        "id": "chest",
+        "w": 2
+      },
+      {
+        "id": "front-delts",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "PLANK",
@@ -1232,7 +2318,21 @@ const EXERCISES = [
     "m": "Transverse Abdominis / Serratus",
     "region": "upper",
     "gif": "",
-    "notes": "Count = seconds."
+    "notes": "Count = seconds.",
+    "muscles": [
+      {
+        "id": "transverse-abdominal",
+        "w": 3
+      },
+      {
+        "id": "serratus",
+        "w": 2
+      },
+      {
+        "id": "abs",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "PRONE_T",
@@ -1245,7 +2345,21 @@ const EXERCISES = [
     "m": "Rhomboids / Rear Delts",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/02/Reverse-dumbbell-flyes.gif?resize=600%2C600&ssl=1",
-    "notes": "Reverse fly pattern; squeeze between shoulder blades."
+    "notes": "Reverse fly pattern; squeeze between shoulder blades.",
+    "muscles": [
+      {
+        "id": "rhomboids",
+        "w": 3
+      },
+      {
+        "id": "rear-delts",
+        "w": 2
+      },
+      {
+        "id": "mid-traps",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "PRONE_Y",
@@ -1258,7 +2372,17 @@ const EXERCISES = [
     "m": "Lower Traps / Rear Delts",
     "region": "upper",
     "gif": "https://www.inspireusafoundation.org/file/2023/11/prone-y-raise-movement.gif",
-    "notes": "Light load; thumbs up, lift from lower traps not neck."
+    "notes": "Light load; thumbs up, lift from lower traps not neck.",
+    "muscles": [
+      {
+        "id": "lower-traps",
+        "w": 2
+      },
+      {
+        "id": "rear-delts",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "PUSHUP",
@@ -1271,7 +2395,21 @@ const EXERCISES = [
     "m": "Chest / Triceps",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "chest",
+        "w": 3
+      },
+      {
+        "id": "triceps",
+        "w": 2
+      },
+      {
+        "id": "front-delts",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "RDL",
@@ -1285,7 +2423,21 @@ const EXERCISES = [
     "m": "Hamstrings / Glute Max",
     "region": "lower",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2022/01/Romanian-deadlift.gif?resize=600%2C600&ssl=1",
-    "notes": "Slow eccentric."
+    "notes": "Slow eccentric.",
+    "muscles": [
+      {
+        "id": "hamstrings",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "spinal-erectors",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "REV_LUNGE",
@@ -1298,7 +2450,21 @@ const EXERCISES = [
     "m": "Glute Max / Quads",
     "region": "lower",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2025/01/reverse-lunge.gif?resize=700%2C700&ssl=1",
-    "notes": "Alternating."
+    "notes": "Alternating.",
+    "muscles": [
+      {
+        "id": "glute-max",
+        "w": 3
+      },
+      {
+        "id": "quads",
+        "w": 2
+      },
+      {
+        "id": "hamstrings",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "ROT_SPLIT_SQUAT",
@@ -1311,7 +2477,21 @@ const EXERCISES = [
     "m": "Glute Max / Quads",
     "region": "lower",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2025/01/reverse-lunge.gif?resize=700%2C700&ssl=1",
-    "notes": "Long stance; rotate slightly toward front leg, push through front glute, control hip rotation."
+    "notes": "Long stance; rotate slightly toward front leg, push through front glute, control hip rotation.",
+    "muscles": [
+      {
+        "id": "glute-max",
+        "w": 3
+      },
+      {
+        "id": "quads",
+        "w": 2
+      },
+      {
+        "id": "obliques",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "ROW_MACHINE",
@@ -1324,7 +2504,21 @@ const EXERCISES = [
     "m": "Upper Back / Biceps",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "lats",
+        "w": 3
+      },
+      {
+        "id": "rhomboids",
+        "w": 2
+      },
+      {
+        "id": "biceps",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "SCAP_PULL",
@@ -1337,7 +2531,17 @@ const EXERCISES = [
     "m": "Lower Traps / Lats",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2024/10/scap-pull-ups.gif?resize=600%2C600&ssl=1",
-    "notes": "Scapular pull-ups only; no elbow bend, smooth shrug-down."
+    "notes": "Scapular pull-ups only; no elbow bend, smooth shrug-down.",
+    "muscles": [
+      {
+        "id": "lower-traps",
+        "w": 2
+      },
+      {
+        "id": "lats",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "SEATED_CABLE_ROW",
@@ -1350,7 +2554,21 @@ const EXERCISES = [
     "m": "Upper Back / Biceps",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "lats",
+        "w": 3
+      },
+      {
+        "id": "rhomboids",
+        "w": 2
+      },
+      {
+        "id": "biceps",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "SERRATUS_PUSHUP",
@@ -1363,7 +2581,17 @@ const EXERCISES = [
     "m": "Serratus / Chest",
     "region": "upper",
     "gif": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Push-Up-Plus.gif",
-    "notes": "Quadruped or wall version; elbows locked, push floor away."
+    "notes": "Quadruped or wall version; elbows locked, push floor away.",
+    "muscles": [
+      {
+        "id": "serratus",
+        "w": 2
+      },
+      {
+        "id": "chest",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "SHOULDER_PRESS_MACHINE",
@@ -1376,7 +2604,21 @@ const EXERCISES = [
     "m": "Front Delts / Triceps",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "front-delts",
+        "w": 3
+      },
+      {
+        "id": "triceps",
+        "w": 2
+      },
+      {
+        "id": "upper-traps",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "SIDE_ER",
@@ -1389,7 +2631,17 @@ const EXERCISES = [
     "m": "Rotator Cuff / Rear Delts",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/12/Dumbbell-lying-external-shoulder-rotation.gif?resize=600%2C600&ssl=1",
-    "notes": "Side-lying cuff work; slow tempo, no cheating from torso."
+    "notes": "Side-lying cuff work; slow tempo, no cheating from torso.",
+    "muscles": [
+      {
+        "id": "rear-delts",
+        "w": 2
+      },
+      {
+        "id": "teres-major",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "SL_RDL_DB",
@@ -1402,7 +2654,21 @@ const EXERCISES = [
     "m": "Hamstrings / Glute Max",
     "region": "lower",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2023/01/Single-leg-romanian-deadlift.gif?resize=600%2C600&ssl=1",
-    "notes": "Opposite-hand DB; hips square, hinge to hamstring stretch, balance-focused."
+    "notes": "Opposite-hand DB; hips square, hinge to hamstring stretch, balance-focused.",
+    "muscles": [
+      {
+        "id": "hamstrings",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "glute-med",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "SMITH_SQUAT",
@@ -1415,7 +2681,21 @@ const EXERCISES = [
     "m": "Quads / Glute Max",
     "region": "lower",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "quads",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "adductors",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "SPIDERMAN_LUNGE_ROT",
@@ -1428,7 +2708,17 @@ const EXERCISES = [
     "m": "Hip Flexors / Obliques",
     "region": "upper",
     "gif": "",
-    "notes": "~4 reps per side (can do elevated hands)."
+    "notes": "~4 reps per side (can do elevated hands).",
+    "muscles": [
+      {
+        "id": "hip-flexors",
+        "w": 2
+      },
+      {
+        "id": "obliques",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "SPLIT_SQUAT",
@@ -1441,7 +2731,21 @@ const EXERCISES = [
     "m": "Quads / Glute Max",
     "region": "lower",
     "gif": "https://fitnessprogramer.com/wp-content/uploads/2022/12/ATG-Split-Squat.gif",
-    "notes": "Left side priority; controlled knee over toes, upright torso, full front-leg bend."
+    "notes": "Left side priority; controlled knee over toes, upright torso, full front-leg bend.",
+    "muscles": [
+      {
+        "id": "quads",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "adductors",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "SUITCASE_CARRY",
@@ -1454,7 +2758,21 @@ const EXERCISES = [
     "m": "Quadratus Lumborum / Forearms",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2025/10/suitcase-carry.gif?resize=600%2C600&ssl=1",
-    "notes": "Heavy DB one side; walk tall, no leaning, strong anti-lateral-flexion."
+    "notes": "Heavy DB one side; walk tall, no leaning, strong anti-lateral-flexion.",
+    "muscles": [
+      {
+        "id": "quadratus-lumborum",
+        "w": 3
+      },
+      {
+        "id": "obliques",
+        "w": 2
+      },
+      {
+        "id": "forearms",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "TB_DEADLIFT",
@@ -1467,7 +2785,21 @@ const EXERCISES = [
     "m": "Hamstrings / Glute Max",
     "region": "lower",
     "gif": "https://drive.google.com/file/d/1Mu2iz695B6BP6Lppw9ghobB7XXYeDd8R/view?usp=sharing",
-    "notes": "3-set ramp. Brace evenly."
+    "notes": "3-set ramp. Brace evenly.",
+    "muscles": [
+      {
+        "id": "hamstrings",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "quads",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "THREAD_NEEDLE",
@@ -1480,7 +2812,17 @@ const EXERCISES = [
     "m": "Upper Back / Obliques",
     "region": "upper",
     "gif": "",
-    "notes": "~6-8 reps per side (slow + relaxed breathing)."
+    "notes": "~6-8 reps per side (slow + relaxed breathing).",
+    "muscles": [
+      {
+        "id": "upper-back",
+        "w": 2
+      },
+      {
+        "id": "obliques",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "TIB_RAISE",
@@ -1493,7 +2835,17 @@ const EXERCISES = [
     "m": "Tibialis Anterior / Calves",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2025/06/tibialis-raises-ezgif.com-optimize.gif?resize=700%2C700&ssl=1",
-    "notes": "Back to wall; lift toes toward shins, heel planted, controlled reps."
+    "notes": "Back to wall; lift toes toward shins, heel planted, controlled reps.",
+    "muscles": [
+      {
+        "id": "tibialis-anterior",
+        "w": 3
+      },
+      {
+        "id": "calves",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "TRI_EXT",
@@ -1507,7 +2859,17 @@ const EXERCISES = [
     "m": "Triceps / Chest",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2023/02/Bodyweight-triceps-extension.gif?resize=600%2C600&ssl=1",
-    "notes": "Keep elbows happy."
+    "notes": "Keep elbows happy.",
+    "muscles": [
+      {
+        "id": "triceps",
+        "w": 3
+      },
+      {
+        "id": "chest",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "TRICEPS_PUSHDOWN",
@@ -1520,11 +2882,21 @@ const EXERCISES = [
     "m": "Triceps / Forearms",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "triceps",
+        "w": 3
+      },
+      {
+        "id": "forearms",
+        "w": 1
+      }
+    ]
   },
   {
-    "id": "TRICEPS_EXT",
-    "n": "Triceps Extension (Cable)",
+    "id": "TRICEPS_ROPEDOWN",
+    "n": "Triceps Rope Pushdown (Cable)",
     "p": "Isolation",
     "scheme": "hypertrophy",
     "eq": [
@@ -1533,7 +2905,17 @@ const EXERCISES = [
     "m": "Triceps / Forearms",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "triceps",
+        "w": 3
+      },
+      {
+        "id": "forearms",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "TSPINE_EXT",
@@ -1546,7 +2928,17 @@ const EXERCISES = [
     "m": "Upper Back / Spinal Erectors",
     "region": "upper",
     "gif": "",
-    "notes": "Slow reps."
+    "notes": "Slow reps.",
+    "muscles": [
+      {
+        "id": "upper-back",
+        "w": 2
+      },
+      {
+        "id": "spinal-erectors",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "W_PULLUP",
@@ -1559,7 +2951,21 @@ const EXERCISES = [
     "m": "Lats / Biceps",
     "region": "upper",
     "gif": "https://fitnessprogramer.com/wp-content/uploads/2021/04/Weighted-Pull-up.gif",
-    "notes": "TM here is added weight 1RM estimate."
+    "notes": "TM here is added weight 1RM estimate.",
+    "muscles": [
+      {
+        "id": "lats",
+        "w": 3
+      },
+      {
+        "id": "biceps",
+        "w": 2
+      },
+      {
+        "id": "teres-major",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "WALL_SLIDE_PLUS",
@@ -1572,7 +2978,17 @@ const EXERCISES = [
     "m": "Serratus / Lower Traps",
     "region": "upper",
     "gif": "https://fitnessprogramer.com/wp-content/uploads/2022/02/Serratus-Wall-Slide-With-Foam-Roller.gif",
-    "notes": "Wall slides; focus on gentle protraction at top, no shrug."
+    "notes": "Wall slides; focus on gentle protraction at top, no shrug.",
+    "muscles": [
+      {
+        "id": "serratus",
+        "w": 2
+      },
+      {
+        "id": "lower-traps",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "WALL_WY",
@@ -1585,7 +3001,17 @@ const EXERCISES = [
     "m": "Lower Traps / Rear Delts",
     "region": "upper",
     "gif": "",
-    "notes": "W-to-Y on wall; keep back and arms in contact, avoid neck tension."
+    "notes": "W-to-Y on wall; keep back and arms in contact, avoid neck tension.",
+    "muscles": [
+      {
+        "id": "lower-traps",
+        "w": 2
+      },
+      {
+        "id": "rear-delts",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "Z_PRESS_1ARM",
@@ -1599,7 +3025,21 @@ const EXERCISES = [
     "m": "Front Delts / Triceps",
     "region": "upper",
     "gif": "",
-    "notes": ""
+    "notes": "",
+    "muscles": [
+      {
+        "id": "front-delts",
+        "w": 3
+      },
+      {
+        "id": "triceps",
+        "w": 2
+      },
+      {
+        "id": "obliques",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "ZERCHER_SQUAT",
@@ -1612,7 +3052,21 @@ const EXERCISES = [
     "m": "Quads / Glute Max",
     "region": "lower",
     "gif": "https://drive.google.com/file/d/1opuSfWxe55zxmFgESiOpm6EnwnSd7J9o/view",
-    "notes": "Brace core."
+    "notes": "Brace core.",
+    "muscles": [
+      {
+        "id": "quads",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "spinal-erectors",
+        "w": 1
+      }
+    ]
   },
   {
     "id": "LUNGE_CARRIES",
@@ -1626,6 +3080,20 @@ const EXERCISES = [
     "m": "Glutes / Forearms",
     "region": "lower",
     "gif": "",
-    "notes": "Loaded walking lunges, weight carried at sides or racked."
+    "notes": "Loaded walking lunges, weight carried at sides or racked.",
+    "muscles": [
+      {
+        "id": "glute-max",
+        "w": 3
+      },
+      {
+        "id": "quads",
+        "w": 2
+      },
+      {
+        "id": "forearms",
+        "w": 1
+      }
+    ]
   }
 ];
