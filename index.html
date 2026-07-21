@@ -248,7 +248,7 @@
   }
 
   // ---------- STATE ----------
-  let state = { equip: new Set(EQUIP), pattern: new Set(PATTERNS), muscle: new Set(ALL_MUSCLE_IDS), view: 'list', activeId: null, saveMsg: '', logFilter: '' };
+  let state = { equip: new Set(EQUIP), pattern: new Set(PATTERNS), view: 'list', activeId: null, saveMsg: '', logFilter: '', muscleMapTarget: null };
   let TM = {};
   let TIER = {};
   let HYP = {};
@@ -257,7 +257,6 @@
   function loadAll() {
     try { const a = JSON.parse(localStorage.getItem('gym-ref-equip')); if (a && a.length) state.equip = new Set(a); } catch(e){}
     try { const a = JSON.parse(localStorage.getItem('gym-ref-pattern')); if (a) state.pattern = new Set(a); } catch(e){}
-    try { const a = JSON.parse(localStorage.getItem('gym-ref-muscle')); if (a) state.muscle = new Set(a); } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-tm')); if (v) TM = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-tier')); if (v) TIER = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-hyp')); if (v) HYP = v; } catch(e){}
@@ -276,7 +275,6 @@
   }
   function saveEquip() { try { localStorage.setItem('gym-ref-equip', JSON.stringify([...state.equip])); } catch(e){} }
   function savePattern() { try { localStorage.setItem('gym-ref-pattern', JSON.stringify([...state.pattern])); } catch(e){} }
-  function saveMuscle() { try { localStorage.setItem('gym-ref-muscle', JSON.stringify([...state.muscle])); } catch(e){} }
   function saveTM() { try { localStorage.setItem('gym-tm', JSON.stringify(TM)); } catch(e){} }
   function saveTier() { try { localStorage.setItem('gym-tier', JSON.stringify(TIER)); } catch(e){} }
   function saveHyp() { try { localStorage.setItem('gym-hyp', JSON.stringify(HYP)); } catch(e){} }
@@ -292,8 +290,6 @@
   function togglePattern(p) { state.pattern.has(p) ? state.pattern.delete(p) : state.pattern.add(p); savePattern(); render(); }
   function setAllPatterns(on) { state.pattern = on ? new Set(PATTERNS) : new Set(); savePattern(); render(); }
   function activePatterns() { return state.pattern.size ? state.pattern : new Set(PATTERNS); }
-  function toggleMuscle(m) { state.muscle.has(m) ? state.muscle.delete(m) : state.muscle.add(m); saveMuscle(); render(); }
-  function setAllMuscle(on) { state.muscle = on ? new Set(ALL_MUSCLE_IDS) : new Set(); saveMuscle(); render(); }
 
   function supersetSuggestions(x) {
     if (NO_SUPERSET_PATTERNS.has(x.p)) return {note:"Best done alone — don't superset squat/hinge/lunge main work.", list:[]};
@@ -313,6 +309,24 @@
   }
 
   // ---------- RENDER: LIST VIEW ----------
+  function buildCard(x) {
+    const card = document.createElement('div');
+    card.className = 'grr-card ' + x.scheme;
+    const schemeLabel = {main:'Major Lift', strength:'Strength', hypertrophy:'Hypertrophy', mobility:'Mobility'}[x.scheme];
+    const badgeClass = x.scheme === 'main' ? 'main' : x.scheme === 'mobility' ? 'mobility' : '';
+    const tmLine = (x.scheme !== 'hypertrophy' && x.scheme !== 'mobility' && TM[x.id]) ? `<div class="grr-card-tm">1RM: ${TM[x.id]} lb</div>` : '';
+    card.innerHTML = `
+      <div class="grr-card-top">
+        <div class="grr-card-name">${x.n}</div>
+        <div class="grr-badge ${badgeClass}">${schemeLabel}</div>
+      </div>
+      <div class="grr-card-meta">${x.m}</div>
+      ${tmLine}
+    `;
+    card.onclick = () => { state.view = 'detail'; state.activeId = x.id; state.saveMsg=''; render(); };
+    return card;
+  }
+
   function renderList() {
     const pats = activePatterns();
     root.innerHTML = `
@@ -333,11 +347,6 @@
         <div class="grr-chip grr-chip-all" data-pall="1">ALL</div>
         <div class="grr-chip grr-chip-all" data-pnone="1">NONE</div>
       </div>
-      ${state.muscle.size < ALL_MUSCLE_IDS.length ? `
-      <div style="margin:0 16px 10px;background:var(--brand);color:#fff;border-radius:6px;padding:8px 12px;font-size:12.5px;font-weight:700;display:flex;justify-content:space-between;align-items:center;">
-        <span>Targeting: ${[...state.muscle].map(m=>MUSCLE_LABELS[m]).join(', ')}</span>
-        <span id="grr-clear-muscle" style="cursor:pointer;text-decoration:underline;font-weight:800;">Clear</span>
-      </div>` : ''}
       <div class="grr-list" id="grr-list"></div>
       <div class="grr-collapse" id="grr-superset">
         <div class="grr-collapse-head">Superset pairing guide ▾</div>
@@ -369,8 +378,6 @@
     `;
 
     const eqRow = root.querySelector('#grr-equip-row');
-    const clearMuscleBtn = root.querySelector('#grr-clear-muscle');
-    if (clearMuscleBtn) clearMuscleBtn.onclick = () => setAllMuscle(true);
     EQUIP.forEach(e => {
       const chip = document.createElement('div');
       chip.className = 'grr-chip' + (state.equip.has(e) ? ' active' : '');
@@ -396,7 +403,7 @@
     list.innerHTML = '';
     let anyShown = false;
     PATTERNS.filter(p => pats.has(p)).forEach(p => {
-      const group = EX.filter(x => x.p === p && x.eq.some(e => state.equip.has(e)) && x.muscles.some(m => state.muscle.has(m.id)));
+      const group = EX.filter(x => x.p === p && x.eq.some(e => state.equip.has(e)));
       if (!group.length) return;
       anyShown = true;
       group.sort((a,b) => (a.scheme === b.scheme ? 0 : a.scheme === 'main' ? -1 : 1));
@@ -405,23 +412,7 @@
       header.style.padding = '10px 0 4px';
       header.textContent = p;
       list.appendChild(header);
-      group.forEach(x => {
-        const card = document.createElement('div');
-        card.className = 'grr-card ' + x.scheme;
-        const schemeLabel = {main:'Major Lift', strength:'Strength', hypertrophy:'Hypertrophy', mobility:'Mobility'}[x.scheme];
-        const badgeClass = x.scheme === 'main' ? 'main' : x.scheme === 'mobility' ? 'mobility' : '';
-        const tmLine = (x.scheme !== 'hypertrophy' && x.scheme !== 'mobility' && TM[x.id]) ? `<div class="grr-card-tm">1RM: ${TM[x.id]} lb</div>` : '';
-        card.innerHTML = `
-          <div class="grr-card-top">
-            <div class="grr-card-name">${x.n}</div>
-            <div class="grr-badge ${badgeClass}">${schemeLabel}</div>
-          </div>
-          <div class="grr-card-meta">${x.m}</div>
-          ${tmLine}
-        `;
-        card.onclick = () => { state.view = 'detail'; state.activeId = x.id; state.saveMsg=''; render(); };
-        list.appendChild(card);
-      });
+      group.forEach(x => list.appendChild(buildCard(x)));
     });
     if (!anyShown) list.innerHTML = `<div class="grr-empty">No matches with the equipment selected.</div>`;
 
@@ -846,8 +837,9 @@
         <div style="font-size:11px;color:var(--muted);padding:0 0 6px;">If a number here is &gt;0 but its region stayed gray above, that muscle's SVG id guess was wrong — tell me the real one and I'll fix just that line.</div>
         <div id="grr-muscle-extra" style="font-size:12.5px;color:var(--muted);line-height:1.7;"></div>
         <div class="grr-section-label" style="padding-left:0;">Tap a muscle to find exercises for it</div>
-        <div style="font-size:11px;color:var(--muted);padding:0 0 6px;">Jumps straight to the exercise list, filtered to just that muscle — log something, then come back to see this update.</div>
+        <div style="font-size:11px;color:var(--muted);padding:0 0 6px;">Shows matching exercises right here, sorted by how central that muscle is to the movement. Tap the same muscle again to close it.</div>
         <div class="grr-equip-row" id="grr-muscle-row" style="padding:0 0 4px;"></div>
+        <div id="grr-muscle-target-results"></div>
       </div>
     `;
     root.querySelector('#grr-back').onclick = () => { state.view = 'list'; render(); };
@@ -875,11 +867,43 @@
         chip.className = 'grr-chip';
         chip.style.background = colorForScore(tally[m] || 0);
         chip.style.color = (tally[m]||0) === 0 ? '#1a1a1a' : '#fff';
-        chip.style.border = 'none';
+        chip.style.border = state.muscleMapTarget === m ? '2px solid var(--chalk)' : 'none';
         chip.textContent = MUSCLE_LABELS[m];
-        chip.onclick = () => { state.muscle = new Set([m]); saveMuscle(); state.view = 'list'; render(); };
+        chip.onclick = () => { state.muscleMapTarget = (state.muscleMapTarget === m) ? null : m; render(); };
         muscleRow.appendChild(chip);
       });
+
+    const resultsWrap = root.querySelector('#grr-muscle-target-results');
+    if (state.muscleMapTarget) {
+      const tm = state.muscleMapTarget;
+      const matches = EX.filter(x => x.eq.some(e => state.equip.has(e)) && x.muscles.some(m => m.id === tm));
+      matches.sort((a,b) => {
+        const wa = a.muscles.find(m => m.id === tm).w;
+        const wb = b.muscles.find(m => m.id === tm).w;
+        return wb - wa;
+      });
+      resultsWrap.innerHTML = '';
+      if (!matches.length) {
+        resultsWrap.innerHTML = `<div class="grr-empty">No exercises match with your current equipment selection.</div>`;
+      } else {
+        const tierLabel = {3:'Primary mover', 2:'Secondary', 1:'Tertiary / stabilizer'};
+        let lastW = null;
+        matches.forEach(x => {
+          const w = x.muscles.find(m => m.id === tm).w;
+          if (w !== lastW) {
+            const header = document.createElement('div');
+            header.className = 'grr-section-label';
+            header.style.padding = '10px 0 4px';
+            header.textContent = `${MUSCLE_LABELS[tm]} — ${tierLabel[w]}`;
+            resultsWrap.appendChild(header);
+            lastW = w;
+          }
+          resultsWrap.appendChild(buildCard(x));
+        });
+      }
+    } else {
+      resultsWrap.innerHTML = '';
+    }
 
     const wrap = root.querySelector('#grr-muscle-svg-wrap');
     try {
@@ -904,7 +928,7 @@
         if (el) {
           matchedCount++;
           el.style.fill = colorForScore(tally[muscleId] || 0);
-          el.style.fillOpacity = '1';
+          el.style.fillOpacity = '0.8';
         }
       });
       root.querySelector('#grr-muscle-meta').textContent += ` · ${matchedCount}/${Object.keys(MUSCLE_TO_SVG).length} regions matched`;
