@@ -377,7 +377,7 @@
     const patRow = root.querySelector('#grr-pattern-row');
     PATTERNS.forEach(p => {
       const chip = document.createElement('div');
-      chip.className = 'grr-chip' + (pats.has(p) ? ' active' : '');
+      chip.className = 'grr-chip' + (state.pattern.has(p) ? ' active' : '');
       chip.textContent = p;
       chip.onclick = () => togglePattern(p);
       patRow.appendChild(chip);
@@ -740,37 +740,48 @@
   // Only muscles with a REAL, verified id in muscles.svg go here. Everything else shows in the
   // text fallback list below the diagram until you finish labeling that shape in Inkscape.
   // To add one: label the shape in Inkscape with any id, then tell me the id and I'll add the line here.
+  // 7 muscles have a real `id` attribute (verified against your uploaded file). The other 21 were set via
+  // Inkscape's Label field (inkscape:label) instead — a different attribute than `id`, but just as usable;
+  // findMuscleEl() below checks both. All 28 are now covered.
   const MUSCLE_TO_SVG = {
-    'rear-delts': 'Rear_delts',
-    'transverse-abdominal': 'Transverse_abdominal',
-    'serratus': 'Serratus',
-    'quadratus-lumborum': 'Quadratus_lumborum',
-    'side-delts': 'Side_delts',
-    'upper-back': 'Upper_back',
-    'hip-flexors': 'Hip_flexors',
-    'tibialis-anterior': 'Tibialis_anterior',
-    'adductors': 'Adductors',
-    'lower-traps': 'Lower_traps',
-    'hamstrings': 'Hamstrings',
-    'mid-traps': 'Mid_traps',
-    'abs': 'Abs',
-    'calves': 'Calves',
-    'quads': 'Quads',
-    'glute-max': 'Glute_max',
-    'glute-med': 'Glute_med',
-    'chest': 'Chest',
-    'neck': 'Neck',
-    'forearms': 'Forearms',
-    'biceps': 'Biceps',
-    'obliques': 'Obliques',
-    'front-delts': 'Front_delts',
-    'triceps': 'Triceps',
-    'spinal-erectors': 'Spinal_erectors',
-    'upper-traps': 'Upper_traps',
-    'lats': 'Lats',
-    'teres-major': 'Teres_Major',
-    'rhomboids': 'Rhomboids',
+    'rear-delts': {id: 'Rear_delts'},
+    'transverse-abdominal': {label: 'Transverse abdominal'},
+    'serratus': {label: 'Serratus'},
+    'quadratus-lumborum': {label: 'Quadratus Lumborum'},
+    'side-delts': {label: 'Side Delts'},
+    'upper-back': {label: 'Upper Back'},
+    'hip-flexors': {label: 'Hip Flexors'},
+    'tibialis-anterior': {label: 'Tibialis anterior'},
+    'adductors': {label: 'Adductors'},
+    'lower-traps': {label: 'Lower Traps'},
+    'hamstrings': {label: 'Hamstrings'},
+    'mid-traps': {label: 'Mid Traps'},
+    'abs': {label: 'Abs'},
+    'calves': {label: 'Calves'},
+    'quads': {label: 'Quads'},
+    'glute-max': {label: 'Glute Max'},
+    'glute-med': {label: 'Glute Med'},
+    'chest': {label: 'Chest'},
+    'neck': {label: 'Neck'},
+    'forearms': {label: 'Forearms'},
+    'biceps': {label: 'Biceps'},
+    'obliques': {label: 'Obliques'},
+    'front-delts': {label: 'Front Delts'},
+    'triceps': {id: 'Triceps'},
+    'spinal-erectors': {id: 'Spinal_erectors'},
+    'upper-traps': {label: 'Upper Traps'},
+    'lats': {id: 'Lats'},
+    'teres-major': {id: 'Teres_Major'},
+    'rhomboids': {id: 'Rhomboids'},
   };
+  function findMuscleEl(root, spec) {
+    if (spec.id) return root.querySelector('#' + CSS.escape(spec.id));
+    if (spec.label) {
+      const candidates = root.querySelectorAll('[inkscape\\:label]');
+      for (const el of candidates) { if (el.getAttribute('inkscape:label') === spec.label) return el; }
+    }
+    return null;
+  }
   const COUNT_MOBILITY_IN_TALLY = false; // warm-ups/stretches don't count as real training stimulus by default
   let musclesSvgLoaded = false;
   let musclesSvgMarkup = null;
@@ -877,13 +888,16 @@
         svgEl.style.height = 'auto';
         svgEl.style.display = 'block';
       }
-      Object.entries(MUSCLE_TO_SVG).forEach(([muscleId, svgId]) => {
-        const el = wrap.querySelector('#' + CSS.escape(svgId));
+      let matchedCount = 0;
+      Object.entries(MUSCLE_TO_SVG).forEach(([muscleId, spec]) => {
+        const el = findMuscleEl(wrap, spec);
         if (el) {
+          matchedCount++;
           el.style.fill = state.muscle.has(muscleId) ? colorForScore(tally[muscleId] || 0) : '#2a2a2a';
           el.style.fillOpacity = '1';
         }
       });
+      root.querySelector('#grr-muscle-meta').textContent += ` · ${matchedCount}/${Object.keys(MUSCLE_TO_SVG).length} regions matched`;
     } catch (err) {
       wrap.innerHTML = `<div class="grr-empty">Couldn't load muscles.svg — make sure it's uploaded in the same folder as index.html.</div>`;
     }
