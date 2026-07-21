@@ -110,6 +110,17 @@
   const PATTERNS = ["Squat","Hinge","Lunge","Push Horizontal","Pull Horizontal","Push Vertical","Pull Vertical","Core / Carry","Isolation","Warm-up / Mobility","Conditioning"];
   const EQUIP = ["barbell","dumbbell","kettlebell","cable","machine","bodyweight","band","trapbar","landmine"];
   const EQUIP_LABEL = {barbell:"Barbell",dumbbell:"DB",kettlebell:"KB",cable:"Cable",machine:"Machine",bodyweight:"Bodyweight",band:"Band",trapbar:"Trap Bar",landmine:"Landmine"};
+  const MUSCLE_LABELS = {
+    'rear-delts':'Rear Delts','transverse-abdominal':'Transverse Abdominal','serratus':'Serratus',
+    'quadratus-lumborum':'Quadratus Lumborum','side-delts':'Side Delts','upper-back':'Upper Back',
+    'hip-flexors':'Hip Flexors','tibialis-anterior':'Tibialis Anterior','adductors':'Adductors',
+    'lower-traps':'Lower Traps','hamstrings':'Hamstrings','mid-traps':'Mid Traps','abs':'Abs',
+    'calves':'Calves','quads':'Quads','glute-max':'Glute Max','glute-med':'Glute Med','chest':'Chest',
+    'neck':'Neck','forearms':'Forearms','biceps':'Biceps','obliques':'Obliques','front-delts':'Front Delts',
+    'triceps':'Triceps','spinal-erectors':'Spinal Erectors','upper-traps':'Upper Traps','lats':'Lats',
+    'teres-major':'Teres Major','rhomboids':'Rhomboids',
+  };
+  const ALL_MUSCLE_IDS = Object.keys(MUSCLE_LABELS);
   const PAIR_MAP = {"Push Horizontal":"Pull Horizontal","Pull Horizontal":"Push Horizontal","Push Vertical":"Pull Vertical","Pull Vertical":"Push Vertical"};
   const NO_SUPERSET_PATTERNS = new Set(["Squat","Hinge","Lunge"]);
 
@@ -237,7 +248,7 @@
   }
 
   // ---------- STATE ----------
-  let state = { equip: new Set(EQUIP), pattern: new Set(PATTERNS), view: 'list', activeId: null, saveMsg: '', logFilter: '' };
+  let state = { equip: new Set(EQUIP), pattern: new Set(PATTERNS), muscle: new Set(ALL_MUSCLE_IDS), view: 'list', activeId: null, saveMsg: '', logFilter: '' };
   let TM = {};
   let TIER = {};
   let HYP = {};
@@ -246,6 +257,7 @@
   function loadAll() {
     try { const a = JSON.parse(localStorage.getItem('gym-ref-equip')); if (a && a.length) state.equip = new Set(a); } catch(e){}
     try { const a = JSON.parse(localStorage.getItem('gym-ref-pattern')); if (a) state.pattern = new Set(a); } catch(e){}
+    try { const a = JSON.parse(localStorage.getItem('gym-ref-muscle')); if (a) state.muscle = new Set(a); } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-tm')); if (v) TM = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-tier')); if (v) TIER = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-hyp')); if (v) HYP = v; } catch(e){}
@@ -264,6 +276,7 @@
   }
   function saveEquip() { try { localStorage.setItem('gym-ref-equip', JSON.stringify([...state.equip])); } catch(e){} }
   function savePattern() { try { localStorage.setItem('gym-ref-pattern', JSON.stringify([...state.pattern])); } catch(e){} }
+  function saveMuscle() { try { localStorage.setItem('gym-ref-muscle', JSON.stringify([...state.muscle])); } catch(e){} }
   function saveTM() { try { localStorage.setItem('gym-tm', JSON.stringify(TM)); } catch(e){} }
   function saveTier() { try { localStorage.setItem('gym-tier', JSON.stringify(TIER)); } catch(e){} }
   function saveHyp() { try { localStorage.setItem('gym-hyp', JSON.stringify(HYP)); } catch(e){} }
@@ -277,8 +290,10 @@
   function toggleEquip(e) { state.equip.has(e) ? state.equip.delete(e) : state.equip.add(e); saveEquip(); render(); }
   function setAllEquip(on) { state.equip = on ? new Set(EQUIP) : new Set(); saveEquip(); render(); }
   function togglePattern(p) { state.pattern.has(p) ? state.pattern.delete(p) : state.pattern.add(p); savePattern(); render(); }
-  function setAllPatterns() { state.pattern = new Set(PATTERNS); savePattern(); render(); }
+  function setAllPatterns(on) { state.pattern = on ? new Set(PATTERNS) : new Set(); savePattern(); render(); }
   function activePatterns() { return state.pattern.size ? state.pattern : new Set(PATTERNS); }
+  function toggleMuscle(m) { state.muscle.has(m) ? state.muscle.delete(m) : state.muscle.add(m); saveMuscle(); render(); }
+  function setAllMuscle(on) { state.muscle = on ? new Set(ALL_MUSCLE_IDS) : new Set(); saveMuscle(); render(); }
 
   function supersetSuggestions(x) {
     if (NO_SUPERSET_PATTERNS.has(x.p)) return {note:"Best done alone — don't superset squat/hinge/lunge main work.", list:[]};
@@ -316,6 +331,12 @@
       <div class="grr-section-label">Movement pattern</div>
       <div class="grr-equip-row" id="grr-pattern-row">
         <div class="grr-chip grr-chip-all" data-pall="1">ALL</div>
+        <div class="grr-chip grr-chip-all" data-pnone="1">NONE</div>
+      </div>
+      <div class="grr-section-label">Muscle group</div>
+      <div class="grr-equip-row" id="grr-muscle-row">
+        <div class="grr-chip grr-chip-all" data-mall="1">ALL</div>
+        <div class="grr-chip grr-chip-all" data-mnone="1">NONE</div>
       </div>
       <div class="grr-list" id="grr-list"></div>
       <div class="grr-collapse" id="grr-superset">
@@ -366,13 +387,25 @@
       chip.onclick = () => togglePattern(p);
       patRow.appendChild(chip);
     });
-    patRow.querySelector('[data-pall]').onclick = () => setAllPatterns();
+    patRow.querySelector('[data-pall]').onclick = () => setAllPatterns(true);
+    patRow.querySelector('[data-pnone]').onclick = () => setAllPatterns(false);
+
+    const muscleRow = root.querySelector('#grr-muscle-row');
+    ALL_MUSCLE_IDS.forEach(m => {
+      const chip = document.createElement('div');
+      chip.className = 'grr-chip' + (state.muscle.has(m) ? ' active' : '');
+      chip.textContent = MUSCLE_LABELS[m];
+      chip.onclick = () => toggleMuscle(m);
+      muscleRow.appendChild(chip);
+    });
+    muscleRow.querySelector('[data-mall]').onclick = () => setAllMuscle(true);
+    muscleRow.querySelector('[data-mnone]').onclick = () => setAllMuscle(false);
 
     const list = root.querySelector('#grr-list');
     list.innerHTML = '';
     let anyShown = false;
     PATTERNS.filter(p => pats.has(p)).forEach(p => {
-      const group = EX.filter(x => x.p === p && x.eq.some(e => state.equip.has(e)));
+      const group = EX.filter(x => x.p === p && x.eq.some(e => state.equip.has(e)) && x.muscles.some(m => state.muscle.has(m.id)));
       if (!group.length) return;
       anyShown = true;
       group.sort((a,b) => (a.scheme === b.scheme ? 0 : a.scheme === 'main' ? -1 : 1));
@@ -754,16 +787,6 @@
     'teres-major': 'Teres_Major',
     'rhomboids': 'Rhomboids',
   };
-  const MUSCLE_LABELS = {
-    'rear-delts':'Rear Delts','transverse-abdominal':'Transverse Abdominal','serratus':'Serratus',
-    'quadratus-lumborum':'Quadratus Lumborum','side-delts':'Side Delts','upper-back':'Upper Back',
-    'hip-flexors':'Hip Flexors','tibialis-anterior':'Tibialis Anterior','adductors':'Adductors',
-    'lower-traps':'Lower Traps','hamstrings':'Hamstrings','mid-traps':'Mid Traps','abs':'Abs',
-    'calves':'Calves','quads':'Quads','glute-max':'Glute Max','glute-med':'Glute Med','chest':'Chest',
-    'neck':'Neck','forearms':'Forearms','biceps':'Biceps','obliques':'Obliques','front-delts':'Front Delts',
-    'triceps':'Triceps','spinal-erectors':'Spinal Erectors','upper-traps':'Upper Traps','lats':'Lats',
-    'teres-major':'Teres Major','rhomboids':'Rhomboids',
-  };
   const COUNT_MOBILITY_IN_TALLY = false; // warm-ups/stretches don't count as real training stimulus by default
   let musclesSvgLoaded = false;
   let musclesSvgMarkup = null;
@@ -789,11 +812,19 @@
     return tally;
   }
 
-  function colorForScore(n, maxScore) {
+  // Color zones are calibrated to real hypertrophy-volume research (Schoenfeld et al. 2017 dose-response
+  // meta-analysis; RP volume landmarks): under ~8 sets/muscle/week = below the minimum effective range;
+  // 8–20 sets/week = the well-supported optimal range for most trained lifters; 20+ = past where most
+  // research shows reliably added benefit, with rising fatigue cost. A "set" here means a set where that
+  // muscle is the PRIMARY mover (weight 3) — secondary/tertiary involvement (weight 2/1) counts as partial
+  // credit, matching how lifters informally count "direct vs indirect" volume. Since our points scale
+  // maxes at 3 per set, points ÷ 3 ≈ sets-equivalent.
+  function setsEquivalent(points) { return points / 3; }
+  function colorForScore(n) {
     if (!n) return '#3a3a3a';
-    const pct = maxScore > 0 ? n / maxScore : 0;
-    if (pct <= 0.33) return '#d9a441';
-    if (pct <= 0.66) return '#e2793a';
+    const se = setsEquivalent(n);
+    if (se < 8) return '#d9a441';
+    if (se <= 20) return '#e2793a';
     return '#c8362a';
   }
 
@@ -804,12 +835,13 @@
         <div class="grr-detail-name">Muscle Map</div>
         <div class="grr-detail-meta" id="grr-muscle-meta">Loading…</div>
         <div id="grr-muscle-svg-wrap" style="background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:14px;"></div>
-        <div class="grr-timer-presets" style="justify-content:flex-start;margin-bottom:14px;">
-          <span class="grr-timer-chip" style="background:#3a3a3a;cursor:default;">Untouched</span>
-          <span class="grr-timer-chip" style="background:#d9a441;color:#1a1a1a;cursor:default;">Low</span>
-          <span class="grr-timer-chip" style="background:#e2793a;color:#1a1a1a;cursor:default;">Moderate</span>
-          <span class="grr-timer-chip" style="background:#c8362a;color:#fff;cursor:default;">High</span>
+        <div class="grr-timer-presets" style="justify-content:flex-start;margin-bottom:6px;">
+          <span class="grr-timer-chip" style="background:#3a3a3a;cursor:default;">0 sets</span>
+          <span class="grr-timer-chip" style="background:#d9a441;color:#1a1a1a;cursor:default;">&lt; 8 (under target)</span>
+          <span class="grr-timer-chip" style="background:#e2793a;color:#1a1a1a;cursor:default;">8–20 (optimal)</span>
+          <span class="grr-timer-chip" style="background:#c8362a;color:#fff;cursor:default;">20+ (very high)</span>
         </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Sets-equivalent per muscle over your last 3 sessions, calibrated to Schoenfeld et al.'s hypertrophy dose-response research. "Set" = primary-mover credit; secondary/tertiary involvement counts as partial credit.</div>
         <div class="grr-section-label" style="padding-left:0;">All muscle tallies (last 3 sessions)</div>
         <div style="font-size:11px;color:var(--muted);padding:0 0 6px;">If a number here is &gt;0 but its region stayed gray above, that muscle's SVG id guess was wrong — tell me the real one and I'll fix just that line.</div>
         <div id="grr-muscle-extra" style="font-size:12.5px;color:var(--muted);line-height:1.7;"></div>
@@ -823,12 +855,11 @@
       : 'No sessions logged yet — log a few sets to see this fill in.';
 
     const tally = computeMuscleTally();
-    const maxScore = Math.max(0, ...Object.values(tally));
 
     const extraWrap = root.querySelector('#grr-muscle-extra');
     const extraLines = Object.keys(MUSCLE_LABELS)
       .sort((a,b) => (tally[b]||0) - (tally[a]||0))
-      .map(id => `${MUSCLE_LABELS[id]}: ${tally[id] || 0}`);
+      .map(id => `${MUSCLE_LABELS[id]}: ${setsEquivalent(tally[id] || 0).toFixed(1)} sets`);
     extraWrap.innerHTML = extraLines.join(' · ') || 'None';
 
     const wrap = root.querySelector('#grr-muscle-svg-wrap');
@@ -851,7 +882,7 @@
       Object.entries(MUSCLE_TO_SVG).forEach(([muscleId, svgId]) => {
         const el = wrap.querySelector('#' + CSS.escape(svgId));
         if (el) {
-          el.style.fill = colorForScore(tally[muscleId] || 0, maxScore);
+          el.style.fill = colorForScore(tally[muscleId] || 0);
           el.style.fillOpacity = '1';
         }
       });
