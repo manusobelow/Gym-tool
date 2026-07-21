@@ -64,6 +64,14 @@
   .grr-tm-box { background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:10px 12px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
   .grr-tm-box label { font-size:11px; text-transform:uppercase; color:var(--muted); font-weight:700; }
   .grr-tm-box input { width:80px; background:var(--bg); border:1px solid var(--line); color:var(--chalk); font-size:15px; padding:6px 8px; border-radius:4px; text-align:right; }
+  .grr-timer-box { background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:14px 12px; margin-bottom:14px; text-align:center; }
+  .grr-timer-time { font-size:34px; font-weight:800; letter-spacing:.02em; color:var(--chalk); font-variant-numeric:tabular-nums; }
+  .grr-timer-bar { height:6px; background:var(--bg); border-radius:999px; overflow:hidden; margin:8px 0 10px; }
+  .grr-timer-fill { height:100%; background:var(--brand); transition:width 1s linear; }
+  .grr-timer-presets { display:flex; justify-content:center; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .grr-timer-chip { border:1px solid var(--line); background:var(--bg); color:var(--muted); font-size:11.5px; font-weight:700; padding:5px 9px; border-radius:999px; cursor:pointer; }
+  .grr-timer-chip.active { background:var(--steel); border-color:var(--steel); color:#fff; }
+  .grr-timer-btn { background:var(--steel); color:#fff; border:none; font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.04em; padding:9px 24px; border-radius:6px; cursor:pointer; }
   .grr-set-row { background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:10px 12px; margin-bottom:8px; }
   .grr-set-row-top { display:flex; justify-content:space-between; font-size:12.5px; color:var(--muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:.03em; font-weight:700;}
   .grr-set-inputs { display:flex; gap:8px; align-items:center; }
@@ -139,6 +147,85 @@
     if (isNaN(d)) return iso;
     const wd = d.toLocaleDateString(undefined, {weekday:'short'});
     return `${wd} ${iso}`;
+  }
+
+  // ---------- REST TIMER ----------
+  let TIMER = { seconds: 120, total: 120, running: false, handle: null, exId: null };
+  const TIMER_PRESETS = [60, 90, 120, 150, 180];
+
+  function fmtTime(s) {
+    s = Math.max(0, s);
+    const m = Math.floor(s / 60), sec = s % 60;
+    return `${m}:${String(sec).padStart(2,'0')}`;
+  }
+  function playBeep() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = 880;
+      g.gain.setValueAtTime(0.3, ctx.currentTime);
+      o.start(); o.stop(ctx.currentTime + 0.35);
+    } catch(e) {}
+  }
+  function timerTick() {
+    TIMER.seconds--;
+    const timeEl = document.getElementById('grr-timer-time');
+    const fillEl = document.getElementById('grr-timer-fill');
+    if (timeEl) timeEl.textContent = fmtTime(TIMER.seconds);
+    if (fillEl) fillEl.style.width = Math.max(0, (TIMER.seconds / TIMER.total) * 100) + '%';
+    if (TIMER.seconds <= 0) {
+      clearInterval(TIMER.handle);
+      TIMER.handle = null; TIMER.running = false;
+      const btn = document.getElementById('grr-timer-startpause');
+      if (btn) btn.textContent = 'Start';
+      if (navigator.vibrate) navigator.vibrate([200,100,200]);
+      playBeep();
+    }
+  }
+  function setTimerDuration(sec, exId) {
+    clearInterval(TIMER.handle);
+    TIMER = {seconds:sec, total:sec, running:false, handle:null, exId};
+    const timeEl = document.getElementById('grr-timer-time');
+    const fillEl = document.getElementById('grr-timer-fill');
+    const btn = document.getElementById('grr-timer-startpause');
+    if (timeEl) timeEl.textContent = fmtTime(sec);
+    if (fillEl) fillEl.style.width = '100%';
+    if (btn) btn.textContent = 'Start';
+  }
+  function toggleTimer(exId, defaultSec) {
+    if (TIMER.exId !== exId) setTimerDuration(defaultSec, exId);
+    const btn = document.getElementById('grr-timer-startpause');
+    if (TIMER.running) {
+      clearInterval(TIMER.handle); TIMER.handle = null; TIMER.running = false;
+      if (btn) btn.textContent = 'Start';
+    } else {
+      if (TIMER.seconds <= 0) TIMER.seconds = TIMER.total;
+      TIMER.running = true;
+      TIMER.handle = setInterval(timerTick, 1000);
+      if (btn) btn.textContent = 'Pause';
+    }
+  }
+  function timerBlock(x, defaultSec) {
+    const isCurrent = TIMER.exId === x.id;
+    const seconds = isCurrent ? TIMER.seconds : defaultSec;
+    const total = isCurrent ? TIMER.total : defaultSec;
+    const running = isCurrent && TIMER.running;
+    return `
+      <div class="grr-timer-box">
+        <div class="grr-timer-time" id="grr-timer-time">${fmtTime(seconds)}</div>
+        <div class="grr-timer-bar"><div class="grr-timer-fill" id="grr-timer-fill" style="width:${Math.max(0,(seconds/total)*100)}%"></div></div>
+        <div class="grr-timer-presets" id="grr-timer-presets">
+          ${TIMER_PRESETS.map(s => `<span class="grr-timer-chip${(isCurrent && TIMER.total===s) ? ' active' : ''}" data-sec="${s}">${fmtTime(s)}</span>`).join('')}
+        </div>
+        <button class="grr-timer-btn" id="grr-timer-startpause">${running ? 'Pause' : 'Start'}</button>
+      </div>`;
+  }
+  function wireTimer(x, defaultSec) {
+    document.getElementById('grr-timer-startpause').onclick = () => toggleTimer(x.id, defaultSec);
+    document.querySelectorAll('.grr-timer-chip').forEach(chip => {
+      chip.onclick = () => setTimerDuration(parseInt(chip.dataset.sec, 10), x.id);
+    });
   }
 
   // ---------- STATE ----------
@@ -395,6 +482,8 @@
           <input type="number" id="grr-hyp-weight-input" value="${hypState.weight || ''}" placeholder="e.g. 40"/>
         </div>`}
 
+        ${timerBlock(x, x.scheme === 'hypertrophy' ? 60 : 120)}
+
         <div id="grr-sets">${setsHtml}</div>
         <button class="grr-save-btn" id="grr-save">Save Today's Log</button>
         <div class="grr-save-msg">${state.saveMsg}</div>
@@ -408,6 +497,7 @@
     `;
 
     root.querySelector('#grr-back').onclick = () => { state.view = 'list'; render(); };
+    wireTimer(x, x.scheme === 'hypertrophy' ? 60 : 120);
     root.querySelectorAll('.grr-superset-chip').forEach(chip => {
       chip.onclick = () => { state.view = 'detail'; state.activeId = chip.dataset.id; state.saveMsg = ''; render(); };
     });
