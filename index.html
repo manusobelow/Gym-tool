@@ -303,7 +303,10 @@
     root.innerHTML = `
       <div class="grr-header">
         <div class="grr-title">GYM <span class="grr-title-accent">REFERENCE</span></div>
-        <button class="grr-navbtn" id="grr-goto-history">Log / Export</button>
+        <div style="display:flex;gap:6px;">
+          <button class="grr-navbtn" id="grr-goto-muscles">Muscle Map</button>
+          <button class="grr-navbtn" id="grr-goto-history">Log / Export</button>
+        </div>
       </div>
       <div class="grr-section-label">Equipment here today</div>
       <div class="grr-equip-row" id="grr-equip-row">
@@ -403,6 +406,7 @@
       el.querySelector('.grr-collapse-head').onclick = () => el.classList.toggle('open');
     });
     root.querySelector('#grr-goto-history').onclick = () => { state.view = 'log'; render(); };
+    root.querySelector('#grr-goto-muscles').onclick = () => { state.view = 'muscles'; render(); };
   }
 
   // ---------- RENDER: DETAIL VIEW (mobility) ----------
@@ -711,7 +715,149 @@
   function render() {
     if (state.view === 'detail') renderDetail();
     else if (state.view === 'log') renderLog();
+    else if (state.view === 'muscles') renderMuscles();
     else renderList();
+  }
+
+  // ---------- MUSCLE MAP ----------
+  // Only muscles with a REAL, verified id in muscles.svg go here. Everything else shows in the
+  // text fallback list below the diagram until you finish labeling that shape in Inkscape.
+  // To add one: label the shape in Inkscape with any id, then tell me the id and I'll add the line here.
+  const MUSCLE_TO_SVG = {
+    'rear-delts': 'Rear_delts',
+    'transverse-abdominal': 'Transverse_abdominal',
+    'serratus': 'Serratus',
+    'quadratus-lumborum': 'Quadratus_lumborum',
+    'side-delts': 'Side_delts',
+    'upper-back': 'Upper_back',
+    'hip-flexors': 'Hip_flexors',
+    'tibialis-anterior': 'Tibialis_anterior',
+    'adductors': 'Adductors',
+    'lower-traps': 'Lower_traps',
+    'hamstrings': 'Hamstrings',
+    'mid-traps': 'Mid_traps',
+    'abs': 'Abs',
+    'calves': 'Calves',
+    'quads': 'Quads',
+    'glute-max': 'Glute_max',
+    'glute-med': 'Glute_med',
+    'chest': 'Chest',
+    'neck': 'Neck',
+    'forearms': 'Forearms',
+    'biceps': 'Biceps',
+    'obliques': 'Obliques',
+    'front-delts': 'Front_delts',
+    'triceps': 'Triceps',
+    'spinal-erectors': 'Spinal_erectors',
+    'upper-traps': 'Upper_traps',
+    'lats': 'Lats',
+    'teres-major': 'Teres_Major',
+    'rhomboids': 'Rhomboids',
+  };
+  const MUSCLE_LABELS = {
+    'rear-delts':'Rear Delts','transverse-abdominal':'Transverse Abdominal','serratus':'Serratus',
+    'quadratus-lumborum':'Quadratus Lumborum','side-delts':'Side Delts','upper-back':'Upper Back',
+    'hip-flexors':'Hip Flexors','tibialis-anterior':'Tibialis Anterior','adductors':'Adductors',
+    'lower-traps':'Lower Traps','hamstrings':'Hamstrings','mid-traps':'Mid Traps','abs':'Abs',
+    'calves':'Calves','quads':'Quads','glute-max':'Glute Max','glute-med':'Glute Med','chest':'Chest',
+    'neck':'Neck','forearms':'Forearms','biceps':'Biceps','obliques':'Obliques','front-delts':'Front Delts',
+    'triceps':'Triceps','spinal-erectors':'Spinal Erectors','upper-traps':'Upper Traps','lats':'Lats',
+    'teres-major':'Teres Major','rhomboids':'Rhomboids',
+  };
+  const COUNT_MOBILITY_IN_TALLY = false; // warm-ups/stretches don't count as real training stimulus by default
+  let musclesSvgLoaded = false;
+  let musclesSvgMarkup = null;
+
+  function last3SessionDates() {
+    const dates = [...new Set(Object.values(LOGS).flat().map(e => e.date))].sort().reverse();
+    return dates.slice(0, 3);
+  }
+
+  function computeMuscleTally() {
+    const recentDates = new Set(last3SessionDates());
+    const tally = {};
+    Object.values(LOGS).flat().forEach(entry => {
+      if (!recentDates.has(entry.date)) return;
+      const ex = EX_BY_ID[entry.exId];
+      if (!ex || !ex.muscles) return;
+      if (ex.scheme === 'mobility' && !COUNT_MOBILITY_IN_TALLY) return;
+      const countedSets = entry.sets.filter(s => s.target !== 'Warm-up').length || entry.sets.length;
+      ex.muscles.forEach(m => {
+        tally[m.id] = (tally[m.id] || 0) + (m.w * countedSets);
+      });
+    });
+    return tally;
+  }
+
+  function colorForScore(n, maxScore) {
+    if (!n) return '#3a3a3a';
+    const pct = maxScore > 0 ? n / maxScore : 0;
+    if (pct <= 0.33) return '#d9a441';
+    if (pct <= 0.66) return '#e2793a';
+    return '#c8362a';
+  }
+
+  async function renderMuscles() {
+    root.innerHTML = `
+      <div class="grr-detail">
+        <span class="grr-back" id="grr-back">← Back to list</span>
+        <div class="grr-detail-name">Muscle Map</div>
+        <div class="grr-detail-meta" id="grr-muscle-meta">Loading…</div>
+        <div id="grr-muscle-svg-wrap" style="background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:14px;"></div>
+        <div class="grr-timer-presets" style="justify-content:flex-start;margin-bottom:14px;">
+          <span class="grr-timer-chip" style="background:#3a3a3a;cursor:default;">Untouched</span>
+          <span class="grr-timer-chip" style="background:#d9a441;color:#1a1a1a;cursor:default;">Low</span>
+          <span class="grr-timer-chip" style="background:#e2793a;color:#1a1a1a;cursor:default;">Moderate</span>
+          <span class="grr-timer-chip" style="background:#c8362a;color:#fff;cursor:default;">High</span>
+        </div>
+        <div class="grr-section-label" style="padding-left:0;">All muscle tallies (last 3 sessions)</div>
+        <div style="font-size:11px;color:var(--muted);padding:0 0 6px;">If a number here is &gt;0 but its region stayed gray above, that muscle's SVG id guess was wrong — tell me the real one and I'll fix just that line.</div>
+        <div id="grr-muscle-extra" style="font-size:12.5px;color:var(--muted);line-height:1.7;"></div>
+      </div>
+    `;
+    root.querySelector('#grr-back').onclick = () => { state.view = 'list'; render(); };
+
+    const dates = last3SessionDates();
+    root.querySelector('#grr-muscle-meta').textContent = dates.length
+      ? `Based on your last ${dates.length} session(s): ${dates.map(friendlyDate).join(', ')}`
+      : 'No sessions logged yet — log a few sets to see this fill in.';
+
+    const tally = computeMuscleTally();
+    const maxScore = Math.max(0, ...Object.values(tally));
+
+    const extraWrap = root.querySelector('#grr-muscle-extra');
+    const extraLines = Object.keys(MUSCLE_LABELS)
+      .sort((a,b) => (tally[b]||0) - (tally[a]||0))
+      .map(id => `${MUSCLE_LABELS[id]}: ${tally[id] || 0}`);
+    extraWrap.innerHTML = extraLines.join(' · ') || 'None';
+
+    const wrap = root.querySelector('#grr-muscle-svg-wrap');
+    try {
+      if (!musclesSvgLoaded) {
+        const resp = await fetch('muscles.svg');
+        if (!resp.ok) throw new Error('not found');
+        musclesSvgMarkup = await resp.text();
+        musclesSvgLoaded = true;
+      }
+      wrap.innerHTML = musclesSvgMarkup;
+      const svgEl = wrap.querySelector('svg');
+      if (svgEl) {
+        svgEl.removeAttribute('width');
+        svgEl.removeAttribute('height');
+        svgEl.style.width = '100%';
+        svgEl.style.height = 'auto';
+        svgEl.style.display = 'block';
+      }
+      Object.entries(MUSCLE_TO_SVG).forEach(([muscleId, svgId]) => {
+        const el = wrap.querySelector('#' + CSS.escape(svgId));
+        if (el) {
+          el.style.fill = colorForScore(tally[muscleId] || 0, maxScore);
+          el.style.fillOpacity = '1';
+        }
+      });
+    } catch (err) {
+      wrap.innerHTML = `<div class="grr-empty">Couldn't load muscles.svg — make sure it's uploaded in the same folder as index.html.</div>`;
+    }
   }
 
   loadAll();
