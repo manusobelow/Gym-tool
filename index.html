@@ -133,14 +133,14 @@
     hamstrings:       {mev:6,  mav:[10,16], mrv:20},
     glutes:           {mev:4,  mav:[8,12],  mrv:16},
     sideDelts:        {mev:8,  mav:[16,22], mrv:26},
-    frontDelts:       {mev:0,  mav:[6,8],   mrv:12},
-    rearDelts:        {mev:0,  mav:[12,16], mrv:20},
+    frontDelts:       {mev:3,  mav:[6,8],   mrv:12}, // borrowed floor — front delts get heavy incidental overlap from all pressing, low MEV is defensible per common coaching consensus
+    rearDelts:        {mev:5,  mav:[12,16], mrv:20}, // borrowed floor — widely flagged by coaches as chronically undertrained despite incidental row/pull volume, floor raised accordingly
     biceps:           {mev:8,  mav:[14,20], mrv:26},
     triceps:          {mev:6,  mav:[10,14], mrv:18},
     calves:           {mev:8,  mav:[12,16], mrv:20},
-    abs:              {mev:0,  mav:[16,20], mrv:25},
-    traps:            {mev:0,  mav:[12,16], mrv:20},
-    smallStabilizers: {mev:0,  mav:[8,12],  mrv:16},
+    abs:              {mev:6,  mav:[16,20], mrv:25}, // borrowed floor — recovers fast, tolerates volume well; closer to RP's actual published ~6-8 MEV than a true zero-data estimate
+    traps:            {mev:5,  mav:[12,16], mrv:20}, // borrowed floor — commonly under-trained relative to incidental shrug/pull volume, floor raised accordingly
+    smallStabilizers: {mev:3,  mav:[8,12],  mrv:16}, // borrowed floor — most muscles in this bucket (QL, hip flexors, rotator cuff, tibialis, neck) are genuinely low-need; forearms is the one outlier sharing this bucket
   };
   const MUSCLE_TO_LANDMARK_CATEGORY = {
     'chest': 'chest',
