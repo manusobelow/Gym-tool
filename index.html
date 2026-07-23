@@ -863,10 +863,11 @@
   function colorForScore(muscleId, n) {
     if (!n) return '#e0b3a0'; // untrained — flesh tone
     const se = setsEquivalent(n);
-    const {mev, mrv} = landmarksFor(muscleId);
-    if (se < mev) return '#f2d43d';   // below minimum effective volume
-    if (se <= mrv) return '#3ea86e';  // effective, productive range
-    return '#c8362a';                 // above maximum recoverable — likely no added benefit
+    const {mev, mav} = landmarksFor(muscleId);
+    if (se < mev) return '#f2d43d';       // below minimum effective volume
+    if (se < mav[0]) return '#a8d9a0';    // meeting minimum, not yet in the optimal band
+    if (se <= mav[1]) return '#3ea86e';   // optimal — the genuine sweet spot, not just "above minimum"
+    return '#c8362a';                     // past optimal — diminishing returns through excessive, one zone
   }
 
   async function renderMuscles() {
@@ -879,10 +880,11 @@
         <div class="grr-timer-presets" style="justify-content:flex-start;margin-bottom:6px;">
           <span class="grr-timer-chip" style="background:#e0b3a0;color:#1a1a1a;cursor:default;">Untrained</span>
           <span class="grr-timer-chip" style="background:#f2d43d;color:#1a1a1a;cursor:default;">Below minimum</span>
-          <span class="grr-timer-chip" style="background:#3ea86e;color:#fff;cursor:default;">Optimal range</span>
-          <span class="grr-timer-chip" style="background:#c8362a;color:#fff;cursor:default;">Above maximum</span>
+          <span class="grr-timer-chip" style="background:#a8d9a0;color:#1a1a1a;cursor:default;">Meeting minimum</span>
+          <span class="grr-timer-chip" style="background:#3ea86e;color:#fff;cursor:default;">Optimal</span>
+          <span class="grr-timer-chip" style="background:#c8362a;color:#fff;cursor:default;">Past optimal</span>
         </div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Sets-equivalent per muscle over a rolling 7-day window, compared against that specific muscle's own minimum/maximum volume landmarks (Renaissance Periodization framework, synthesized from Schoenfeld et al.'s dose-response research) — thresholds differ by muscle, so the same number can be a different color on different muscles.</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Sets-equivalent per muscle over a rolling 7-day window, compared against that specific muscle's own minimum and optimal volume band (Renaissance Periodization framework, synthesized from Schoenfeld et al.'s dose-response research). Meeting the minimum isn't the same as being in the optimal range — thresholds differ by muscle, so the same number can be a different color on different muscles.</div>
         <div class="grr-section-label" style="padding-left:0;">All muscle tallies (rolling 7 days)</div>
         <div id="grr-muscle-extra" style="font-size:12.5px;color:var(--muted);line-height:1.7;"></div>
         <div class="grr-section-label" style="padding-left:0;">Tap a muscle to find exercises for it</div>
@@ -905,7 +907,7 @@
       .sort((a,b) => (tally[b]||0) - (tally[a]||0))
       .map(id => {
         const lm = landmarksFor(id);
-        return `${MUSCLE_LABELS[id]}: ${setsEquivalent(tally[id] || 0).toFixed(1)} (target ${lm.mev}\u2013${lm.mrv})`;
+        return `${MUSCLE_LABELS[id]}: ${setsEquivalent(tally[id] || 0).toFixed(1)} (optimal ${lm.mav[0]}\u2013${lm.mav[1]})`;
       });
     extraWrap.innerHTML = extraLines.join(' · ') || 'None';
 
