@@ -55,6 +55,275 @@ const EXERCISES = [
     ]
   },
   {
+  "id": "STRAIGHT_ARM_LAT_PULLDOWN_WIDE",
+  "n": "Straight-Arm Lat Pulldown (Wide Grip)",
+  "p": "Isolation",
+  "scheme": "hypertrophy",
+  "eq": ["cable"],
+  "m": "Teres Major / Lats",
+  "region": "upper",
+  "gif": "",
+  "notes": "Wide grip, straight arms, drive elbows down and back to bias teres major over lats.",
+  "muscles": [
+    {"id": "lats", "w": 3},
+    {"id": "teres-major", "w": 2},
+    {"id": "triceps", "w": 1}
+  ]
+},
+{
+  "id": "TERES_MAJOR_ROW",
+  "n": "Teres Major Row (Wide-Grip, Elbow-Out Row)",
+  "p": "Pull Horizontal",
+  "scheme": "hypertrophy",
+  "eq": ["cable", "dumbbell"],
+  "m": "Teres Major / Upper Back",
+  "region": "upper",
+  "gif": "",
+  "notes": "Wide grip, elbows flared ~45°, pull to lower ribs to emphasize teres major over lats/rhomboids.",
+  "muscles": [
+    {"id": "teres-major", "w": 3},
+    {"id": "upper-back", "w": 2},
+    {"id": "rear-delts", "w": 1}
+  ]
+},
+{
+  "id": "NECK_CURL",
+  "n": "Neck Curl (Manual/Plate-Resisted)",
+  "p": "Isolation",
+  "scheme": "hypertrophy",
+  "eq": ["bodyweight"],
+  "m": "Neck",
+  "region": "upper",
+  "gif": "",
+  "notes": "Lying face-up, chin tucks toward chest against resistance from own hand or a light plate on forehead.",
+  "muscles": [
+    {"id": "neck", "w": 3}
+  ]
+},
+{
+  "id": "NECK_EXTENSION",
+  "n": "Neck Extension (Manual/Plate-Resisted)",
+  "p": "Isolation",
+  "scheme": "hypertrophy",
+  "eq": ["bodyweight"],
+  "m": "Neck",
+  "region": "upper",
+  "gif": "",
+  "notes": "Lying face-down, head extends back against resistance from own hand or a light plate at back of head.",
+  "muscles": [
+    {"id": "neck", "w": 3}
+  ]
+},
+{
+  "id": "NECK_LATERAL_FLEXION",
+  "n": "Neck Lateral Flexion (Manual-Resisted)",
+  "p": "Isolation",
+  "scheme": "hypertrophy",
+  "eq": ["bodyweight"],
+  "m": "Neck",
+  "region": "upper",
+  "gif": "",
+  "notes": "Seated or standing, side-bend head against resistance from own hand. Work both sides evenly.",
+  "muscles": [
+    {"id": "neck", "w": 3}
+  ]
+},
+{
+  "id": "NORDIC_CURL",
+  "n": "Nordic Curl",
+  "p": "Isolation",
+  "scheme": "hypertrophy",
+  "eq": ["bodyweight"],
+  "m": "Hamstrings",
+  "region": "lower",
+  "gif": "",
+  "notes": "Anchor ankles, lower torso under control as far as possible, push back up. Regress with hand assist if needed.",
+  "muscles": [
+    {"id": "hamstrings", "w": 3},
+    {"id": "glute-max", "w": 1}
+  ]
+},
+{
+  "id": "SEATED_CALF_RAISE_MACHINE",
+  "n": "Seated Calf Raise Machine",
+  "p": "Isolation",
+  "scheme": "hypertrophy",
+  "eq": ["machine"],
+  "m": "Calves",
+  "region": "lower",
+  "gif": "",
+  "notes": "Bent-knee position biases soleus over gastrocnemius.",
+  "muscles": [
+    {"id": "calves", "w": 3}
+  ]
+},
+{
+  "id": "LOW_TO_HIGH_CABLE_FLY",
+  "n": "Low-to-High Cable Fly",
+  "p": "Isolation",
+  "scheme": "hypertrophy",
+  "eq": ["cable"],
+  "m": "Chest / Front Delts",
+  "region": "upper",
+  "gif": "",
+  "notes": "Cables set low, pull up and across to bias upper chest and front delt.",
+  "muscles": [
+    {"id": "chest", "w": 3},
+    {"id": "front-delts", "w": 2}
+  ]
+},
+{
+  "id": "COPENHAGEN_PLANK",
+  "n": "Copenhagen Plank",
+  "p": "Core / Carry",
+  "scheme": "hypertrophy",
+  "eq": ["bodyweight"],
+  "m": "Adductors / Obliques",
+  "region": "lower",
+  "gif": "",
+  "notes": "Top leg on bench, bottom leg free, hold side-plank position. Regress with bent bottom knee if needed.",
+  "muscles": [
+    {"id": "adductors", "w": 3},
+    {"id": "obliques", "w": 2},
+    {"id": "quadratus-lumborum", "w": 1}
+  ]
+},
+{
+  "id": "CABLE_FRONT_RAISE",
+  "n": "Cable Front Raise",
+  "p": "Isolation",
+  "scheme": "hypertrophy",
+  "eq": ["cable"],
+  "m": "Front Delts",
+  "region": "upper",
+  "gif": "",
+  "notes": "Constant tension version of front raise; can also sub plate or dumbbell.",
+  "muscles": [
+    {"id": "front-delts", "w": 3},
+    {"id": "upper-traps", "w": 1}
+  ]
+},
+{
+  "id": "WRIST_CURL",
+  "n": "Wrist Curl (Barbell/DB)",
+  "p": "Isolation",
+  "scheme": "hypertrophy",
+  "eq": ["barbell", "dumbbell"],
+  "m": "Forearms",
+  "region": "upper",
+  "gif": "",
+  "notes": "Forearms on bench or thighs, curl bar/DB up using wrist flexion only.",
+  "muscles": [
+    {"id": "forearms", "w": 3}
+  ]
+},
+{
+  "id": "REVERSE_WRIST_CURL",
+  "n": "Reverse Wrist Curl (Barbell/DB)",
+  "p": "Isolation",
+  "scheme": "hypertrophy",
+  "eq": ["barbell", "dumbbell"],
+  "m": "Forearms",
+  "region": "upper",
+  "gif": "",
+  "notes": "Overhand grip, forearms supported, extend wrist upward against resistance.",
+  "muscles": [
+    {"id": "forearms", "w": 3}
+  ]
+},
+{
+  "id": "SINGLE_LEG_LEG_CURL_MACHINE",
+  "n": "Single-Leg Leg Curl (Machine)",
+  "p": "Isolation",
+  "scheme": "hypertrophy",
+  "eq": ["machine"],
+  "m": "Hamstrings",
+  "region": "lower",
+  "gif": "",
+  "notes": "Unilateral version of lying/seated leg curl — helps address side-to-side imbalance.",
+  "muscles": [
+    {"id": "hamstrings", "w": 3},
+    {"id": "calves", "w": 1}
+  ]
+},
+{
+  "id": "SEATED_BARBELL_BACK_SQUAT",
+  "n": "Seated Barbell Back Squat (Box/Bench)",
+  "p": "Squat",
+  "scheme": "strength",
+  "eq": ["barbell"],
+  "m": "Quads / Glute Max",
+  "region": "lower",
+  "gif": "",
+  "notes": "Squat down to a full seated pause on a box or bench, then drive up without bouncing — removes stretch-reflex, emphasizes concentric strength out of the bottom.",
+  "muscles": [
+    {"id": "quads", "w": 3},
+    {"id": "glute-max", "w": 2},
+    {"id": "adductors", "w": 1}
+  ]
+},
+{
+  "id": "MACHINE_LATERAL_RAISE",
+  "n": "Lateral Raise Machine",
+  "p": "Isolation",
+  "scheme": "hypertrophy",
+  "eq": ["machine"],
+  "m": "Side Delts",
+  "region": "upper",
+  "gif": "",
+  "notes": "Fixed path keeps tension on side delt without needing to control momentum — good option for drop sets.",
+  "muscles": [
+    {"id": "side-delts", "w": 3},
+    {"id": "upper-traps", "w": 1}
+  ]
+},
+{
+  "id": "LEANING_CABLE_LATERAL_RAISE",
+  "n": "Leaning Cable Lateral Raise",
+  "p": "Isolation",
+  "scheme": "hypertrophy",
+  "eq": ["cable"],
+  "m": "Side Delts",
+  "region": "upper",
+  "gif": "",
+  "notes": "Lean away from the cable stack to increase range of motion and keep tension on side delt at the bottom, where standing/DB versions lose it.",
+  "muscles": [
+    {"id": "side-delts", "w": 3},
+    {"id": "upper-traps", "w": 1}
+  ]
+},
+{
+  "id": "CHEST_SUPPORTED_DB_REVERSE_FLY",
+  "n": "Chest-Supported DB Reverse Fly",
+  "p": "Isolation",
+  "scheme": "hypertrophy",
+  "eq": ["dumbbell"],
+  "m": "Rear Delts / Upper Back",
+  "region": "upper",
+  "gif": "",
+  "notes": "Chest braced on incline bench removes momentum/lower back involvement, isolating rear delts and upper back more strictly than a standing bent-over version.",
+  "muscles": [
+    {"id": "rear-delts", "w": 3},
+    {"id": "upper-back", "w": 2},
+    {"id": "rhomboids", "w": 1}
+  ]
+},
+{
+  "id": "STANDARD_CRUNCH",
+  "n": "Crunch",
+  "p": "Core / Carry",
+  "scheme": "hypertrophy",
+  "eq": ["bodyweight"],
+  "m": "Abs",
+  "region": "upper",
+  "gif": "",
+  "notes": "Lying face-up, knees bent, curl shoulder blades off the floor using abs only — short range of motion, avoid pulling on neck.",
+  "muscles": [
+    {"id": "abs", "w": 3},
+    {"id": "obliques", "w": 1}
+  ]
+}
+  {
     "id": "ATG_SPLIT_SQUAT_MOB",
     "n": "ATG Split Squat (Mobility)",
     "p": "Warm-up / Mobility",
