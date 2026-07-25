@@ -928,7 +928,7 @@
         </div>
         <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Sets-equivalent per muscle over a rolling 7-day window, compared against that specific muscle's own minimum and optimal volume band (Renaissance Periodization framework, synthesized from Schoenfeld et al.'s dose-response research). Meeting the minimum isn't the same as being in the optimal range — thresholds differ by muscle, so the same number can be a different color on different muscles.</div>
         <div class="grr-section-label" style="padding-left:0;">Tap a muscle to see it, its status, and matching exercises</div>
-        <div id="grr-muscle-row"></div>
+        <div class="grr-equip-row" id="grr-muscle-row" style="padding:0 0 4px;"></div>
         <div id="grr-muscle-target-results"></div>
       </div>
     `;
@@ -945,22 +945,35 @@
     // one row per muscle: color swatch + name + current sets-equivalent + optimal target range.
     // Sorted lowest-trained first so the muscles worth attention surface at the top. Tappable,
     // same as before, to filter matching exercises below.
+    // zone 0=untrained, 1=below minimum, 2=meeting minimum, 3=optimal, 4=past optimal — matches legend order
+    function zoneRank(muscleId, n) {
+      if (!n) return 0;
+      const se = setsEquivalent(n);
+      const {mev, mav} = landmarksFor(muscleId);
+      if (se < mev) return 1;
+      if (se < mav[0]) return 2;
+      if (se <= mav[1]) return 3;
+      return 4;
+    }
+
     const muscleRow = root.querySelector('#grr-muscle-row');
     Object.keys(MUSCLE_LABELS)
-      .sort((a,b) => (tally[a]||0) - (tally[b]||0))
+      .sort((a,b) => {
+        const za = zoneRank(a, tally[a]||0), zb = zoneRank(b, tally[b]||0);
+        if (za !== zb) return za - zb;
+        return MUSCLE_LABELS[a].localeCompare(MUSCLE_LABELS[b]);
+      })
       .forEach(m => {
-        const lm = landmarksFor(m);
         const se = setsEquivalent(tally[m] || 0);
         const color = colorForScore(m, tally[m] || 0);
-        const row = document.createElement('div');
-        row.onclick = () => { state.muscleMapTarget = (state.muscleMapTarget === m) ? null : m; render(); };
-        row.style.cssText = `display:flex;align-items:center;gap:10px;padding:9px 10px;margin-bottom:6px;border-radius:6px;cursor:pointer;background:var(--surface);border:1px solid ${state.muscleMapTarget === m ? 'var(--chalk)' : 'var(--line)'};`;
-        row.innerHTML = `
-          <span style="width:14px;height:14px;border-radius:4px;background:${color};flex-shrink:0;"></span>
-          <span style="flex:1;font-weight:700;font-size:13.5px;">${MUSCLE_LABELS[m]}</span>
-          <span style="font-size:12px;color:var(--muted);white-space:nowrap;">${se.toFixed(1)} <span style="opacity:.7;">(optimal ${lm.mav[0]}\u2013${lm.mav[1]})</span></span>
-        `;
-        muscleRow.appendChild(row);
+        const chip = document.createElement('div');
+        chip.className = 'grr-chip';
+        chip.style.background = color;
+        chip.style.color = (tally[m]||0) === 0 ? '#1a1a1a' : '#fff';
+        chip.style.border = state.muscleMapTarget === m ? '2px solid var(--chalk)' : 'none';
+        chip.textContent = `${MUSCLE_LABELS[m]} \u00b7 ${se.toFixed(1)}`;
+        chip.onclick = () => { state.muscleMapTarget = (state.muscleMapTarget === m) ? null : m; render(); };
+        muscleRow.appendChild(chip);
       });
 
     const resultsWrap = root.querySelector('#grr-muscle-target-results');
