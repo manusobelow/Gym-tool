@@ -244,6 +244,7 @@
       if (btn) btn.textContent = 'Start';
       if (navigator.vibrate) navigator.vibrate([200,100,200]);
       playBeep();
+      releaseWakeLock();
     }
   }
   function setTimerDuration(sec, exId) {
@@ -256,16 +257,33 @@
     if (fillEl) fillEl.style.width = '100%';
     if (btn) btn.textContent = 'Start';
   }
+  let wakeLock = null;
+  async function acquireWakeLock() {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLock = await navigator.wakeLock.request('screen');
+      }
+    } catch (e) { /* not supported or denied — timer still works, just may lose time if screen sleeps */ }
+  }
+  function releaseWakeLock() {
+    if (wakeLock) { wakeLock.release().catch(()=>{}); wakeLock = null; }
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && TIMER.running && !wakeLock) acquireWakeLock();
+  });
+
   function toggleTimer(exId, defaultSec) {
     if (TIMER.exId !== exId) setTimerDuration(defaultSec, exId);
     const btn = document.getElementById('grr-timer-startpause');
     if (TIMER.running) {
       clearInterval(TIMER.handle); TIMER.handle = null; TIMER.running = false;
+      releaseWakeLock();
       if (btn) btn.textContent = 'Start';
     } else {
       if (TIMER.seconds <= 0) TIMER.seconds = TIMER.total;
       TIMER.running = true;
       TIMER.handle = setInterval(timerTick, 1000);
+      acquireWakeLock();
       if (btn) btn.textContent = 'Pause';
     }
   }
@@ -297,6 +315,7 @@
   let TIER = {};
   let HYP = {};
   let LOGS = {};
+  let DRAFTS = {}; // in-progress, unsaved set inputs per exercise id — survives navigating away and back
 
   function loadAll() {
     try { const a = JSON.parse(localStorage.getItem('gym-ref-equip')); if (a && a.length) state.equip = new Set(a); } catch(e){}
@@ -309,6 +328,7 @@
       else if (HYP[id].tier === '8-10') HYP[id].tier = 10;
     });
     try { const v = JSON.parse(localStorage.getItem('gym-logs')); if (v) LOGS = v; } catch(e){}
+    try { const v = JSON.parse(localStorage.getItem('gym-drafts')); if (v) DRAFTS = v; } catch(e){}
     Object.keys(LOGS).forEach(exId => {
       (LOGS[exId] || []).forEach((e, i) => {
         if (!e.exId) e.exId = exId;
@@ -323,6 +343,14 @@
   function saveTier() { try { localStorage.setItem('gym-tier', JSON.stringify(TIER)); } catch(e){} }
   function saveHyp() { try { localStorage.setItem('gym-hyp', JSON.stringify(HYP)); } catch(e){} }
   function saveLogs() { try { localStorage.setItem('gym-logs', JSON.stringify(LOGS)); } catch(e){} }
+  function saveDrafts() { try { localStorage.setItem('gym-drafts', JSON.stringify(DRAFTS)); } catch(e){} }
+  function updateDraft(exId, i, field, value) {
+    if (!DRAFTS[exId]) DRAFTS[exId] = {};
+    if (!DRAFTS[exId][i]) DRAFTS[exId][i] = {};
+    DRAFTS[exId][i][field] = value;
+    saveDrafts();
+  }
+  function clearDraft(exId) { delete DRAFTS[exId]; saveDrafts(); }
   function deleteLogEntry(exId, logId) {
     if (!LOGS[exId]) return;
     LOGS[exId] = LOGS[exId].filter(e => e.logId !== logId);
@@ -510,22 +538,27 @@
     const ss = supersetSuggestions(x);
     const hist = (LOGS[x.id] || []).slice(-5).reverse();
 
+    const draft = DRAFTS[x.id] || {};
     let setsHtml = targets.map((t,i) => {
       let weightGuess = '';
       if (t.pct) weightGuess = tm ? roundW(tm * t.pct) : '';
       if (t.fixedWeight !== undefined) weightGuess = t.fixedWeight || '';
       const pctLabel = t.pct ? Math.round(t.pct*100)+'% · ' : '';
+      const d = draft[i] || {};
+      const weightVal = d.weight !== undefined ? d.weight : weightGuess;
+      const repsVal = d.reps !== undefined ? d.reps : (typeof t.reps === 'number' ? t.reps : '');
+      const successVal = d.success; // true, false, or undefined
       return `
         <div class="grr-set-row" data-i="${i}">
           <div class="grr-set-row-top"><span>${t.label}</span><span>${pctLabel}${t.reps} reps</span></div>
           <div class="grr-set-inputs">
-            <input type="number" class="grr-weight-input" placeholder="lb" value="${weightGuess}"/>
+            <input type="number" class="grr-weight-input" placeholder="lb" value="${weightVal}"/>
             <span class="grr-unit">lb</span>
-            <input type="number" class="grr-reps-input" placeholder="reps" value="${typeof t.reps === 'number' ? t.reps : ''}"/>
+            <input type="number" class="grr-reps-input" placeholder="reps" value="${repsVal}"/>
             <span class="grr-unit">reps</span>
             <div class="grr-toggle">
-              <button class="grr-yes" data-i="${i}">✓</button>
-              <button class="grr-no" data-i="${i}">✗</button>
+              <button class="grr-yes${successVal===true?' on-yes':''}" data-i="${i}">✓</button>
+              <button class="grr-no${successVal===false?' on-no':''}" data-i="${i}">✗</button>
             </div>
           </div>
         </div>`;
@@ -594,11 +627,19 @@
         if (!isNaN(v) && v > 0) { HYP[x.id] = {weight: v, tier: hypState.tier}; saveHyp(); render(); }
       };
     }
+    root.querySelectorAll('.grr-weight-input').forEach((inp, i) => {
+      inp.oninput = () => updateDraft(x.id, i, 'weight', inp.value);
+    });
+    root.querySelectorAll('.grr-reps-input').forEach((inp, i) => {
+      inp.oninput = () => updateDraft(x.id, i, 'reps', inp.value);
+    });
     root.querySelectorAll('.grr-yes').forEach(b => b.onclick = () => {
       b.classList.add('on-yes'); b.parentElement.querySelector('.grr-no').classList.remove('on-no');
+      updateDraft(x.id, parseInt(b.dataset.i, 10), 'success', true);
     });
     root.querySelectorAll('.grr-no').forEach(b => b.onclick = () => {
       b.classList.add('on-no'); b.parentElement.querySelector('.grr-yes').classList.remove('on-yes');
+      updateDraft(x.id, parseInt(b.dataset.i, 10), 'success', false);
     });
 
     root.querySelector('#grr-save').onclick = () => {
@@ -653,6 +694,7 @@
       if (!LOGS[x.id]) LOGS[x.id] = [];
       LOGS[x.id].push(entry);
       saveLogs();
+      clearDraft(x.id);
       state.saveMsg = msg;
       render();
     };
@@ -885,10 +927,8 @@
           <span class="grr-timer-chip" style="background:#c8362a;color:#fff;cursor:default;">Past optimal</span>
         </div>
         <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Sets-equivalent per muscle over a rolling 7-day window, compared against that specific muscle's own minimum and optimal volume band (Renaissance Periodization framework, synthesized from Schoenfeld et al.'s dose-response research). Meeting the minimum isn't the same as being in the optimal range — thresholds differ by muscle, so the same number can be a different color on different muscles.</div>
-        <div class="grr-section-label" style="padding-left:0;">All muscle tallies (rolling 7 days)</div>
-        <div id="grr-muscle-extra" style="font-size:12.5px;color:var(--muted);line-height:1.7;"></div>
-        <div class="grr-section-label" style="padding-left:0;">Tap a muscle to find exercises for it</div>
-        <div class="grr-equip-row" id="grr-muscle-row" style="padding:0 0 4px;"></div>
+        <div class="grr-section-label" style="padding-left:0;">Tap a muscle to see it, its status, and matching exercises</div>
+        <div id="grr-muscle-row"></div>
         <div id="grr-muscle-target-results"></div>
       </div>
     `;
@@ -902,29 +942,25 @@
 
     const tally = computeMuscleTally();
 
-    const extraWrap = root.querySelector('#grr-muscle-extra');
-    const extraLines = Object.keys(MUSCLE_LABELS)
-      .sort((a,b) => (tally[b]||0) - (tally[a]||0))
-      .map(id => {
-        const lm = landmarksFor(id);
-        return `${MUSCLE_LABELS[id]}: ${setsEquivalent(tally[id] || 0).toFixed(1)} (optimal ${lm.mav[0]}\u2013${lm.mav[1]})`;
-      });
-    extraWrap.innerHTML = extraLines.join(' · ') || 'None';
-
-    // muscle chips sorted lowest-trained first, colored to match their own status —
-    // makes the undertrained ones (the ones worth tapping) easy to spot at a glance
+    // one row per muscle: color swatch + name + current sets-equivalent + optimal target range.
+    // Sorted lowest-trained first so the muscles worth attention surface at the top. Tappable,
+    // same as before, to filter matching exercises below.
     const muscleRow = root.querySelector('#grr-muscle-row');
     Object.keys(MUSCLE_LABELS)
       .sort((a,b) => (tally[a]||0) - (tally[b]||0))
       .forEach(m => {
-        const chip = document.createElement('div');
-        chip.className = 'grr-chip';
-        chip.style.background = colorForScore(m, tally[m] || 0);
-        chip.style.color = (tally[m]||0) === 0 ? '#1a1a1a' : '#fff';
-        chip.style.border = state.muscleMapTarget === m ? '2px solid var(--chalk)' : 'none';
-        chip.textContent = MUSCLE_LABELS[m];
-        chip.onclick = () => { state.muscleMapTarget = (state.muscleMapTarget === m) ? null : m; render(); };
-        muscleRow.appendChild(chip);
+        const lm = landmarksFor(m);
+        const se = setsEquivalent(tally[m] || 0);
+        const color = colorForScore(m, tally[m] || 0);
+        const row = document.createElement('div');
+        row.onclick = () => { state.muscleMapTarget = (state.muscleMapTarget === m) ? null : m; render(); };
+        row.style.cssText = `display:flex;align-items:center;gap:10px;padding:9px 10px;margin-bottom:6px;border-radius:6px;cursor:pointer;background:var(--surface);border:1px solid ${state.muscleMapTarget === m ? 'var(--chalk)' : 'var(--line)'};`;
+        row.innerHTML = `
+          <span style="width:14px;height:14px;border-radius:4px;background:${color};flex-shrink:0;"></span>
+          <span style="flex:1;font-weight:700;font-size:13.5px;">${MUSCLE_LABELS[m]}</span>
+          <span style="font-size:12px;color:var(--muted);white-space:nowrap;">${se.toFixed(1)} <span style="opacity:.7;">(optimal ${lm.mav[0]}\u2013${lm.mav[1]})</span></span>
+        `;
+        muscleRow.appendChild(row);
       });
 
     const resultsWrap = root.querySelector('#grr-muscle-target-results');
