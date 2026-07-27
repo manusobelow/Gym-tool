@@ -3489,7 +3489,7 @@ const EXERCISES = [
     ],
     "m": "Hip Flexors / Quads",
     "region": "lower",
-    "gif": "https://i.imgur.com/FD1fhdt.gif",
+    "gif": "https://drive.google.com/file/d/1ioo3RmQ_pLidyOW9BVWyADEY2GZrBuDC/view?usp=sharing",
     "notes": "Reposition on a leg curl or leg extension machine so the pad rests against the thigh, then drive the knee upward into it (hip flexion) instead of the machine's normal knee flexion/extension path.",
     "muscles": [
       {
