@@ -310,7 +310,7 @@
   }
 
   // ---------- STATE ----------
-  let state = { equip: new Set(EQUIP), pattern: new Set(PATTERNS), view: 'list', activeId: null, saveMsg: '', logFilter: '', muscleMapTarget: null };
+  let state = { equip: new Set(EQUIP), pattern: new Set(PATTERNS), view: 'list', activeId: null, saveMsg: '', logFilter: '', muscleMapTarget: null, cameFrom: null };
   let TM = {};
   let TIER = {};
   let HYP = {};
@@ -381,7 +381,7 @@
   }
 
   // ---------- RENDER: LIST VIEW ----------
-  function buildCard(x) {
+  function buildCard(x, cameFrom) {
     const card = document.createElement('div');
     card.className = 'grr-card ' + x.scheme;
     const schemeLabel = {main:'Major Lift', strength:'Strength', hypertrophy:'Hypertrophy', mobility:'Mobility'}[x.scheme];
@@ -395,7 +395,7 @@
       <div class="grr-card-meta">${x.m}</div>
       ${tmLine}
     `;
-    card.onclick = () => { state.view = 'detail'; state.activeId = x.id; state.saveMsg=''; render(); };
+    card.onclick = () => { state.cameFrom = cameFrom || null; state.view = 'detail'; state.activeId = x.id; state.saveMsg=''; render(); };
     return card;
   }
 
@@ -497,6 +497,28 @@
   }
 
   // ---------- RENDER: DETAIL VIEW (mobility) ----------
+  function backButtonHtml() {
+    let html = `<span class="grr-back" id="grr-back">← Back to list</span>`;
+    if (state.cameFrom) {
+      if (state.cameFrom.view === 'muscles') {
+        html += ` &nbsp; <span class="grr-back" id="grr-back-ctx">← Back to Muscle Map</span>`;
+      } else if (state.cameFrom.view === 'detail' && EX_BY_ID[state.cameFrom.activeId]) {
+        html += ` &nbsp; <span class="grr-back" id="grr-back-ctx">← Back to ${EX_BY_ID[state.cameFrom.activeId].n}</span>`;
+      }
+    }
+    return html;
+  }
+  function wireBackButtons() {
+    root.querySelector('#grr-back').onclick = () => { state.cameFrom = null; state.view = 'list'; render(); };
+    const ctx = root.querySelector('#grr-back-ctx');
+    if (ctx) ctx.onclick = () => {
+      const cf = state.cameFrom; state.cameFrom = null;
+      if (cf.view === 'muscles') { state.muscleMapTarget = cf.muscleMapTarget; state.view = 'muscles'; }
+      else if (cf.view === 'detail') { state.activeId = cf.activeId; state.view = 'detail'; }
+      render();
+    };
+  }
+
   function renderMobilityDetail(x) {
     const hist = (LOGS[x.id] || []).slice(-6).reverse();
     const histHtml = hist.length ? hist.map(l => `<div class="grr-history-row"><span>${friendlyDate(l.date)}</span><span>✅ Done</span></div>`).join('')
@@ -504,7 +526,7 @@
 
     root.innerHTML = `
       <div class="grr-detail">
-        <span class="grr-back" id="grr-back">← Back to list</span>
+        ${backButtonHtml()}
         <div class="grr-detail-name">${x.n}</div>
         <div class="grr-detail-meta">${x.p} · ${x.m}</div>
         ${gifBlock(x)}
@@ -515,7 +537,7 @@
         <div class="grr-history">${histHtml}</div>
       </div>
     `;
-    root.querySelector('#grr-back').onclick = () => { state.view = 'list'; render(); };
+    wireBackButtons();
     root.querySelector('#grr-save').onclick = () => {
       const entry = {date: todayLocal(), exercise: x.n, pattern: x.p, exId: x.id, logId: newLogId(), sets:[{target:'Done', weight:null, reps:null, success:true}], allSuccess:true, tmAction:'none'};
       if (!LOGS[x.id]) LOGS[x.id] = [];
@@ -575,7 +597,7 @@
 
     root.innerHTML = `
       <div class="grr-detail">
-        <span class="grr-back" id="grr-back">← Back to list</span>
+        ${backButtonHtml()}
         <div class="grr-detail-name">${x.n}</div>
         <div class="grr-detail-meta">${x.p} · ${x.m}</div>
         ${gifBlock(x)}
@@ -611,10 +633,10 @@
       </div>
     `;
 
-    root.querySelector('#grr-back').onclick = () => { state.view = 'list'; render(); };
+    wireBackButtons();
     wireTimer(x, x.scheme === 'hypertrophy' ? 60 : 120);
     root.querySelectorAll('.grr-superset-chip').forEach(chip => {
-      chip.onclick = () => { state.view = 'detail'; state.activeId = chip.dataset.id; state.saveMsg = ''; render(); };
+      chip.onclick = () => { state.cameFrom = {view:'detail', activeId: x.id}; state.view = 'detail'; state.activeId = chip.dataset.id; state.saveMsg = ''; render(); };
     });
     if (x.scheme !== 'hypertrophy') {
       root.querySelector('#grr-tm-input').onchange = (e) => {
@@ -964,6 +986,7 @@
         return MUSCLE_LABELS[a].localeCompare(MUSCLE_LABELS[b]);
       })
       .forEach(m => {
+        const lm = landmarksFor(m);
         const se = setsEquivalent(tally[m] || 0);
         const color = colorForScore(m, tally[m] || 0);
         const chip = document.createElement('div');
@@ -971,7 +994,7 @@
         chip.style.background = color;
         chip.style.color = (tally[m]||0) === 0 ? '#1a1a1a' : '#fff';
         chip.style.border = state.muscleMapTarget === m ? '2px solid var(--chalk)' : 'none';
-        chip.textContent = `${MUSCLE_LABELS[m]} \u00b7 ${se.toFixed(1)}`;
+        chip.textContent = `${MUSCLE_LABELS[m]} \u00b7 ${se.toFixed(1)} (${lm.mav[0]}\u2013${lm.mav[1]})`;
         chip.onclick = () => { state.muscleMapTarget = (state.muscleMapTarget === m) ? null : m; render(); };
         muscleRow.appendChild(chip);
       });
@@ -1001,7 +1024,7 @@
             resultsWrap.appendChild(header);
             lastW = w;
           }
-          resultsWrap.appendChild(buildCard(x));
+          resultsWrap.appendChild(buildCard(x, {view:'muscles', muscleMapTarget: state.muscleMapTarget}));
         });
       }
     } else {
