@@ -3466,7 +3466,7 @@ const EXERCISES = [
     ],
     "m": "Front Delts / Side Delts",
     "region": "upper",
-    "gif": "",
+    "gif": "https://drive.google.com/file/d/16UOag6Rh1Y48zmtUmhv1s8-jJ9d42IDv/view?usp=sharing",
     "notes": "Sweep DBs from front to side with a slight internal rotation at the top; combines front and lateral raise into one continuous rep.",
     "muscles": [
       {
