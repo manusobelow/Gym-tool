@@ -1036,6 +1036,65 @@ const EXERCISES = [
     ]
   },
   {
+  "id": "WEIGHTED_HIP_FLEXION_FOOT",
+  "n": "Weighted Hip Flexion (Foot-Loaded)",
+  "p": "Isolation",
+  "scheme": "hypertrophy",
+  "eq": ["kettlebell", "dumbbell"],
+  "m": "Hip Flexors",
+  "region": "lower",
+  "gif": "",
+  "notes": "Hook KB/DB handle over foot or ankle, standing or seated, drive knee up against the resistance. Control the descent.",
+  "muscles": [
+    {"id": "hip-flexors", "w": 3}
+  ]
+},
+{
+  "id": "L_SIT",
+  "n": "L-Sit Hold",
+  "p": "Core / Carry",
+  "scheme": "hypertrophy",
+  "eq": ["bodyweight"],
+  "m": "Hip Flexors / Abs",
+  "region": "upper",
+  "gif": "",
+  "notes": "Support on hands/parallettes or floor, legs extended straight out in front, hold. Bend knees to regress if needed.",
+  "muscles": [
+    {"id": "hip-flexors", "w": 3},
+    {"id": "abs", "w": 2}
+  ]
+},
+{
+  "id": "LU_RAISE",
+  "n": "Lu Raise",
+  "p": "Isolation",
+  "scheme": "hypertrophy",
+  "eq": ["dumbbell"],
+  "m": "Front Delts / Side Delts",
+  "region": "upper",
+  "gif": "",
+  "notes": "Sweep DBs from front to side with a slight internal rotation at the top; combines front and lateral raise into one continuous rep.",
+  "muscles": [
+    {"id": "front-delts", "w": 3},
+    {"id": "side-delts", "w": 2}
+  ]
+},
+{
+  "id": "MACHINE_RESISTED_HIP_FLEXION",
+  "n": "Machine-Resisted Hip Flexion (Repositioned Leg Curl/Extension)",
+  "p": "Isolation",
+  "scheme": "hypertrophy",
+  "eq": ["machine"],
+  "m": "Hip Flexors / Quads",
+  "region": "lower",
+  "gif": "",
+  "notes": "Reposition on a leg curl or leg extension machine so the pad rests against the thigh, then drive the knee upward into it (hip flexion) instead of the machine's normal knee flexion/extension path.",
+  "muscles": [
+    {"id": "hip-flexors", "w": 3},
+    {"id": "quads", "w": 1}
+  ]
+},
+  {
     "id": "DB_FRONT_RAISE_ALT",
     "n": "DB Alternating Front Raise",
     "p": "Isolation",
