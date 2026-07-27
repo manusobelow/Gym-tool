@@ -163,9 +163,6 @@
   function landmarksFor(muscleId) {
     return LANDMARK_CATEGORIES[MUSCLE_TO_LANDMARK_CATEGORY[muscleId]];
   }
-  const PAIR_MAP = {"Push Horizontal":"Pull Horizontal","Pull Horizontal":"Push Horizontal","Push Vertical":"Pull Vertical","Pull Vertical":"Push Vertical"};
-  const NO_SUPERSET_PATTERNS = new Set(["Squat","Hinge","Lunge"]);
-
   const EX = EXERCISES;
   const EX_BY_ID = Object.fromEntries(EX.map(x => [x.id, x]));
 
@@ -364,9 +361,14 @@
   function activePatterns() { return state.pattern.size ? state.pattern : new Set(PATTERNS); }
 
   function supersetSuggestions(x) {
-    if (NO_SUPERSET_PATTERNS.has(x.p)) return {note:"Best done alone — don't superset squat/hinge/lunge main work.", list:[]};
-    const targetPattern = PAIR_MAP[x.p] || x.p;
-    const list = EX.filter(o => o.id !== x.id && o.p === targetPattern && o.scheme !== 'mobility' && o.eq.some(e => state.equip.has(e))).slice(0,5);
+    if (x.scheme === 'main') return {note:"Major lifts are best done alone — don't superset these.", list:[]};
+    const myMuscles = new Set(x.muscles.map(m => m.id));
+    const list = EX.filter(o =>
+      o.id !== x.id &&
+      o.scheme !== 'main' &&
+      o.eq.some(e => state.equip.has(e)) &&
+      !o.muscles.some(m => myMuscles.has(m.id))
+    ).slice(0,5);
     return {note: null, list};
   }
 
@@ -423,11 +425,13 @@
       <div class="grr-collapse" id="grr-superset">
         <div class="grr-collapse-head">Superset pairing guide ▾</div>
         <div class="grr-collapse-body">
+          <b>Only Major Lifts are off-limits for supersetting</b> — everything else is fair game as long as the two exercises don't share a targeted muscle. Antagonist or unrelated pairs both work fine, e.g. Chin-Ups + Cossack Squat is fine (no overlap); Chin-Ups + Bicep Curl is not (both hit biceps).<br/><br/>
+          <b>Good pairing examples:</b><br/>
           <div class="grr-row-pair"><span>Horizontal Push</span><span>↔ Horizontal Pull</span></div>
           <div class="grr-row-pair"><span>Vertical Push</span><span>↔ Vertical Pull</span></div>
           <div class="grr-row-pair"><span>DB / EZ Curl</span><span>↔ Triceps Pushdown</span></div>
           <div class="grr-row-pair"><span>Face Pull</span><span>↔ Pallof Press</span></div>
-          <br/><b>Avoid supersetting:</b> Squat+Deadlift, Squat+Lunge, Deadlift+Heavy Row, Bench+OHP, Pull-ups+Lat Pulldown
+          <br/>Each exercise page shows live "Goes well with" suggestions computed from this exact rule, filtered to your current equipment.
         </div>
       </div>
       <div class="grr-collapse" id="grr-template">
