@@ -3470,12 +3470,16 @@ const EXERCISES = [
     "notes": "Sweep DBs from front to side with a slight internal rotation at the top; combines front and lateral raise into one continuous rep.",
     "muscles": [
       {
-        "id": "front-delts",
+        "id": "side-delts",
         "w": 3
       },
       {
-        "id": "side-delts",
+        "id": "front-delts",
         "w": 2
+      },
+         {
+        "id": "upper-back",
+        "w": 1
       }
     ]
   },
