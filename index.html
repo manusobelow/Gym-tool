@@ -79,6 +79,8 @@
   .grr-set-inputs .grr-unit { font-size:11px; color:var(--muted); }
   .grr-toggle { margin-left:auto; display:flex; gap:4px; }
   .grr-toggle button { border:1px solid var(--line); background:var(--bg); color:var(--muted); font-size:15px; width:36px; height:32px; border-radius:4px; cursor:pointer; }
+  .grr-bw-btn { border:1px solid var(--line); background:var(--bg); color:var(--muted); font-size:10px; font-weight:800; padding:0 8px; height:32px; border-radius:4px; cursor:pointer; }
+  .grr-bw-btn.active { background:var(--steel); border-color:var(--steel); color:#fff; }
   .grr-toggle button.on-yes { background:var(--green); color:#111; border-color:var(--green); }
   .grr-toggle button.on-no { background:var(--red); color:#111; border-color:var(--red); }
   .grr-save-btn { width:100%; background:var(--brand); color:#fff; border:none; font-weight:800; font-size:14px; text-transform:uppercase; letter-spacing:.04em; padding:12px; border-radius:6px; margin-top:6px; cursor:pointer; }
@@ -167,27 +169,36 @@
   const EX_BY_ID = Object.fromEntries(EX.map(x => [x.id, x]));
 
   function targetsFor(x, tierState, hypState) {
-    if (x.scheme === 'main') {
+    const scheme = effectiveScheme(x);
+    const rep = REP_OVERRIDE[x.id] || {};
+    if (scheme === 'main') {
       const lastPct = (tierState === '85') ? 0.85 : 0.80;
+      const wr = rep.workingReps || 6;
       return [
         {label:'Warm-up', pct:0.50, reps:5},
-        {label:'Set 1', pct:0.85, reps:6},
-        {label:'Set 2', pct:0.85, reps:6},
-        {label:'Set 3 (test set)', pct:lastPct, reps:6, isTestSet:true},
+        {label:'Set 1', pct:0.85, reps:wr},
+        {label:'Set 2', pct:0.85, reps:wr},
+        {label:'Set 3 (test set)', pct:lastPct, reps:wr, isTestSet:true},
       ];
     }
-    if (x.scheme === 'strength') return [
-      {label:'Warm-up', pct:0.50, reps:5},
-      {label:'Set 1', pct:0.85, reps:7},
-      {label:'Set 2 (test set)', pct:0.85, reps:7, isTestSet:true},
-    ];
+    if (scheme === 'strength') {
+      const wr = rep.workingReps || 7;
+      return [
+        {label:'Warm-up', pct:0.50, reps:5},
+        {label:'Set 1', pct:0.85, reps:wr},
+        {label:'Set 2 (test set)', pct:0.85, reps:wr, isTestSet:true},
+      ];
+    }
     // hypertrophy
-    const tier = (hypState && hypState.tier) || 8;
+    const lo = rep.hypLow || 8;
+    const hi = rep.hypHigh || 10;
+    const tierKey = (hypState && hypState.tier) || 'low';
+    const tierReps = tierKey === 'high' ? hi : lo;
     const w = (hypState && hypState.weight) || null;
     return [
-      {label:'Set 1 (to failure)', reps:tier, fixedWeight:w, isMainHypSet:true},
-      {label:'Set 2 (to failure)', reps:tier, fixedWeight:w, isMainHypSet:true},
-      {label:'Set 3 — drop weight (to failure)', reps:10, fixedWeight: w ? roundW(w*0.85) : null},
+      {label:'Set 1 (to failure)', reps:tierReps, fixedWeight:w, isMainHypSet:true},
+      {label:'Set 2 (to failure)', reps:tierReps, fixedWeight:w, isMainHypSet:true},
+      {label:'Set 3 — drop weight (to failure)', reps:hi, fixedWeight: w ? roundW(w*0.85) : null},
     ];
   }
 
@@ -311,6 +322,16 @@
   let TM = {};
   let TIER = {};
   let HYP = {};
+  let SCHEME_OVERRIDE = {}; // { exId: 'main'|'strength'|'hypertrophy'|'mobility' } — overrides exercises.js default
+  let REP_OVERRIDE = {};    // { exId: {mainReps, hypLow, hypHigh} } — overrides hardcoded rep targets
+  function isBodyweightOnly(x) { return x.eq.length === 1 && x.eq[0] === 'bodyweight'; }
+  function effectiveScheme(x) { return SCHEME_OVERRIDE[x.id] || x.scheme; }
+  function schemeChoicesFor(x) {
+    const choices = new Set(['main','strength','hypertrophy']);
+    if (isBodyweightOnly(x)) choices.add('mobility');
+    choices.add(x.scheme); // always keep the original default reachable, even if it wouldn't otherwise qualify
+    return [...choices];
+  }
   let LOGS = {};
   let DRAFTS = {}; // in-progress, unsaved set inputs per exercise id — survives navigating away and back
 
@@ -320,9 +341,11 @@
     try { const v = JSON.parse(localStorage.getItem('gym-tm')); if (v) TM = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-tier')); if (v) TIER = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-hyp')); if (v) HYP = v; } catch(e){}
+    try { const v = JSON.parse(localStorage.getItem('gym-scheme-override')); if (v) SCHEME_OVERRIDE = v; } catch(e){}
+    try { const v = JSON.parse(localStorage.getItem('gym-rep-override')); if (v) REP_OVERRIDE = v; } catch(e){}
     Object.keys(HYP).forEach(id => {
-      if (HYP[id].tier === '6-8') HYP[id].tier = 8;
-      else if (HYP[id].tier === '8-10') HYP[id].tier = 10;
+      if (HYP[id].tier === '6-8' || HYP[id].tier === 8) HYP[id].tier = 'low';
+      else if (HYP[id].tier === '8-10' || HYP[id].tier === 10) HYP[id].tier = 'high';
     });
     try { const v = JSON.parse(localStorage.getItem('gym-logs')); if (v) LOGS = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-drafts')); if (v) DRAFTS = v; } catch(e){}
@@ -339,6 +362,8 @@
   function saveTM() { try { localStorage.setItem('gym-tm', JSON.stringify(TM)); } catch(e){} }
   function saveTier() { try { localStorage.setItem('gym-tier', JSON.stringify(TIER)); } catch(e){} }
   function saveHyp() { try { localStorage.setItem('gym-hyp', JSON.stringify(HYP)); } catch(e){} }
+  function saveSchemeOverride() { try { localStorage.setItem('gym-scheme-override', JSON.stringify(SCHEME_OVERRIDE)); } catch(e){} }
+  function saveRepOverride() { try { localStorage.setItem('gym-rep-override', JSON.stringify(REP_OVERRIDE)); } catch(e){} }
   function saveLogs() { try { localStorage.setItem('gym-logs', JSON.stringify(LOGS)); } catch(e){} }
   function saveDrafts() { try { localStorage.setItem('gym-drafts', JSON.stringify(DRAFTS)); } catch(e){} }
   function updateDraft(exId, i, field, value) {
@@ -361,14 +386,14 @@
   function activePatterns() { return state.pattern.size ? state.pattern : new Set(PATTERNS); }
 
   function supersetSuggestions(x) {
-    if (x.scheme === 'main') return {note:"Major lifts are best done alone — don't superset these.", list:[]};
+    if (effectiveScheme(x) === 'main') return {note:"Major lifts are best done alone — don't superset these.", list:[]};
     const myMuscles = new Set(x.muscles.map(m => m.id));
     const list = EX.filter(o =>
       o.id !== x.id &&
-      o.scheme !== 'main' &&
+      effectiveScheme(o) !== 'main' &&
       o.eq.some(e => state.equip.has(e)) &&
       !o.muscles.some(m => myMuscles.has(m.id))
-    ).slice(0,5);
+    );
     return {note: null, list};
   }
 
@@ -385,10 +410,11 @@
   // ---------- RENDER: LIST VIEW ----------
   function buildCard(x, cameFrom) {
     const card = document.createElement('div');
-    card.className = 'grr-card ' + x.scheme;
-    const schemeLabel = {main:'Major Lift', strength:'Strength', hypertrophy:'Hypertrophy', mobility:'Mobility'}[x.scheme];
-    const badgeClass = x.scheme === 'main' ? 'main' : x.scheme === 'mobility' ? 'mobility' : '';
-    const tmLine = (x.scheme !== 'hypertrophy' && x.scheme !== 'mobility' && TM[x.id]) ? `<div class="grr-card-tm">1RM: ${TM[x.id]} lb</div>` : '';
+    const scheme = effectiveScheme(x);
+    card.className = 'grr-card ' + scheme;
+    const schemeLabel = {main:'Major Lift', strength:'Strength', hypertrophy:'Hypertrophy', mobility:'Mobility'}[scheme];
+    const badgeClass = scheme === 'main' ? 'main' : scheme === 'mobility' ? 'mobility' : '';
+    const tmLine = (scheme !== 'hypertrophy' && scheme !== 'mobility' && TM[x.id]) ? `<div class="grr-card-tm">1RM: ${TM[x.id]} lb</div>` : '';
     card.innerHTML = `
       <div class="grr-card-top">
         <div class="grr-card-name">${x.n}</div>
@@ -482,7 +508,7 @@
       const group = EX.filter(x => x.p === p && x.eq.some(e => state.equip.has(e)));
       if (!group.length) return;
       anyShown = true;
-      group.sort((a,b) => (a.scheme === b.scheme ? 0 : a.scheme === 'main' ? -1 : 1));
+      group.sort((a,b) => (effectiveScheme(a) === effectiveScheme(b) ? 0 : effectiveScheme(a) === 'main' ? -1 : 1));
       const header = document.createElement('div');
       header.className = 'grr-section-label';
       header.style.padding = '10px 0 4px';
@@ -555,31 +581,35 @@
   // ---------- RENDER: DETAIL VIEW ----------
   function renderDetail() {
     const x = EX_BY_ID[state.activeId];
-    if (x.scheme === 'mobility') { renderMobilityDetail(x); return; }
+    const scheme = effectiveScheme(x);
+    if (scheme === 'mobility') { renderMobilityDetail(x); return; }
 
     const tm = TM[x.id] || null;
     const tierState = TIER[x.id] || '80';
-    const hypState = HYP[x.id] || {weight: null, tier: 8};
+    const hypState = HYP[x.id] || {weight: null, tier: 'low'};
     const targets = targetsFor(x, tierState, hypState);
     const ss = supersetSuggestions(x);
     const hist = (LOGS[x.id] || []).slice(-5).reverse();
 
     const draft = DRAFTS[x.id] || {};
+    const rep = REP_OVERRIDE[x.id] || {};
     let setsHtml = targets.map((t,i) => {
       let weightGuess = '';
       if (t.pct) weightGuess = tm ? roundW(tm * t.pct) : '';
       if (t.fixedWeight !== undefined) weightGuess = t.fixedWeight || '';
       const pctLabel = t.pct ? Math.round(t.pct*100)+'% · ' : '';
       const d = draft[i] || {};
-      const weightVal = d.weight !== undefined ? d.weight : weightGuess;
+      const isBW = d.weight === 'BW';
+      const weightVal = isBW ? '' : (d.weight !== undefined ? d.weight : weightGuess);
       const repsVal = d.reps !== undefined ? d.reps : (typeof t.reps === 'number' ? t.reps : '');
       const successVal = d.success; // true, false, or undefined
       return `
         <div class="grr-set-row" data-i="${i}">
           <div class="grr-set-row-top"><span>${t.label}</span><span>${pctLabel}${t.reps} reps</span></div>
           <div class="grr-set-inputs">
-            <input type="number" class="grr-weight-input" placeholder="lb" value="${weightVal}"/>
+            <input type="number" class="grr-weight-input" placeholder="lb" value="${weightVal}" ${isBW ? 'disabled' : ''}/>
             <span class="grr-unit">lb</span>
+            <button type="button" class="grr-bw-btn${isBW ? ' active' : ''}" data-i="${i}">BW</button>
             <input type="number" class="grr-reps-input" placeholder="reps" value="${repsVal}"/>
             <span class="grr-unit">reps</span>
             <div class="grr-toggle">
@@ -599,6 +629,27 @@
       <div class="grr-history-row"><span>${friendlyDate(l.date)}</span><span>${l.sets.map(s=>s.success?'✅':'❌').join('')} ${l.tmAction==='increase'?'⬆️':''}</span></div>
     `).join('') : `<div style="color:var(--muted);font-size:12px;">No sessions logged yet.</div>`;
 
+    const schemeLabels = {main:'Major Lift', strength:'Strength', hypertrophy:'Hypertrophy', mobility:'Mobility'};
+    const schemePickerHtml = `
+      <div class="grr-section-label" style="padding-left:0;">Scheme</div>
+      <div class="grr-equip-row" id="grr-scheme-picker" style="padding:0 0 10px;">
+        ${schemeChoicesFor(x).map(s => `<div class="grr-chip${scheme===s?' active':''}" data-scheme="${s}">${schemeLabels[s]}</div>`).join('')}
+      </div>`;
+
+    const repOverrideHtml = scheme === 'hypertrophy' ? `
+      <div class="grr-tm-box">
+        <div><label>Rep Range</label><div style="font-size:11px;color:var(--muted);margin-top:2px;">Low → High before weight increases</div></div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input type="number" id="grr-rep-lo" value="${rep.hypLow || 8}" style="width:50px;background:var(--bg);border:1px solid var(--line);color:var(--chalk);padding:6px;border-radius:4px;text-align:center;font-size:15px;"/>
+          <span style="color:var(--muted);">–</span>
+          <input type="number" id="grr-rep-hi" value="${rep.hypHigh || 10}" style="width:50px;background:var(--bg);border:1px solid var(--line);color:var(--chalk);padding:6px;border-radius:4px;text-align:center;font-size:15px;"/>
+        </div>
+      </div>` : `
+      <div class="grr-tm-box">
+        <div><label>Reps per set</label></div>
+        <input type="number" id="grr-rep-working" value="${rep.workingReps || (scheme==='main'?6:7)}" style="width:60px;"/>
+      </div>`;
+
     root.innerHTML = `
       <div class="grr-detail">
         ${backButtonHtml()}
@@ -607,30 +658,45 @@
         ${gifBlock(x)}
         ${x.notes ? `<div class="grr-notes">${x.notes}</div>` : ''}
 
-        ${x.scheme !== 'hypertrophy' ? `
-        <div class="grr-tm-box">
+        ${schemePickerHtml}
+
+        <div class="grr-tm-box" style="flex-wrap:wrap;">
           <div>
             <label>1RM</label>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px;">${x.scheme==='main' ? `Test set currently at ${tierState}%` : 'Rest 2–3 min between sets'}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">${scheme==='main' ? `Test set currently at ${tierState}%` : scheme==='strength' ? 'Rest 2–3 min between sets' : 'Reference number — not used while in Hypertrophy mode'}</div>
           </div>
           <input type="number" id="grr-tm-input" value="${tm || ''}" placeholder="e.g. 135"/>
-        </div>` : `
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;font-size:11px;color:var(--muted);margin:-8px 0 14px;padding:0 2px;">
+          <span>or calculate from a set:</span>
+          <input type="number" id="grr-calc-weight" placeholder="lb" style="width:52px;background:var(--surface);border:1px solid var(--line);color:var(--chalk);padding:5px;border-radius:4px;text-align:center;"/>
+          <span>×</span>
+          <input type="number" id="grr-calc-reps" placeholder="reps" style="width:48px;background:var(--surface);border:1px solid var(--line);color:var(--chalk);padding:5px;border-radius:4px;text-align:center;"/>
+          <button type="button" id="grr-calc-btn" style="background:var(--steel);color:#fff;border:none;font-size:11px;font-weight:700;padding:6px 10px;border-radius:4px;cursor:pointer;">Calculate</button>
+        </div>
+
         <div class="grr-tm-box">
           <div>
             <label>Working Weight</label>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px;">Rep target currently ${hypState.tier} reps · rest 1 min</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">${scheme==='hypertrophy' ? `Rep target currently ${hypState.tier === 'high' ? (rep.hypHigh||10) : (rep.hypLow||8)} reps · rest 1 min` : 'Used only while in Hypertrophy mode'}</div>
           </div>
           <input type="number" id="grr-hyp-weight-input" value="${hypState.weight || ''}" placeholder="e.g. 40"/>
-        </div>`}
+        </div>
 
-        ${timerBlock(x, x.scheme === 'hypertrophy' ? 60 : 120)}
+        ${repOverrideHtml}
+
+        ${timerBlock(x, scheme === 'hypertrophy' ? 60 : 120)}
 
         <div id="grr-sets">${setsHtml}</div>
         <button class="grr-save-btn" id="grr-save">Save Today's Log</button>
         <div class="grr-save-msg">${state.saveMsg}</div>
 
-        <div class="grr-section-label" style="padding-left:0;">Goes well with</div>
-        <div class="grr-superset-box">${ssHtml}</div>
+        <div class="grr-collapse" id="grr-superset-collapse" style="margin:10px 0 14px;">
+          <div class="grr-collapse-head">Goes well with ▾</div>
+          <div class="grr-collapse-body" style="padding:0 0 12px;">
+            <div class="grr-superset-box">${ssHtml}</div>
+          </div>
+        </div>
 
         <div class="grr-section-label" style="padding-left:0;">Recent history</div>
         <div class="grr-history">${histHtml}</div>
@@ -638,26 +704,63 @@
     `;
 
     wireBackButtons();
-    wireTimer(x, x.scheme === 'hypertrophy' ? 60 : 120);
+    wireTimer(x, scheme === 'hypertrophy' ? 60 : 120);
+    root.querySelector('#grr-superset-collapse .grr-collapse-head').onclick = () => {
+      root.querySelector('#grr-superset-collapse').classList.toggle('open');
+    };
     root.querySelectorAll('.grr-superset-chip').forEach(chip => {
       chip.onclick = () => { state.cameFrom = {view:'detail', activeId: x.id}; state.view = 'detail'; state.activeId = chip.dataset.id; state.saveMsg = ''; render(); };
     });
-    if (x.scheme !== 'hypertrophy') {
-      root.querySelector('#grr-tm-input').onchange = (e) => {
-        const v = parseFloat(e.target.value);
-        if (!isNaN(v) && v > 0) { TM[x.id] = v; saveTM(); render(); }
+
+    root.querySelectorAll('#grr-scheme-picker .grr-chip').forEach(chip => {
+      chip.onclick = () => {
+        const s = chip.dataset.scheme;
+        if (s === x.scheme) delete SCHEME_OVERRIDE[x.id]; else SCHEME_OVERRIDE[x.id] = s;
+        saveSchemeOverride(); state.saveMsg = ''; render();
       };
+    });
+
+    root.querySelector('#grr-tm-input').onchange = (e) => {
+      const v = parseFloat(e.target.value);
+      if (!isNaN(v) && v > 0) { TM[x.id] = v; saveTM(); render(); }
+    };
+    root.querySelector('#grr-hyp-weight-input').onchange = (e) => {
+      const v = parseFloat(e.target.value);
+      if (!isNaN(v) && v > 0) { HYP[x.id] = {weight: v, tier: hypState.tier}; saveHyp(); render(); }
+    };
+    root.querySelector('#grr-calc-btn').onclick = () => {
+      const w = parseFloat(document.getElementById('grr-calc-weight').value);
+      const r = parseFloat(document.getElementById('grr-calc-reps').value);
+      if (w > 0 && r > 0) {
+        const est = roundW(w * (1 + r/30)); // Epley formula estimate
+        TM[x.id] = est; saveTM(); render();
+      }
+    };
+
+    if (scheme === 'hypertrophy') {
+      const lo = document.getElementById('grr-rep-lo'), hi = document.getElementById('grr-rep-hi');
+      lo.onchange = () => { const v = parseInt(lo.value,10); if (v>0) { if (!REP_OVERRIDE[x.id]) REP_OVERRIDE[x.id]={}; REP_OVERRIDE[x.id].hypLow = v; saveRepOverride(); render(); } };
+      hi.onchange = () => { const v = parseInt(hi.value,10); if (v>0) { if (!REP_OVERRIDE[x.id]) REP_OVERRIDE[x.id]={}; REP_OVERRIDE[x.id].hypHigh = v; saveRepOverride(); render(); } };
     } else {
-      root.querySelector('#grr-hyp-weight-input').onchange = (e) => {
-        const v = parseFloat(e.target.value);
-        if (!isNaN(v) && v > 0) { HYP[x.id] = {weight: v, tier: hypState.tier}; saveHyp(); render(); }
-      };
+      const wr = document.getElementById('grr-rep-working');
+      wr.onchange = () => { const v = parseInt(wr.value,10); if (v>0) { if (!REP_OVERRIDE[x.id]) REP_OVERRIDE[x.id]={}; REP_OVERRIDE[x.id].workingReps = v; saveRepOverride(); render(); } };
     }
+
     root.querySelectorAll('.grr-weight-input').forEach((inp, i) => {
       inp.oninput = () => updateDraft(x.id, i, 'weight', inp.value);
     });
     root.querySelectorAll('.grr-reps-input').forEach((inp, i) => {
       inp.oninput = () => updateDraft(x.id, i, 'reps', inp.value);
+    });
+    root.querySelectorAll('.grr-bw-btn').forEach(btn => {
+      btn.onclick = () => {
+        const i = parseInt(btn.dataset.i, 10);
+        const wInput = root.querySelector(`.grr-set-row[data-i="${i}"] .grr-weight-input`);
+        const nowBW = !btn.classList.contains('active');
+        if (nowBW) { wInput.value = ''; wInput.disabled = true; updateDraft(x.id, i, 'weight', 'BW'); }
+        else { wInput.disabled = false; updateDraft(x.id, i, 'weight', ''); }
+        btn.classList.toggle('active', nowBW);
+      };
     });
     root.querySelectorAll('.grr-yes').forEach(b => b.onclick = () => {
       b.classList.add('on-yes'); b.parentElement.querySelector('.grr-no').classList.remove('on-no');
@@ -672,46 +775,49 @@
       const rows = root.querySelectorAll('.grr-set-row');
       const sets = [];
       rows.forEach((row, i) => {
-        const w = parseFloat(row.querySelector('.grr-weight-input').value) || null;
+        const wInput = row.querySelector('.grr-weight-input');
+        const w = wInput.disabled ? 'BW' : (parseFloat(wInput.value) || null);
         const r = parseFloat(row.querySelector('.grr-reps-input').value) || null;
         const success = row.querySelector('.grr-yes').classList.contains('on-yes');
         sets.push({target: targets[i].label, weight: w, reps: r, success});
       });
       let msg = 'Saved.';
+      const workingIdxs = targets.map((t,i)=>i).filter(i => targets[i].label !== 'Warm-up');
+      const allWorkingOK = workingIdxs.length && workingIdxs.every(i => sets[i] && sets[i].success);
 
-      if (x.scheme === 'main' && tm) {
-        const testSetIdx = targets.findIndex(t => t.isTestSet);
-        const testOK = sets[testSetIdx] && sets[testSetIdx].success;
-        if (testOK) {
+      if (scheme === 'main' && tm) {
+        if (allWorkingOK) {
           if (tierState === '80') {
             TIER[x.id] = '85'; saveTier();
-            msg = 'Saved. Test set hit at 80% — next session it moves to 85%.';
+            msg = 'Saved. All working sets hit at 80% — next session the test set moves to 85%.';
           } else {
             const inc = x.region === 'lower' ? 5 : 2.5;
             TM[x.id] = tm + inc; TIER[x.id] = '80';
             saveTM(); saveTier();
-            msg = `Saved. Test set hit at 85% — 1RM bumped to ${TM[x.id]} lb, test set resets to 80%.`;
+            msg = `Saved. All working sets hit at 85% — 1RM bumped to ${TM[x.id]} lb, test set resets to 80%.`;
           }
+        } else {
+          msg = 'Saved. Not all working sets hit — no change. If the earlier sets failed but the last one succeeded, that likely means the weight was too high, not that it should go up.';
         }
-      } else if (x.scheme === 'strength' && tm) {
-        const testSetIdx = targets.findIndex(t => t.isTestSet);
-        const testOK = sets[testSetIdx] && sets[testSetIdx].success;
-        if (testOK) {
+      } else if (scheme === 'strength' && tm) {
+        if (allWorkingOK) {
           const inc = x.region === 'lower' ? 5 : 2.5;
           TM[x.id] = tm + inc; saveTM();
           msg = `Saved. Both sets hit — 1RM bumped to ${TM[x.id]} lb.`;
+        } else {
+          msg = 'Saved. Not all sets hit — no change.';
         }
-      } else if (x.scheme === 'hypertrophy') {
+      } else if (scheme === 'hypertrophy') {
         const mainHypIdx = targets.map((t,i)=>t.isMainHypSet?i:-1).filter(i=>i>=0);
         const mainHypOK = mainHypIdx.length && mainHypIdx.every(i => sets[i] && sets[i].success);
         if (mainHypOK && hypState.weight) {
-          if (hypState.tier === 8) {
-            HYP[x.id] = {weight: hypState.weight, tier: 10}; saveHyp();
-            msg = 'Saved. Sets 1-2 complete — rep target moves to 10 next session.';
+          if (hypState.tier !== 'high') {
+            HYP[x.id] = {weight: hypState.weight, tier: 'high'}; saveHyp();
+            msg = `Saved. Sets 1-2 complete — rep target moves to ${rep.hypHigh||10} next session.`;
           } else {
             const inc = x.region === 'lower' ? 5 : 2.5;
-            HYP[x.id] = {weight: hypState.weight + inc, tier: 8}; saveHyp();
-            msg = `Saved. Hit 10 reps — weight bumped to ${HYP[x.id].weight} lb, rep target resets to 8.`;
+            HYP[x.id] = {weight: hypState.weight + inc, tier: 'low'}; saveHyp();
+            msg = `Saved. Hit ${rep.hypHigh||10} reps — weight bumped to ${HYP[x.id].weight} lb, rep target resets to ${rep.hypLow||8}.`;
           }
         }
       }
@@ -732,7 +838,7 @@
     entries.sort((a,b)=>a.date.localeCompare(b.date)).forEach(entry => {
       const exObj = EX.find(x => x.n === entry.exercise);
       const isBodyweightOnly = exObj && exObj.eq.length === 1 && exObj.eq[0] === 'bodyweight';
-      const isMobility = exObj && exObj.scheme === 'mobility';
+      const isMobility = exObj && effectiveScheme(exObj) === 'mobility';
       entry.sets.forEach(s => {
         let weight, reps;
         if (isMobility) {
@@ -913,7 +1019,7 @@
       if (entryDate < cutoff) return;
       const ex = EX_BY_ID[entry.exId];
       if (!ex || !ex.muscles) return;
-      if (ex.scheme === 'mobility' && !COUNT_MOBILITY_IN_TALLY) return;
+      if (effectiveScheme(ex) === 'mobility' && !COUNT_MOBILITY_IN_TALLY) return;
       const countedSets = entry.sets.filter(s => s.target !== 'Warm-up').length || entry.sets.length;
       ex.muscles.forEach(m => {
         tally[m.id] = (tally[m.id] || 0) + (m.w * countedSets);
