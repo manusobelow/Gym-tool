@@ -3026,7 +3026,7 @@ const EXERCISES = [
     ],
     "m": "Quads / Glute Max",
     "region": "lower",
-    "gif": "https://drive.google.com/file/d/1opuSfWxe55zxmFgESiOpm6EnwnSd7J9o/view",
+    "gif": "https://www.projectinvictus.it/wp-content/uploads/2023/05/Zercher-Squat-flessione-busto.png",
     "notes": "Brace core.",
     "muscles": [
       {
