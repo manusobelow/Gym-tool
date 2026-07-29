@@ -1,6 +1,7 @@
 // Gym Reference — exercise data
 // Edit this file to add/remove/change exercises. Re-upload just this file to GitHub — no need to touch index.html.
-// Fields: id (unique), n (name), p (movement pattern), scheme (main|strength|hypertrophy|mobility),
+// Fields: id (unique), n (name), p (movement pattern), scheme (main|strength|hypertrophy|mobility) — this is the DEFAULT scheme;
+// can be overridden per-exercise inside the app itself, saved locally, without editing this file.
 // eq (equipment array), m (muscle text, display label), region (lower|upper), gif (image URL, optional), notes (optional),
 // muscles (weighted body-map targets: [{id, w}], w=3 primary/2 secondary/1 tertiary, id matches the muscle SVG taxonomy)
 const EXERCISES = [
@@ -1396,7 +1397,8 @@ const EXERCISES = [
     "scheme": "hypertrophy",
     "eq": [
       "cable",
-      "band"
+      "band",
+      "machine"
     ],
     "m": "Rear Delts / Upper Back",
     "region": "upper",
@@ -2311,7 +2313,7 @@ const EXERCISES = [
     "id": "PRONE_T",
     "n": "Prone T-Raise / Reverse Fly",
     "p": "Pull Horizontal",
-    "scheme": "strength",
+    "scheme": "hypertrophy",
     "eq": [
       "dumbbell"
     ],
@@ -3477,7 +3479,7 @@ const EXERCISES = [
         "id": "front-delts",
         "w": 2
       },
-         {
+      {
         "id": "upper-back",
         "w": 1
       }
