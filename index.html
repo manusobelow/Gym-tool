@@ -19,7 +19,7 @@
   #gym-ref-root {
     --bg: #131313; --surface: #1d1d1d; --surface-2: #262626; --line: #333333;
     --chalk: #f2f0ea; --muted: #8f8c86; --brand: #c8362a; --steel: #5b84b8;
-    --green: #6fae6f; --red: #7a3b34; --gold: #c9a227;
+    --green: #6fae6f; --red: #7a3b34; --hyper: #f2f0ea;
     background: var(--bg); color: var(--chalk);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     min-height: 100vh; max-width: 480px; margin: 0 auto; padding-bottom: 60px;
@@ -37,13 +37,13 @@
   .grr-list { padding: 4px 16px 8px; display:flex; flex-direction:column; gap:8px; }
   .grr-card { background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--steel); border-radius:4px; padding:10px 12px; cursor:pointer; }
   .grr-card.main { border-left-color: var(--brand); }
-  .grr-card.hypertrophy { border-left-color: var(--gold); }
+  .grr-card.hypertrophy { border-left-color: var(--hyper); }
   .grr-card-top { display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
   .grr-card-name { font-weight:700; font-size:14.5px; }
   .grr-badge { font-size:9.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; padding:2px 6px; border-radius:3px; white-space:nowrap; background:var(--steel); color:#fff; }
   .grr-badge.main { background: var(--brand); color:#fff; }
   .grr-badge.mobility { background: #4a4a4a; }
-  .grr-badge.hypertrophy { background: var(--gold); color:#1a1a1a; }
+  .grr-badge.hypertrophy { background: var(--hyper); color:#111111; }
   .grr-card-meta { font-size:11.5px; color:var(--muted); margin-top:3px; }
   .grr-card-tm { font-size:11px; color:var(--brand); margin-top:4px; font-weight:700; }
   .grr-empty { color:var(--muted); font-size:13px; padding:24px 16px; text-align:center; }
