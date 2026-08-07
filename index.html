@@ -350,23 +350,6 @@
     choices.add(x.scheme); // always keep the original default reachable, even if it wouldn't otherwise qualify
     return [...choices];
   }
-  const SCHEME_LABELS = {main:'Major Lift', strength:'Strength', hypertrophy:'Hypertrophy', mobility:'Mobility', circuit:'Home Circuit'};
-  function buildSchemePickerHtml(x, scheme) {
-    return `
-      <div class="grr-section-label" style="padding-left:0;">Scheme</div>
-      <div class="grr-equip-row" id="grr-scheme-picker" style="padding:0 0 10px;">
-        ${schemeChoicesFor(x).map(s => `<div class="grr-chip${scheme===s?' active':''}" data-scheme="${s}">${SCHEME_LABELS[s]}</div>`).join('')}
-      </div>`;
-  }
-  function wireSchemePicker(x) {
-    root.querySelectorAll('#grr-scheme-picker .grr-chip').forEach(chip => {
-      chip.onclick = () => {
-        const s = chip.dataset.scheme;
-        if (s === x.scheme) delete SCHEME_OVERRIDE[x.id]; else SCHEME_OVERRIDE[x.id] = s;
-        saveSchemeOverride(); clearDraft(x.id); state.saveMsg = ''; render();
-      };
-    });
-  }
   let LOGS = {};
   let DRAFTS = {}; // in-progress, unsaved set inputs per exercise id — survives navigating away and back
 
@@ -435,7 +418,6 @@
     const list = EX.filter(o =>
       o.id !== x.id &&
       effectiveScheme(o) !== 'main' &&
-      effectiveScheme(o) !== 'circuit' &&
       o.eq.some(e => state.equip.has(e)) &&
       !o.muscles.some(m => myMuscles.has(m.id))
     );
@@ -638,11 +620,8 @@
   // ---------- RENDER: DETAIL VIEW ----------
   function renderDetail() {
     const x = EX_BY_ID[state.activeId];
+    if (state.homeMode) { renderHomeDetail(x); return; }
     const scheme = effectiveScheme(x);
-    // Circuit-scheme exercises ALWAYS use the Home Workout rendering, no matter how you reached them —
-    // not just when arriving via the Home Workout page's own click handlers. Closes the leak where
-    // Muscle Map / superset suggestions could surface one and render it with the wrong scheme entirely.
-    if (scheme === 'circuit' || (state.homeMode && findMajorLiftDay(x.id))) { renderHomeDetail(x); return; }
     if (scheme === 'mobility') { renderMobilityDetail(x); return; }
 
     const tm = TM[x.id] || null;
@@ -691,7 +670,11 @@
     `).join('') : `<div style="color:var(--muted);font-size:12px;">No sessions logged yet.</div>`;
 
     const schemeLabels = {main:'Major Lift', strength:'Strength', hypertrophy:'Hypertrophy', mobility:'Mobility', circuit:'Home Circuit'};
-    const schemePickerHtml = buildSchemePickerHtml(x, scheme);
+    const schemePickerHtml = `
+      <div class="grr-section-label" style="padding-left:0;">Scheme</div>
+      <div class="grr-equip-row" id="grr-scheme-picker" style="padding:0 0 10px;">
+        ${schemeChoicesFor(x).map(s => `<div class="grr-chip${scheme===s?' active':''}" data-scheme="${s}">${schemeLabels[s]}</div>`).join('')}
+      </div>`;
 
     const repOverrideHtml = scheme === 'hypertrophy' ? `
       <div class="grr-tm-box">
@@ -769,7 +752,13 @@
       chip.onclick = () => { state.cameFrom = {view:'detail', activeId: x.id}; state.view = 'detail'; state.activeId = chip.dataset.id; state.saveMsg = ''; render(); };
     });
 
-    wireSchemePicker(x);
+    root.querySelectorAll('#grr-scheme-picker .grr-chip').forEach(chip => {
+      chip.onclick = () => {
+        const s = chip.dataset.scheme;
+        if (s === x.scheme) delete SCHEME_OVERRIDE[x.id]; else SCHEME_OVERRIDE[x.id] = s;
+        saveSchemeOverride(); clearDraft(x.id); state.saveMsg = ''; render();
+      };
+    });
 
     root.querySelector('#grr-tm-input').onchange = (e) => {
       const v = parseFloat(e.target.value);
@@ -1616,7 +1605,7 @@
     const resultsWrap = root.querySelector('#grr-muscle-target-results');
     if (state.muscleMapTarget) {
       const tm = state.muscleMapTarget;
-      const matches = EX.filter(x => effectiveScheme(x) !== 'circuit' && x.eq.some(e => state.equip.has(e)) && x.muscles.some(m => m.id === tm));
+      const matches = EX.filter(x => x.eq.some(e => state.equip.has(e)) && x.muscles.some(m => m.id === tm));
       matches.sort((a,b) => {
         const wa = a.muscles.find(m => m.id === tm).w;
         const wb = b.muscles.find(m => m.id === tm).w;
