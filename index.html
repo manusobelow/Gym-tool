@@ -320,7 +320,7 @@
   }
 
   // ---------- STATE ----------
-  let state = { equip: new Set(EQUIP), pattern: new Set(PATTERNS), view: 'list', activeId: null, saveMsg: '', logFilter: '', muscleMapTarget: null, cameFrom: null };
+  let state = { equip: new Set(EQUIP), pattern: new Set(PATTERNS), view: 'list', activeId: null, saveMsg: '', logFilter: '', muscleMapTarget: null, cameFrom: null, homeMode: false, homeMsg: '' };
   let TM = {};
   let TIER = {};
   let HYP = {};
@@ -557,6 +557,9 @@
 
   // ---------- RENDER: DETAIL VIEW (mobility) ----------
   function backButtonHtml() {
+    if (state.cameFrom && state.cameFrom.view === 'home') {
+      return `<span class="grr-back" id="grr-back">← Back to Home Workout</span>`;
+    }
     let html = `<span class="grr-back" id="grr-back">← Back to list</span>`;
     if (state.cameFrom) {
       if (state.cameFrom.view === 'muscles') {
@@ -568,7 +571,11 @@
     return html;
   }
   function wireBackButtons() {
-    root.querySelector('#grr-back').onclick = () => { state.cameFrom = null; state.view = 'list'; render(); };
+    root.querySelector('#grr-back').onclick = () => {
+      const cf = state.cameFrom; state.cameFrom = null; state.homeMode = false;
+      if (cf && cf.view === 'home') { state.view = 'home'; } else { state.view = 'list'; }
+      render();
+    };
     const ctx = root.querySelector('#grr-back-ctx');
     if (ctx) ctx.onclick = () => {
       const cf = state.cameFrom; state.cameFrom = null;
@@ -610,6 +617,7 @@
   // ---------- RENDER: DETAIL VIEW ----------
   function renderDetail() {
     const x = EX_BY_ID[state.activeId];
+    if (state.homeMode) { renderHomeDetail(x); return; }
     const scheme = effectiveScheme(x);
     if (scheme === 'mobility') { renderMobilityDetail(x); return; }
 
@@ -974,6 +982,76 @@
     };
   }
 
+  // ---------- HOME WORKOUT HELPERS ----------
+  function findMajorLiftDay(exId) {
+    for (const k of Object.keys(MAJOR_LIFT_DAYS)) if (MAJOR_LIFT_DAYS[k].lift === exId) return k;
+    return null;
+  }
+  function findLadderForExercise(exId) {
+    for (const k of Object.keys(LADDERS)) {
+      const idx = LADDERS[k].rungs.indexOf(exId);
+      if (idx !== -1) return {key:k, idx};
+    }
+    return null;
+  }
+  function isDailySupersetExercise(exId) {
+    return Object.values(MAJOR_LIFT_DAYS).some(d => d.dailySuperset.includes(exId));
+  }
+  function isIsolationStationExercise(exId) {
+    return Object.values(CIRCUIT_DAYS).some(d => d.stations.some(s => !s.ladder && s.exercises.includes(exId)));
+  }
+  let ISOLATION_STATE = {}; // { exId: {sets, weight, streak} }
+  function saveIsolationState() { try { localStorage.setItem('gym-isolation-state', JSON.stringify(ISOLATION_STATE)); } catch(e){} }
+  function currentMajorLiftPlatesUsed() {
+    // Auto-derived from the Major Lift's own tracked weight — no separate duplicate field to fill in
+    const mlState = MAJOR_LIFT_STATE[HOME.majorDay];
+    const weight = mlState && mlState.weight ? mlState.weight : 0;
+    return Math.max(0, weight - BAR_WEIGHT);
+  }
+
+  // Shared by both the Home Workout front page and the dedicated exercise detail page —
+  // one implementation, so the two never drift out of sync.
+  function renderMajorLiftLogger(container, dayKey, msgElId) {
+    const majorDay = MAJOR_LIFT_DAYS[dayKey];
+    const ex = EX_BY_ID[majorDay.lift];
+    const mlState = MAJOR_LIFT_STATE[dayKey] || {sets: CIRCUIT_PARAMS.majorLift.startSets, weight: null, streak: 0, lastAmrap: null};
+    const P = CIRCUIT_PARAMS.majorLift;
+    let html = `<div class="grr-tm-box" style="margin-bottom:10px;"><div><label>Weight (lb, total incl. 20lb bar)</label><div style="font-size:11px;color:var(--muted);margin-top:2px;">Stage: ${mlState.sets} sets · target ${P.repCeiling}, floor ${P.repFloor}</div></div><input type="number" id="grr-ml-weight" value="${mlState.weight||''}" placeholder="e.g. 70"/></div>`;
+    for (let i=1;i<=mlState.sets;i++) {
+      const isAmrap = i===mlState.sets;
+      html += `<div class="grr-set-row"><div class="grr-set-row-top"><span>Set ${i}${isAmrap?' (AMRAP)':''}</span><span>${isAmrap?`beat last: ${mlState.lastAmrap??'—'}`:`target ${P.repCeiling}`}</span></div><div class="grr-set-inputs"><input type="number" class="grr-ml-reps" data-i="${i}" placeholder="reps" style="width:70px;"/><span class="grr-unit">reps</span></div></div>`;
+    }
+    html += `<button class="grr-save-btn" id="grr-save-major">Save Major Lift</button><div class="grr-save-msg" id="${msgElId}"></div>`;
+    container.innerHTML = html;
+    container.querySelector('#grr-ml-weight').onchange = (e) => { mlState.weight = parseFloat(e.target.value)||null; MAJOR_LIFT_STATE[dayKey]=mlState; saveMajorLiftState(); };
+    container.querySelector('#grr-save-major').onclick = () => {
+      const reps = [...container.querySelectorAll('.grr-ml-reps')].map(inp => parseInt(inp.value,10)||0);
+      const msgEl = container.querySelector('#'+msgElId);
+      if (reps.some(r=>r<=0)) { msgEl.textContent = 'Enter a rep count for every set first.'; return; }
+      const amrapReps = reps[reps.length-1];
+      const allHit = reps.every(r => r >= P.repCeiling);
+      let msg;
+      if (allHit) {
+        mlState.streak = (mlState.streak||0)+1;
+        if (mlState.streak >= 2) {
+          if (mlState.sets < P.maxSets) { mlState.sets += 1; mlState.streak = 0; msg = `All sets hit ${P.repCeiling} twice in a row — moving to ${mlState.sets} sets next session.`; }
+          else { mlState.weight = (mlState.weight||0)+10; mlState.sets = P.startSets; mlState.streak = 0; msg = `All ${P.maxSets} sets hit ${P.repCeiling} twice in a row — weight bumped to ${mlState.weight} lb, back to ${mlState.sets} sets.`; }
+        } else { msg = `All sets hit ${P.repCeiling} — one more session like this and you'll advance.`; }
+      } else {
+        mlState.streak = 0;
+        msg = amrapReps > (mlState.lastAmrap||0) ? `Didn't hit ${P.repCeiling} on every set, but the AMRAP improved (${amrapReps} vs ${mlState.lastAmrap}).` : 'Saved — not every set hit the ceiling, no stage change.';
+      }
+      mlState.lastAmrap = amrapReps;
+      MAJOR_LIFT_STATE[dayKey] = mlState; saveMajorLiftState();
+      const entry = {date: todayLocal(), exercise: ex.n, pattern: ex.p, exId: majorDay.lift, logId: newLogId(),
+        sets: reps.map((r,i)=>({target: i===reps.length-1?'AMRAP':'Set '+(i+1), weight: mlState.weight, reps:r, success: r>=P.repCeiling})),
+        allSuccess: allHit, tmAction: msg.includes('bumped') ? 'increase' : 'none'};
+      if (!LOGS[majorDay.lift]) LOGS[majorDay.lift]=[];
+      LOGS[majorDay.lift].push(entry); saveLogs();
+      msgEl.textContent = msg;
+    };
+  }
+
   function renderHome() {
     if (!HOME_DATA_LOADED) {
       root.innerHTML = `<div class="grr-detail"><span class="grr-back" id="grr-back">← Back to list</span><div class="grr-empty">Couldn't load home-workouts.js — make sure it's uploaded in the same folder as index.html.</div></div>`;
@@ -983,7 +1061,7 @@
 
     const majorDay = MAJOR_LIFT_DAYS[HOME.majorDay];
     const circuitDay = CIRCUIT_DAYS[HOME.circuitDay];
-    const mlState = MAJOR_LIFT_STATE[HOME.majorDay] || {sets: CIRCUIT_PARAMS.majorLift.startSets, weight: null, streak: 0, lastAmrap: null};
+    const P = CIRCUIT_PARAMS.ladder;
 
     root.innerHTML = `
       <div class="grr-detail">
@@ -991,6 +1069,8 @@
         <div class="grr-detail-name">Home Workout</div>
         <div class="grr-detail-meta">Today's session — pick your Major Lift day and Circuit day below.</div>
 
+        <div class="grr-section-label" style="padding-left:0;">Equipment on hand</div>
+        <div class="grr-equip-row" id="grr-home-equip-row"></div>
         <div class="grr-section-label" style="padding-left:0;">Major Lift day</div>
         <div class="grr-equip-row" id="grr-major-day-row"></div>
         <div class="grr-section-label" style="padding-left:0;">Circuit day</div>
@@ -1001,21 +1081,29 @@
           <div class="grr-collapse-body" id="grr-plate-body" style="padding:0 0 12px;"></div>
         </div>
 
-        <div class="grr-section-label" style="padding-left:0;">${majorDay.label}: ${EX_BY_ID[majorDay.lift] ? EX_BY_ID[majorDay.lift].n : majorDay.lift}</div>
+        <div class="grr-section-label" style="padding-left:0;" id="grr-major-lift-header">${majorDay.label}: ${EX_BY_ID[majorDay.lift] ? EX_BY_ID[majorDay.lift].n : majorDay.lift} <span style="color:var(--steel);font-size:11px;cursor:pointer;">(view exercise →)</span></div>
         <div id="grr-major-lift-block"></div>
-        <button class="grr-save-btn" id="grr-save-major" style="margin-bottom:14px;">Save Major Lift</button>
-        <div class="grr-save-msg" id="grr-major-msg"></div>
 
         <div class="grr-section-label" style="padding-left:0;">Daily Superset</div>
         <div id="grr-daily-superset-block" style="margin-bottom:14px;"></div>
 
-        <div class="grr-section-label" style="padding-left:0;">${circuitDay.label}</div>
+        <div class="grr-section-label" style="padding-left:0;">${circuitDay.label} — ${P.startSets} rounds each, tap to log each round as you go</div>
         <div id="grr-circuit-block"></div>
         <button class="grr-save-btn" id="grr-save-circuit">Save Circuit Session</button>
         <div class="grr-save-msg" id="grr-home-msg"></div>
       </div>
     `;
     root.querySelector('#grr-back').onclick = () => { state.view = 'list'; render(); };
+
+    // Home equipment row
+    const homeEqRow = root.querySelector('#grr-home-equip-row');
+    HOME_EQUIPMENT.forEach(e => {
+      const chip = document.createElement('div');
+      chip.className = 'grr-chip' + (HOME.equip.has(e) ? ' active' : '');
+      chip.textContent = EQUIP_LABEL[e] || e;
+      chip.onclick = () => { HOME.equip.has(e) ? HOME.equip.delete(e) : HOME.equip.add(e); saveHome(); render(); };
+      homeEqRow.appendChild(chip);
+    });
 
     const majorRow = root.querySelector('#grr-major-day-row');
     ['A','B','C'].forEach(d => {
@@ -1034,8 +1122,11 @@
       circuitRow.appendChild(chip);
     });
 
+    // Plate inventory + pool — circuit weight auto-derives from the Major Lift weight field, no duplicate entry
     const plateBody = root.querySelector('#grr-plate-body');
     const sizes = Object.keys(PLATE_INVENTORY).map(Number).sort((a,b)=>a-b);
+    const platesUsed = currentMajorLiftPlatesUsed();
+    const circuitPlatesLeft = Math.max(0, totalPlateWeight() - platesUsed);
     plateBody.innerHTML = `
       <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Pairs owned per plate size. Update as you buy more — no code change needed.</div>
       ${sizes.map(s => `
@@ -1044,71 +1135,21 @@
           <input type="number" class="grr-plate-input" data-size="${s}" value="${PLATE_INVENTORY[s]}" style="width:50px;background:var(--bg);border:1px solid var(--line);color:var(--chalk);padding:5px;border-radius:4px;text-align:center;"/>
         </div>`).join('')}
       <div style="margin-top:10px;font-size:12.5px;">Total loadable plate pool: <b style="color:var(--brand);">${totalPlateWeight()} lb</b> · Bar: ${BAR_WEIGHT} lb · DB handle: ${DB_HANDLE_WEIGHT} lb</div>
-      <div style="margin-top:10px;">
-        <label style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;">Plates on the Major Lift bar right now (lb, not counting the 20lb bar itself)</label>
-        <input type="number" id="grr-major-plates-used" value="${HOME.majorPlatesUsed || 0}" style="width:70px;display:block;margin-top:6px;background:var(--bg);border:1px solid var(--line);color:var(--chalk);padding:6px;border-radius:4px;text-align:center;"/>
-      </div>
-      <div style="margin-top:8px;font-size:12.5px;">Circuit dumbbell available: <b style="color:var(--brand);">${Math.max(0, totalPlateWeight() - (HOME.majorPlatesUsed||0))} lb</b> on plates + ${DB_HANDLE_WEIGHT} lb handle = <b>${Math.max(0, totalPlateWeight() - (HOME.majorPlatesUsed||0)) + DB_HANDLE_WEIGHT} lb</b> total</div>
+      <div style="margin-top:8px;font-size:12.5px;">Auto-populated from the Major Lift weight below — plates in use there: <b>${platesUsed} lb</b></div>
+      <div style="margin-top:4px;font-size:12.5px;">Circuit dumbbell available: <b style="color:var(--brand);">${circuitPlatesLeft} lb</b> on plates + ${DB_HANDLE_WEIGHT} lb handle = <b>${circuitPlatesLeft + DB_HANDLE_WEIGHT} lb</b> total</div>
     `;
     plateBody.querySelectorAll('.grr-plate-input').forEach(inp => {
       inp.onchange = () => { PLATE_INVENTORY[inp.dataset.size] = parseInt(inp.value,10) || 0; savePlateInventory(); render(); };
     });
-    root.querySelector('#grr-major-plates-used').onchange = (e) => { HOME.majorPlatesUsed = parseFloat(e.target.value) || 0; saveHome(); render(); };
     root.querySelector('#grr-plate-collapse .grr-collapse-head').onclick = () => root.querySelector('#grr-plate-collapse').classList.toggle('open');
 
-    const mlBlock = root.querySelector('#grr-major-lift-block');
-    const P = CIRCUIT_PARAMS.majorLift;
-    let mlHtml = `<div class="grr-tm-box" style="margin-bottom:10px;"><div><label>Weight (lb)</label><div style="font-size:11px;color:var(--muted);margin-top:2px;">Stage: ${mlState.sets} sets · target ${P.repCeiling} reps, floor ${P.repFloor}</div></div><input type="number" id="grr-ml-weight" value="${mlState.weight||''}" placeholder="e.g. 70"/></div>`;
-    for (let i=1; i<=mlState.sets; i++) {
-      const isAmrap = i === mlState.sets;
-      mlHtml += `<div class="grr-set-row"><div class="grr-set-row-top"><span>Set ${i}${isAmrap?' (AMRAP)':''}</span><span>${isAmrap ? `beat last: ${mlState.lastAmrap ?? '—'}`: `target ${P.repCeiling}`}</span></div>
-        <div class="grr-set-inputs"><input type="number" class="grr-ml-reps" data-i="${i}" placeholder="reps" style="width:70px;"/><span class="grr-unit">reps</span></div></div>`;
-    }
-    mlBlock.innerHTML = mlHtml;
-    root.querySelector('#grr-ml-weight').onchange = (e) => { mlState.weight = parseFloat(e.target.value)||null; MAJOR_LIFT_STATE[HOME.majorDay]=mlState; saveMajorLiftState(); };
-
-    root.querySelector('#grr-save-major').onclick = () => {
-      const repInputs = root.querySelectorAll('.grr-ml-reps');
-      const reps = [...repInputs].map(inp => parseInt(inp.value,10) || 0);
-      if (reps.some(r => r <= 0)) {
-        root.querySelector('#grr-major-msg').textContent = 'Enter a rep count for every set first.';
-        return;
-      }
-      const ex = EX_BY_ID[majorDay.lift];
-      const amrapReps = reps[reps.length - 1];
-      const allHitCeiling = reps.every(r => r >= P.repCeiling);
-      let msg;
-      if (allHitCeiling) {
-        mlState.streak = (mlState.streak || 0) + 1;
-        if (mlState.streak >= 2) {
-          if (mlState.sets < P.maxSets) {
-            mlState.sets += 1; mlState.streak = 0;
-            msg = `All sets hit ${P.repCeiling} twice in a row — moving to ${mlState.sets} sets next session, reps reset to target.`;
-          } else {
-            mlState.weight = (mlState.weight || 0) + 10; // smallest available jump: 5lb/side
-            mlState.sets = CIRCUIT_PARAMS.majorLift.startSets; mlState.streak = 0;
-            msg = `All ${P.maxSets} sets hit ${P.repCeiling} twice in a row — weight bumped to ${mlState.weight} lb, back to ${mlState.sets} sets.`;
-          }
-        } else {
-          msg = `All sets hit ${P.repCeiling} — one more session like this and you'll advance.`;
-        }
-      } else {
-        mlState.streak = 0;
-        msg = amrapReps > (mlState.lastAmrap||0) ? `Didn't hit ${P.repCeiling} on every set, but the AMRAP beat last time (${amrapReps} vs ${mlState.lastAmrap}). Keep pushing that number up.` : 'Saved. Not every set hit the ceiling — no stage change.';
-      }
-      mlState.lastAmrap = amrapReps;
-      MAJOR_LIFT_STATE[HOME.majorDay] = mlState;
-      saveMajorLiftState();
-      const entry = {date: todayLocal(), exercise: ex.n, pattern: ex.p, exId: majorDay.lift, logId: newLogId(),
-        sets: reps.map((r,i) => ({target: i===reps.length-1?'AMRAP':'Set '+(i+1), weight: mlState.weight, reps: r, success: r >= P.repFloor})),
-        allSuccess: allHitCeiling, tmAction: 'none'};
-      if (!LOGS[majorDay.lift]) LOGS[majorDay.lift] = [];
-      LOGS[majorDay.lift].push(entry);
-      saveLogs();
-      root.querySelector('#grr-major-msg').textContent = msg;
-      render();
+    // Major Lift — shared logger + clickable header to view the full exercise page
+    renderMajorLiftLogger(root.querySelector('#grr-major-lift-block'), HOME.majorDay, 'grr-major-msg-inline');
+    root.querySelector('#grr-major-lift-header').onclick = () => {
+      state.cameFrom = {view:'home'}; state.homeMode = true; state.view = 'detail'; state.activeId = majorDay.lift; state.saveMsg=''; render();
     };
 
+    // Daily superset — simple done ticks, clickable through to their own page too
     const dsBlock = root.querySelector('#grr-daily-superset-block');
     majorDay.dailySuperset.forEach(exId => {
       const ex = EX_BY_ID[exId];
@@ -1122,6 +1163,7 @@
       dsBlock.appendChild(chip);
     });
 
+    // Circuit block — one row per station, with a prev-rung button and one tick per round (P.startSets rounds)
     const circBlock = root.querySelector('#grr-circuit-block');
     circuitDay.stations.forEach(station => {
       const isLadder = !!station.ladder;
@@ -1129,51 +1171,79 @@
       exIds.forEach(exId => {
         const ex = EX_BY_ID[exId];
         if (!ex) return;
-        const tick = CIRCUIT_TICKS[exId] || 0;
+        const ticks = CIRCUIT_TICKS[exId] || [];
         const row = document.createElement('div');
-        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px;margin-bottom:6px;border-radius:6px;background:var(--surface);border:1px solid var(--line);';
+        row.style.cssText = 'padding:10px;margin-bottom:6px;border-radius:6px;background:var(--surface);border:1px solid var(--line);';
+        const topRow = document.createElement('div');
+        topRow.style.cssText = 'display:flex;align-items:center;gap:8px;';
         const nameSpan = document.createElement('div');
         nameSpan.style.cssText = 'flex:1;cursor:pointer;';
-        nameSpan.innerHTML = `<div style="font-weight:700;font-size:13px;">${station.pattern}</div><div style="font-size:11.5px;color:var(--muted);">${ex.n}${isLadder ? ' · rung ' + (LADDERS[station.ladder].rungs.indexOf(exId)+1) + '/' + LADDERS[station.ladder].rungs.length : ''}</div>`;
-        nameSpan.onclick = () => { state.cameFrom = {view:'home'}; state.view = 'detail'; state.activeId = exId; state.saveMsg=''; render(); };
-        const tickBtn = document.createElement('button');
-        tickBtn.type = 'button';
-        const tickLabel = tick === 2 ? '✓✓' : tick === 1 ? '✓' : '—';
-        const tickColor = tick === 2 ? 'var(--brand)' : tick === 1 ? 'var(--steel)' : 'var(--line)';
-        tickBtn.textContent = tickLabel;
-        tickBtn.style.cssText = `width:52px;height:40px;border-radius:6px;border:none;background:${tickColor};color:#fff;font-weight:800;font-size:14px;cursor:pointer;flex-shrink:0;`;
-        tickBtn.onclick = () => { CIRCUIT_TICKS[exId] = (tick + 1) % 3; saveCircuitTicks(); render(); };
-        row.appendChild(nameSpan);
-        row.appendChild(tickBtn);
+        const rungLabel = isLadder ? ` · rung ${LADDERS[station.ladder].rungs.indexOf(exId)+1}/${LADDERS[station.ladder].rungs.length}` : '';
+        nameSpan.innerHTML = `<div style="font-weight:700;font-size:13px;">${station.pattern}</div><div style="font-size:11.5px;color:var(--muted);">${ex.n}${rungLabel}</div>`;
+        nameSpan.onclick = () => { state.cameFrom = {view:'home'}; state.homeMode = true; state.view = 'detail'; state.activeId = exId; state.saveMsg=''; render(); };
+        topRow.appendChild(nameSpan);
+        if (isLadder) {
+          const st = RUNG_STATE[station.ladder] || {rungIndex:0, streak:0};
+          if (st.rungIndex > 0) {
+            const prevBtn = document.createElement('button');
+            prevBtn.type = 'button'; prevBtn.textContent = '◀ prev rung';
+            prevBtn.style.cssText = 'background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:10px;font-weight:700;padding:5px 8px;border-radius:4px;cursor:pointer;flex-shrink:0;';
+            prevBtn.onclick = () => { st.rungIndex -= 1; st.streak = 0; RUNG_STATE[station.ladder] = st; saveRungState(); render(); };
+            topRow.appendChild(prevBtn);
+          }
+        }
+        row.appendChild(topRow);
+        const tickRow = document.createElement('div');
+        tickRow.style.cssText = 'display:flex;gap:6px;margin-top:8px;';
+        for (let round = 0; round < P.startSets; round++) {
+          const tick = ticks[round] || 0;
+          const tickBtn = document.createElement('button');
+          tickBtn.type = 'button';
+          const tickLabel = tick === 2 ? '✓✓' : tick === 1 ? '✓' : `R${round+1}`;
+          const tickColor = tick === 2 ? 'var(--brand)' : tick === 1 ? 'var(--steel)' : 'var(--line)';
+          tickBtn.textContent = tickLabel;
+          tickBtn.style.cssText = `flex:1;height:38px;border-radius:6px;border:none;background:${tickColor};color:#fff;font-weight:800;font-size:13px;cursor:pointer;`;
+          tickBtn.onclick = () => {
+            const arr = CIRCUIT_TICKS[exId] || [];
+            arr[round] = ((arr[round]||0) + 1) % 3;
+            CIRCUIT_TICKS[exId] = arr;
+            saveCircuitTicks(); render();
+          };
+          tickRow.appendChild(tickBtn);
+        }
+        row.appendChild(tickRow);
         circBlock.appendChild(row);
       });
     });
 
-    function logCircuitTick(exId, tick) {
-      const entry = {date: todayLocal(), exercise: EX_BY_ID[exId].n, pattern: EX_BY_ID[exId].p, exId, logId: newLogId(),
-        sets:[{target:'Circuit', weight:null, reps:null, success: tick===2}], allSuccess: tick===2, tmAction:'none'};
+    function logCircuitSet(exId, ticks) {
+      const ex = EX_BY_ID[exId];
+      const sets = ticks.map((t,i) => ({target: 'Round '+(i+1), weight:null, reps:null, success: t===2}));
+      const allSuccess = ticks.length === P.startSets && ticks.every(t => t===2);
+      const entry = {date: todayLocal(), exercise: ex.n, pattern: ex.p, exId, logId: newLogId(), sets, allSuccess, tmAction:'none'};
       if (!LOGS[exId]) LOGS[exId] = [];
       LOGS[exId].push(entry);
+      return allSuccess;
     }
 
     root.querySelector('#grr-save-circuit').onclick = () => {
+      let anySaved = false;
       circuitDay.stations.forEach(station => {
         if (!station.ladder) {
           const exId = station.exercises[0];
-          const tick = CIRCUIT_TICKS[exId] || 0;
-          if (tick > 0 && EX_BY_ID[exId]) logCircuitTick(exId, tick);
+          const ticks = CIRCUIT_TICKS[exId] || [];
+          if (ticks.some(t => t > 0) && EX_BY_ID[exId]) { logCircuitSet(exId, ticks); anySaved = true; }
           return;
         }
         const exId = currentRungId(station.ladder);
-        const tick = CIRCUIT_TICKS[exId] || 0;
-        if (tick === 0) return;
-        logCircuitTick(exId, tick);
+        const ticks = CIRCUIT_TICKS[exId] || [];
+        if (!ticks.some(t => t > 0)) return;
+        const allSuccess = logCircuitSet(exId, ticks);
+        anySaved = true;
         const st = RUNG_STATE[station.ladder] || {rungIndex:0, streak:0};
-        if (tick === 2) {
+        if (allSuccess) {
           st.streak = (st.streak||0) + 1;
-          if (st.streak >= 2 && st.rungIndex < LADDERS[station.ladder].rungs.length - 1) {
-            st.rungIndex++; st.streak = 0;
-          }
+          if (st.streak >= 2 && st.rungIndex < LADDERS[station.ladder].rungs.length - 1) { st.rungIndex++; st.streak = 0; }
         } else {
           st.streak = 0;
         }
@@ -1183,9 +1253,185 @@
       saveLogs();
       CIRCUIT_TICKS = {};
       saveCircuitTicks();
-      root.querySelector('#grr-home-msg').textContent = 'Circuit session saved. Any rung that hit its ceiling twice in a row has advanced.';
+      root.querySelector('#grr-home-msg').textContent = anySaved
+        ? 'Circuit session saved. Any rung that hit its ceiling on every round, twice in a row, has advanced.'
+        : 'Nothing ticked yet — tap at least one round before saving.';
       render();
     };
+  }
+
+  // ---------- RENDER: HOME WORKOUT EXERCISE DETAIL (Major Lift / Ladder rung / Isolation / Daily Superset) ----------
+  function renderHomeDetail(x) {
+    const majorKey = findMajorLiftDay(x.id);
+    const ladderInfo = findLadderForExercise(x.id);
+    const isSuperset = isDailySupersetExercise(x.id);
+    const isIsolation = isIsolationStationExercise(x.id);
+
+    if (majorKey) {
+      root.innerHTML = `
+        <div class="grr-detail">
+          ${backButtonHtml()}
+          <div class="grr-detail-name">${x.n}</div>
+          <div class="grr-detail-meta">${x.p} · ${x.m} · Home Major Lift ${majorKey}</div>
+          ${gifBlock(x)}
+          ${x.notes ? `<div class="grr-notes">${x.notes}</div>` : ''}
+          <div id="grr-hd-major-block"></div>
+        </div>
+      `;
+      wireBackButtons();
+      renderMajorLiftLogger(root.querySelector('#grr-hd-major-block'), majorKey, 'grr-hd-major-msg');
+      return;
+    }
+
+    if (isSuperset) {
+      const hist = (LOGS[x.id] || []).slice(-6).reverse();
+      const histHtml = hist.length ? hist.map(l => `<div class="grr-history-row"><span>${friendlyDate(l.date)}</span><span>✅ Done</span></div>`).join('') : `<div style="color:var(--muted);font-size:12px;">Not logged yet.</div>`;
+      root.innerHTML = `
+        <div class="grr-detail">
+          ${backButtonHtml()}
+          <div class="grr-detail-name">${x.n}</div>
+          <div class="grr-detail-meta">${x.p} · ${x.m} · Daily Superset</div>
+          ${gifBlock(x)}
+          ${x.notes ? `<div class="grr-notes">${x.notes}</div>` : ''}
+          <button class="grr-save-btn" id="grr-hd-save">Mark Done Today</button>
+          <div class="grr-save-msg" id="grr-hd-msg"></div>
+          <div class="grr-section-label" style="padding-left:0;">Recent history</div>
+          <div class="grr-history">${histHtml}</div>
+        </div>
+      `;
+      wireBackButtons();
+      root.querySelector('#grr-hd-save').onclick = () => {
+        CIRCUIT_TICKS[x.id] = 2; saveCircuitTicks();
+        const entry = {date: todayLocal(), exercise: x.n, pattern: x.p, exId: x.id, logId: newLogId(), sets:[{target:'Done', weight:null, reps:null, success:true}], allSuccess:true, tmAction:'none'};
+        if (!LOGS[x.id]) LOGS[x.id] = [];
+        LOGS[x.id].push(entry); saveLogs();
+        root.querySelector('#grr-hd-msg').textContent = 'Marked done for today.';
+        render();
+      };
+      return;
+    }
+
+    if (ladderInfo) {
+      const ladder = LADDERS[ladderInfo.key];
+      const st = RUNG_STATE[ladderInfo.key] || {rungIndex:0, streak:0};
+      const P = CIRCUIT_PARAMS.ladder;
+      const rungListHtml = ladder.rungs.map((rId, i) => {
+        const rEx = EX_BY_ID[rId];
+        const isCurrent = i === st.rungIndex;
+        return `<div class="grr-rung-row${isCurrent?' active':''}" data-idx="${i}" style="padding:8px 10px;border-radius:6px;margin-bottom:4px;cursor:pointer;background:${isCurrent?'var(--brand)':'var(--surface)'};color:${isCurrent?'#fff':'var(--chalk)'};border:1px solid ${isCurrent?'var(--brand)':'var(--line)'};font-size:12.5px;">Rung ${i+1}: ${rEx ? rEx.n : rId}${isCurrent?' (current)':''}</div>`;
+      }).join('');
+      const hist = (LOGS[x.id] || []).slice(-5).reverse();
+      const histHtml = hist.length ? hist.map(l => `<div class="grr-history-row"><span>${friendlyDate(l.date)}</span><span>${l.sets.map(s=>s.success?'✅':'❌').join('')}</span></div>`).join('') : `<div style="color:var(--muted);font-size:12px;">No sessions logged yet.</div>`;
+      let setsHtml = '';
+      for (let i=1; i<=P.startSets; i++) {
+        setsHtml += `<div class="grr-set-row"><div class="grr-set-row-top"><span>Round ${i}</span><span>target ${P.repCeiling}, floor ${P.repFloor}</span></div><div class="grr-set-inputs"><input type="number" class="grr-hd-reps" data-i="${i}" placeholder="reps" style="width:70px;"/><span class="grr-unit">reps</span></div></div>`;
+      }
+      root.innerHTML = `
+        <div class="grr-detail">
+          ${backButtonHtml()}
+          <div class="grr-detail-name">${x.n}</div>
+          <div class="grr-detail-meta">${x.p} · ${x.m} · ${ladder.label}, rung ${ladderInfo.idx+1}/${ladder.rungs.length}</div>
+          ${gifBlock(x)}
+          ${x.notes ? `<div class="grr-notes">${x.notes}</div>` : ''}
+          <div class="grr-section-label" style="padding-left:0;">${ladder.label} — tap any rung to jump there (forward or back)</div>
+          <div id="grr-rung-list" style="margin-bottom:14px;">${rungListHtml}</div>
+          <div id="grr-hd-sets">${setsHtml}</div>
+          <button class="grr-save-btn" id="grr-hd-save">Save Round(s)</button>
+          <div class="grr-save-msg" id="grr-hd-msg"></div>
+          <div class="grr-section-label" style="padding-left:0;">Recent history</div>
+          <div class="grr-history">${histHtml}</div>
+        </div>
+      `;
+      wireBackButtons();
+      root.querySelectorAll('.grr-rung-row').forEach(row => {
+        row.onclick = () => {
+          const idx = parseInt(row.dataset.idx, 10);
+          RUNG_STATE[ladderInfo.key] = {rungIndex: idx, streak: 0};
+          saveRungState();
+          state.activeId = ladder.rungs[idx];
+          render();
+        };
+      });
+      root.querySelector('#grr-hd-save').onclick = () => {
+        const reps = [...root.querySelectorAll('.grr-hd-reps')].map(inp => parseInt(inp.value,10)||0);
+        if (reps.some(r=>r<=0)) { root.querySelector('#grr-hd-msg').textContent = 'Enter reps for every round first.'; return; }
+        const allHit = reps.every(r => r >= P.repCeiling);
+        const entry = {date: todayLocal(), exercise: x.n, pattern: x.p, exId: x.id, logId: newLogId(),
+          sets: reps.map((r,i)=>({target:'Round '+(i+1), weight:null, reps:r, success: r>=P.repCeiling})), allSuccess: allHit, tmAction:'none'};
+        if (!LOGS[x.id]) LOGS[x.id] = [];
+        LOGS[x.id].push(entry); saveLogs();
+        let msg;
+        if (allHit) {
+          st.streak = (st.streak||0)+1;
+          if (st.streak >= 2 && st.rungIndex < ladder.rungs.length-1) {
+            st.rungIndex++; st.streak = 0;
+            msg = `All rounds hit ${P.repCeiling} twice in a row — advanced to rung ${st.rungIndex+1}.`;
+          } else {
+            msg = `All rounds hit ${P.repCeiling} — one more session like this and you'll advance.`;
+          }
+        } else {
+          st.streak = 0;
+          msg = 'Saved — not every round hit the ceiling, no rung change.';
+        }
+        RUNG_STATE[ladderInfo.key] = st; saveRungState();
+        root.querySelector('#grr-hd-msg').textContent = msg;
+        render();
+      };
+      return;
+    }
+
+    if (isIsolation) {
+      const iState = ISOLATION_STATE[x.id] || {sets: CIRCUIT_PARAMS.isolation.startSets, weight: null, streak: 0};
+      const P = CIRCUIT_PARAMS.isolation;
+      const hist = (LOGS[x.id] || []).slice(-5).reverse();
+      const histHtml = hist.length ? hist.map(l => `<div class="grr-history-row"><span>${friendlyDate(l.date)}</span><span>${l.sets.map(s=>s.success?'✅':'❌').join('')}</span></div>`).join('') : `<div style="color:var(--muted);font-size:12px;">No sessions logged yet.</div>`;
+      let setsHtml = '';
+      for (let i=1;i<=iState.sets;i++) {
+        setsHtml += `<div class="grr-set-row"><div class="grr-set-row-top"><span>Set ${i}</span><span>target ${P.repCeiling}, floor ${P.repFloor}</span></div><div class="grr-set-inputs"><input type="number" class="grr-hd-reps" data-i="${i}" placeholder="reps" style="width:70px;"/><span class="grr-unit">reps</span></div></div>`;
+      }
+      root.innerHTML = `
+        <div class="grr-detail">
+          ${backButtonHtml()}
+          <div class="grr-detail-name">${x.n}</div>
+          <div class="grr-detail-meta">${x.p} · ${x.m} · Isolation — stage: ${iState.sets} sets</div>
+          ${gifBlock(x)}
+          ${x.notes ? `<div class="grr-notes">${x.notes}</div>` : ''}
+          <div class="grr-tm-box"><div><label>Weight (lb)</label></div><input type="number" id="grr-hd-iso-weight" value="${iState.weight||''}" placeholder="e.g. 20"/></div>
+          <div id="grr-hd-sets">${setsHtml}</div>
+          <button class="grr-save-btn" id="grr-hd-save">Save</button>
+          <div class="grr-save-msg" id="grr-hd-msg"></div>
+          <div class="grr-section-label" style="padding-left:0;">Recent history</div>
+          <div class="grr-history">${histHtml}</div>
+        </div>
+      `;
+      wireBackButtons();
+      root.querySelector('#grr-hd-iso-weight').onchange = (e) => { iState.weight = parseFloat(e.target.value)||null; ISOLATION_STATE[x.id]=iState; saveIsolationState(); };
+      root.querySelector('#grr-hd-save').onclick = () => {
+        const reps = [...root.querySelectorAll('.grr-hd-reps')].map(inp => parseInt(inp.value,10)||0);
+        if (reps.some(r=>r<=0)) { root.querySelector('#grr-hd-msg').textContent = 'Enter reps for every set first.'; return; }
+        const allHit = reps.every(r => r >= P.repCeiling);
+        let msg;
+        if (allHit) {
+          iState.streak = (iState.streak||0)+1;
+          if (iState.streak >= 2) {
+            if (iState.sets < P.maxSets) { iState.sets += 1; iState.streak = 0; msg = `All sets hit ${P.repCeiling} twice in a row — moving to ${iState.sets} sets next session.`; }
+            else { iState.weight = (iState.weight||0)+5; iState.sets = P.startSets; iState.streak = 0; msg = `All sets hit ${P.repCeiling} twice in a row — weight bumped to ${iState.weight} lb, back to ${iState.sets} sets.`; }
+          } else { msg = `All sets hit ${P.repCeiling} — one more session like this and you'll advance.`; }
+        } else { iState.streak = 0; msg = 'Saved — not every set hit the ceiling, no stage change.'; }
+        ISOLATION_STATE[x.id] = iState; saveIsolationState();
+        const entry = {date: todayLocal(), exercise: x.n, pattern: x.p, exId: x.id, logId: newLogId(),
+          sets: reps.map((r,i)=>({target:'Set '+(i+1), weight: iState.weight, reps:r, success: r>=P.repCeiling})), allSuccess: allHit, tmAction: msg.includes('bumped')?'increase':'none'};
+        if (!LOGS[x.id]) LOGS[x.id] = [];
+        LOGS[x.id].push(entry); saveLogs();
+        root.querySelector('#grr-hd-msg').textContent = msg;
+        render();
+      };
+      return;
+    }
+
+    // Fallback — shouldn't normally hit this, but keeps the app from breaking on an unrecognized circuit exercise
+    root.innerHTML = `<div class="grr-detail">${backButtonHtml()}<div class="grr-detail-name">${x.n}</div><div class="grr-empty">This exercise isn't linked into a Home Workout day yet.</div></div>`;
+    wireBackButtons();
   }
 
   function render() {

@@ -16,7 +16,7 @@ const LADDERS = {
   },
   row: {
     label: "Row Progression",
-    rungs: ["ROW_R1","ROW_R2","ROW_R3","DB_ROW_1ARM","ROW_R5"]
+    rungs: ["ROW_R1","ROW_R2","ROW_R3","ROW_R4_RING","ROW_R5"]
   },
   pushup: {
     label: "Push-Up Progression",
@@ -24,11 +24,11 @@ const LADDERS = {
   },
   splitSquat: {
     label: "Split Squat Progression",
-    rungs: ["SPLITSQ_R1","SPLITSQ_R2","SPLITSQ_R3","SPLITSQ_R4","SPLITSQ_R5","SPLITSQ_R6"]
+    rungs: ["SPLITSQ_R1","SPLITSQ_R2","SPLITSQ_R3","SPLITSQ_R4"]
   },
   lateralLunge: {
     label: "Lateral Lunge / Cossack Progression",
-    rungs: ["LATLUNGE_R1","LATLUNGE_R2","LATLUNGE_R3","LATLUNGE_R4","COSSACK","LATLUNGE_R6"]
+    rungs: ["LATLUNGE_R1","LATLUNGE_R4","COSSACK","LATLUNGE_R6"]
   },
   hipThrust: {
     label: "Hip Thrust Progression",
@@ -36,11 +36,11 @@ const LADDERS = {
   },
   singleLegRDL: {
     label: "Single-Leg RDL Progression",
-    rungs: ["SLRDL_R1","SLRDL_R2","SL_RDL_DB","SLRDL_R4"]
+    rungs: ["SLRDL_R2","SL_RDL_DB","SLRDL_R4"]
   },
   core: {
     label: "Core Progression",
-    rungs: ["CORE_R1","STANDARD_CRUNCH","CORE_R3","CORE_R4","HANG_KNEE_RAISE"]
+    rungs: ["REVERSE_CRUNCH","STANDARD_CRUNCH","CORE_R3","AB_WHEEL_KNEE","AB_WHEEL_TOES"]
   }
 };
 
@@ -49,7 +49,7 @@ const LADDERS = {
 // reps→sets→weight staging, just with different numbers.
 const CIRCUIT_PARAMS = {
   majorLift:  { repFloor: 5,  repCeiling: 8,  startSets: 3, maxSets: 4, hasAMRAP: true  }, // set 3/4 is AMRAP
-  ladder:     { repFloor: 8,  repCeiling: 15, startSets: 3, maxSets: 3, hasAMRAP: false }, // fixed 3 rounds, never adds a 4th
+  ladder:     { repFloor: 8,  repCeiling: 15, startSets: 2, maxSets: 2, hasAMRAP: false }, // fixed 2 rounds — timed to keep Major Lift and Circuit sides roughly matched (~15 min each)
   isolation:  { repFloor: 8,  repCeiling: 12, startSets: 3, maxSets: 4, hasAMRAP: false }
 };
 

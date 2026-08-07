@@ -3,7 +3,7 @@
 // Fields: id (unique), n (name), p (movement pattern), scheme (main|strength|hypertrophy|mobility|circuit) — this is the DEFAULT scheme;
 // can be overridden per-exercise inside the app itself, saved locally, without editing this file.
 // scheme:"circuit" = Home Workout exercises only — excluded from normal gym browsing, only reachable via the Home Workout page.
-// eq (equipment array — includes "rings" as of Home Workout support), m (muscle text, display label), region (lower|upper),
+// eq (equipment array — includes "rings" for Home Workout), m (muscle text, display label), region (lower|upper),
 // gif (image URL, optional), notes (optional),
 // muscles (weighted body-map targets: [{id, w}], w=3 primary/2 secondary/1 tertiary, id matches the muscle SVG taxonomy)
 const EXERCISES = [
@@ -3566,7 +3566,7 @@ const EXERCISES = [
   },
   {
     "id": "HSPU_R3",
-    "n": "Wall HSPU \u2014 Negatives Only",
+    "n": "Wall Handstand Push-Up \u2014 Front to Wall",
     "p": "Push Vertical",
     "scheme": "circuit",
     "eq": [
@@ -3575,7 +3575,7 @@ const EXERCISES = [
     "m": "Front Delts / Triceps",
     "region": "upper",
     "gif": "",
-    "notes": "Rung 3 of Handstand Progression.",
+    "notes": "Rung 3 of Handstand Progression. Facing the wall.",
     "muscles": [
       {
         "id": "front-delts",
@@ -3593,7 +3593,7 @@ const EXERCISES = [
   },
   {
     "id": "HSPU_R4",
-    "n": "Wall HSPU \u2014 Full Rep",
+    "n": "Wall Handstand Push-Up \u2014 Back to Wall",
     "p": "Push Vertical",
     "scheme": "circuit",
     "eq": [
@@ -3602,7 +3602,7 @@ const EXERCISES = [
     "m": "Front Delts / Triceps",
     "region": "upper",
     "gif": "",
-    "notes": "Rung 4 of Handstand Progression.",
+    "notes": "Rung 4 of Handstand Progression. Back to the wall \u2014 deeper, more advanced ROM.",
     "muscles": [
       {
         "id": "front-delts",
@@ -4295,60 +4295,6 @@ const EXERCISES = [
     ]
   },
   {
-    "id": "SPLITSQ_R5",
-    "n": "Goblet-Loaded Bulgarian Split Squat",
-    "p": "Lunge",
-    "scheme": "circuit",
-    "eq": [
-      "dumbbell"
-    ],
-    "m": "Glute Max / Quads",
-    "region": "lower",
-    "gif": "",
-    "notes": "Rung 5 of Split Squat Progression. Heavier.",
-    "muscles": [
-      {
-        "id": "glute-max",
-        "w": 3
-      },
-      {
-        "id": "quads",
-        "w": 2
-      },
-      {
-        "id": "hip-flexors",
-        "w": 1
-      }
-    ]
-  },
-  {
-    "id": "SPLITSQ_R6",
-    "n": "Loaded Walking Lunge",
-    "p": "Lunge",
-    "scheme": "circuit",
-    "eq": [
-      "dumbbell"
-    ],
-    "m": "Quads / Glute Max",
-    "region": "lower",
-    "gif": "",
-    "notes": "Rung 6 of Split Squat Progression. Single-arm rack or suitcase hold.",
-    "muscles": [
-      {
-        "id": "quads",
-        "w": 3
-      },
-      {
-        "id": "glute-max",
-        "w": 2
-      },
-      {
-        "id": "obliques",
-        "w": 1
-      }
-    ]
-  },
-  {
     "id": "LATLUNGE_R1",
     "n": "BW Lateral Lunge, Shallow",
     "p": "Lunge",
@@ -4367,60 +4313,6 @@ const EXERCISES = [
       },
       {
         "id": "glute-max",
-        "w": 2
-      },
-      {
-        "id": "quads",
-        "w": 1
-      }
-    ]
-  },
-  {
-    "id": "LATLUNGE_R2",
-    "n": "BW Lateral Lunge, Full Depth",
-    "p": "Lunge",
-    "scheme": "circuit",
-    "eq": [
-      "bodyweight"
-    ],
-    "m": "Adductors / Glute Max",
-    "region": "lower",
-    "gif": "",
-    "notes": "Rung 2 of Lateral Lunge Progression.",
-    "muscles": [
-      {
-        "id": "adductors",
-        "w": 3
-      },
-      {
-        "id": "glute-max",
-        "w": 2
-      },
-      {
-        "id": "quads",
-        "w": 1
-      }
-    ]
-  },
-  {
-    "id": "LATLUNGE_R3",
-    "n": "Curtsy Lunge",
-    "p": "Lunge",
-    "scheme": "circuit",
-    "eq": [
-      "bodyweight"
-    ],
-    "m": "Glute Med / Adductors",
-    "region": "lower",
-    "gif": "",
-    "notes": "Rung 3 of Lateral Lunge Progression.",
-    "muscles": [
-      {
-        "id": "glute-med",
-        "w": 3
-      },
-      {
-        "id": "adductors",
         "w": 2
       },
       {
@@ -4592,33 +4484,6 @@ const EXERCISES = [
     ]
   },
   {
-    "id": "SLRDL_R1",
-    "n": "Single-Leg RDL, Hand Support",
-    "p": "Hinge",
-    "scheme": "circuit",
-    "eq": [
-      "bodyweight"
-    ],
-    "m": "Hamstrings / Glute Max",
-    "region": "lower",
-    "gif": "",
-    "notes": "Rung 1 of Single-Leg RDL Progression.",
-    "muscles": [
-      {
-        "id": "hamstrings",
-        "w": 3
-      },
-      {
-        "id": "glute-max",
-        "w": 2
-      },
-      {
-        "id": "glute-med",
-        "w": 1
-      }
-    ]
-  },
-  {
     "id": "SLRDL_R2",
     "n": "Single-Leg RDL, No Support",
     "p": "Hinge",
@@ -4673,29 +4538,6 @@ const EXERCISES = [
     ]
   },
   {
-    "id": "CORE_R1",
-    "n": "Bent-Knee Crunch",
-    "p": "Core / Carry",
-    "scheme": "circuit",
-    "eq": [
-      "bodyweight"
-    ],
-    "m": "Abs / Obliques",
-    "region": "upper",
-    "gif": "",
-    "notes": "Rung 1 of Core Progression.",
-    "muscles": [
-      {
-        "id": "abs",
-        "w": 3
-      },
-      {
-        "id": "obliques",
-        "w": 1
-      }
-    ]
-  },
-  {
     "id": "CORE_R3",
     "n": "Weighted Crunch",
     "p": "Core / Carry",
@@ -4715,33 +4557,6 @@ const EXERCISES = [
       },
       {
         "id": "obliques",
-        "w": 1
-      }
-    ]
-  },
-  {
-    "id": "CORE_R4",
-    "n": "Bicycle Crunch",
-    "p": "Core / Carry",
-    "scheme": "circuit",
-    "eq": [
-      "bodyweight"
-    ],
-    "m": "Abs / Obliques",
-    "region": "upper",
-    "gif": "",
-    "notes": "Rung 4 of Core Progression.",
-    "muscles": [
-      {
-        "id": "abs",
-        "w": 3
-      },
-      {
-        "id": "obliques",
-        "w": 2
-      },
-      {
-        "id": "hip-flexors",
         "w": 1
       }
     ]
@@ -4838,6 +4653,83 @@ const EXERCISES = [
       },
       {
         "id": "rear-delts",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "ROW_R4_RING",
+    "n": "Single-Arm Ring Row",
+    "p": "Pull Horizontal",
+    "scheme": "circuit",
+    "eq": [
+      "rings"
+    ],
+    "m": "Lats / Rhomboids",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 4 of Row Progression. Unilateral loading adds real anti-rotation demand.",
+    "muscles": [
+      {
+        "id": "lats",
+        "w": 3
+      },
+      {
+        "id": "rhomboids",
+        "w": 2
+      },
+      {
+        "id": "obliques",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "REVERSE_CRUNCH",
+    "n": "Reverse Crunch",
+    "p": "Core / Carry",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Abs / Hip Flexors",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 1 of Core Progression.",
+    "muscles": [
+      {
+        "id": "abs",
+        "w": 3
+      },
+      {
+        "id": "hip-flexors",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "AB_WHEEL_TOES",
+    "n": "Ab-Wheel Rollout from Toes (Plank Position)",
+    "p": "Core / Carry",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Abs / Lats",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 5 of Core Progression. Full-plank rollout \u2014 significantly harder than the kneeling version.",
+    "muscles": [
+      {
+        "id": "abs",
+        "w": 3
+      },
+      {
+        "id": "obliques",
+        "w": 2
+      },
+      {
+        "id": "lats",
         "w": 1
       }
     ]
