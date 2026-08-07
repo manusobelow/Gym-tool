@@ -1078,13 +1078,12 @@ majorDay.dailySuperset.forEach(exId => {
   };
   card.querySelector('[data-action="tick"]').onclick = (e) => {
     e.stopPropagation();
-    // Toggle between 0 and 1 (not done / done)
     CIRCUIT_TICKS[exId] = CIRCUIT_TICKS[exId] ? 0 : 1;
     saveCircuitTicks();
     render();
   };
   dsBlock.appendChild(card);
-}); // <-- This } closes the forEach
+});
 
 const dsSave = document.createElement('button');
 dsSave.className = 'grr-save-btn';
