@@ -1070,7 +1070,6 @@ majorDay.dailySuperset.forEach(exId => {
       <button type="button" class="grr-circuit-detail-tick" data-action="tick" title="Tap to log as done" style="flex:1;height:38px;border-radius:6px;border:none;background:${tick ? 'var(--brand)' : 'var(--line)'};color:#fff;font-weight:800;font-size:13px;cursor:pointer;">${tick ? '✓ Done' : 'Tap to log'}</button>
     </div>
   `;
-});
 
   // Clicking the card opens the same exercise detail/progression view used by
   // Home Circuit exercises. The tick control is the only exception.
@@ -1085,7 +1084,8 @@ majorDay.dailySuperset.forEach(exId => {
     render();
   };
   dsBlock.appendChild(card);
-});
+}); // <-- This } closes the forEach
+
 const dsSave = document.createElement('button');
 dsSave.className = 'grr-save-btn';
 dsSave.id = 'grr-save-superset';
@@ -1114,7 +1114,6 @@ dsSave.onclick = () => {
     : 'Nothing ticked yet — tap an exercise to log it as done.';
   render();
 };
-
     // Circuit block — one row per station, with a prev-rung button and one tick per round (P.startSets rounds)
     const circBlock = root.querySelector('#grr-circuit-block');
     circuitDay.stations.forEach(station => {
