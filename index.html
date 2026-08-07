@@ -64,14 +64,6 @@
   .grr-tm-box { background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:10px 12px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
   .grr-tm-box label { font-size:11px; text-transform:uppercase; color:var(--muted); font-weight:700; }
   .grr-tm-box input { width:80px; background:var(--bg); border:1px solid var(--line); color:var(--chalk); font-size:15px; padding:6px 8px; border-radius:4px; text-align:right; }
-  .grr-timer-box { background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:14px 12px; margin-bottom:14px; text-align:center; }
-  .grr-timer-time { font-size:34px; font-weight:800; letter-spacing:.02em; color:var(--chalk); font-variant-numeric:tabular-nums; }
-  .grr-timer-bar { height:6px; background:var(--bg); border-radius:999px; overflow:hidden; margin:8px 0 10px; }
-  .grr-timer-fill { height:100%; background:var(--brand); transition:width 1s linear; }
-  .grr-timer-presets { display:flex; justify-content:center; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
-  .grr-timer-chip { border:1px solid var(--line); background:var(--bg); color:var(--muted); font-size:11.5px; font-weight:700; padding:5px 9px; border-radius:999px; cursor:pointer; }
-  .grr-timer-chip.active { background:var(--steel); border-color:var(--steel); color:#fff; }
-  .grr-timer-btn { background:var(--steel); color:#fff; border:none; font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.04em; padding:9px 24px; border-radius:6px; cursor:pointer; }
   .grr-set-row { background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:10px 12px; margin-bottom:8px; }
   .grr-set-row-top { display:flex; justify-content:space-between; font-size:12.5px; color:var(--muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:.03em; font-weight:700;}
   .grr-set-inputs { display:flex; gap:8px; align-items:center; }
@@ -222,103 +214,6 @@
   }
   function newLogId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
 
-  // ---------- REST TIMER ----------
-  let TIMER = { seconds: 120, total: 120, running: false, handle: null, exId: null };
-  const TIMER_PRESETS = [60, 90, 120, 150, 180];
-
-  function fmtTime(s) {
-    s = Math.max(0, s);
-    const m = Math.floor(s / 60), sec = s % 60;
-    return `${m}:${String(sec).padStart(2,'0')}`;
-  }
-  function playBeep() {
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.connect(g); g.connect(ctx.destination);
-      o.frequency.value = 880;
-      g.gain.setValueAtTime(0.3, ctx.currentTime);
-      o.start(); o.stop(ctx.currentTime + 0.35);
-    } catch(e) {}
-  }
-  function timerTick() {
-    TIMER.seconds--;
-    const timeEl = document.getElementById('grr-timer-time');
-    const fillEl = document.getElementById('grr-timer-fill');
-    if (timeEl) timeEl.textContent = fmtTime(TIMER.seconds);
-    if (fillEl) fillEl.style.width = Math.max(0, (TIMER.seconds / TIMER.total) * 100) + '%';
-    if (TIMER.seconds <= 0) {
-      clearInterval(TIMER.handle);
-      TIMER.handle = null; TIMER.running = false;
-      const btn = document.getElementById('grr-timer-startpause');
-      if (btn) btn.textContent = 'Start';
-      if (navigator.vibrate) navigator.vibrate([200,100,200]);
-      playBeep();
-      releaseWakeLock();
-    }
-  }
-  function setTimerDuration(sec, exId) {
-    clearInterval(TIMER.handle);
-    TIMER = {seconds:sec, total:sec, running:false, handle:null, exId};
-    const timeEl = document.getElementById('grr-timer-time');
-    const fillEl = document.getElementById('grr-timer-fill');
-    const btn = document.getElementById('grr-timer-startpause');
-    if (timeEl) timeEl.textContent = fmtTime(sec);
-    if (fillEl) fillEl.style.width = '100%';
-    if (btn) btn.textContent = 'Start';
-  }
-  let wakeLock = null;
-  async function acquireWakeLock() {
-    try {
-      if ('wakeLock' in navigator) {
-        wakeLock = await navigator.wakeLock.request('screen');
-      }
-    } catch (e) { /* not supported or denied — timer still works, just may lose time if screen sleeps */ }
-  }
-  function releaseWakeLock() {
-    if (wakeLock) { wakeLock.release().catch(()=>{}); wakeLock = null; }
-  }
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && TIMER.running && !wakeLock) acquireWakeLock();
-  });
-
-  function toggleTimer(exId, defaultSec) {
-    if (TIMER.exId !== exId) setTimerDuration(defaultSec, exId);
-    const btn = document.getElementById('grr-timer-startpause');
-    if (TIMER.running) {
-      clearInterval(TIMER.handle); TIMER.handle = null; TIMER.running = false;
-      releaseWakeLock();
-      if (btn) btn.textContent = 'Start';
-    } else {
-      if (TIMER.seconds <= 0) TIMER.seconds = TIMER.total;
-      TIMER.running = true;
-      TIMER.handle = setInterval(timerTick, 1000);
-      acquireWakeLock();
-      if (btn) btn.textContent = 'Pause';
-    }
-  }
-  function timerBlock(x, defaultSec) {
-    const isCurrent = TIMER.exId === x.id;
-    const seconds = isCurrent ? TIMER.seconds : defaultSec;
-    const total = isCurrent ? TIMER.total : defaultSec;
-    const running = isCurrent && TIMER.running;
-    return `
-      <div class="grr-timer-box">
-        <div class="grr-timer-time" id="grr-timer-time">${fmtTime(seconds)}</div>
-        <div class="grr-timer-bar"><div class="grr-timer-fill" id="grr-timer-fill" style="width:${Math.max(0,(seconds/total)*100)}%"></div></div>
-        <div class="grr-timer-presets" id="grr-timer-presets">
-          ${TIMER_PRESETS.map(s => `<span class="grr-timer-chip${(isCurrent && TIMER.total===s) ? ' active' : ''}" data-sec="${s}">${fmtTime(s)}</span>`).join('')}
-        </div>
-        <button class="grr-timer-btn" id="grr-timer-startpause">${running ? 'Pause' : 'Start'}</button>
-      </div>`;
-  }
-  function wireTimer(x, defaultSec) {
-    document.getElementById('grr-timer-startpause').onclick = () => toggleTimer(x.id, defaultSec);
-    document.querySelectorAll('.grr-timer-chip').forEach(chip => {
-      chip.onclick = () => setTimerDuration(parseInt(chip.dataset.sec, 10), x.id);
-    });
-  }
-
   // ---------- STATE ----------
   let state = { equip: new Set(EQUIP), pattern: new Set(PATTERNS), view: 'list', activeId: null, saveMsg: '', logFilter: '', muscleMapTarget: null, cameFrom: null, homeMode: false, homeMsg: '' };
   let TM = {};
@@ -328,10 +223,10 @@
   let REP_OVERRIDE = {};    // { exId: {mainReps, hypLow, hypHigh} } — overrides hardcoded rep targets
 
   // ---------- HOME WORKOUT STATE ----------
-  let HOME = { majorDay: 'A', circuitDay: 1, equip: HOME_DATA_LOADED ? new Set(HOME_EQUIPMENT) : new Set() };
+  let HOME = { majorDay: 'A', circuitDay: 1 };
   let PLATE_INVENTORY = HOME_DATA_LOADED ? {...DEFAULT_PLATE_INVENTORY} : {};
   let RUNG_STATE = {};   // { ladderKey: { rungIndex: 0, streak: 0 } }
-  let CIRCUIT_TICKS = {}; // { exId: 0|1|2 } — 0=blank, 1=partial (didn't hit ceiling), 2=full success (hit ceiling)
+  let CIRCUIT_TICKS = {}; // { exId: 0|1|2 } — 0=blank, 1=done, 2=max; no scheme/weight upgrade is tied to ticks
   let MAJOR_LIFT_STATE = {}; // { A: {sets:3, weight:null, streak:0, lastAmrap:null}, B: {...}, C: {...} }
   function saveMajorLiftState() { try { localStorage.setItem('gym-major-lift-state', JSON.stringify(MAJOR_LIFT_STATE)); } catch(e){} }
   function totalPlateWeight() {
@@ -343,7 +238,12 @@
     return ladder.rungs[Math.min(st.rungIndex, ladder.rungs.length-1)];
   }
   function isBodyweightOnly(x) { return x.eq.length === 1 && x.eq[0] === 'bodyweight'; }
-  function effectiveScheme(x) { return SCHEME_OVERRIDE[x.id] || x.scheme; }
+  function effectiveScheme(x) {
+    // Home Workout exercises are always Home Circuit exercises. A gym-page scheme
+    // override must never leak into a ladder rung, isolation station, or daily superset.
+    if (HOME_DATA_LOADED && isHomeWorkoutExercise(x.id)) return 'circuit';
+    return SCHEME_OVERRIDE[x.id] || x.scheme;
+  }
   function schemeChoicesFor(x) {
     const choices = new Set(['main','strength','hypertrophy']);
     if (isBodyweightOnly(x)) choices.add('mobility');
@@ -378,7 +278,7 @@
     try { const v = JSON.parse(localStorage.getItem('gym-hyp')); if (v) HYP = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-scheme-override')); if (v) SCHEME_OVERRIDE = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-rep-override')); if (v) REP_OVERRIDE = v; } catch(e){}
-    try { const v = JSON.parse(localStorage.getItem('gym-home-state')); if (v) HOME = {...HOME, ...v, equip: new Set(v.equip || [])}; } catch(e){}
+    try { const v = JSON.parse(localStorage.getItem('gym-home-state')); if (v) HOME = {...HOME, majorDay: v.majorDay || HOME.majorDay, circuitDay: v.circuitDay || HOME.circuitDay}; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-plate-inventory')); if (v) PLATE_INVENTORY = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-rung-state')); if (v) RUNG_STATE = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-circuit-ticks')); if (v) CIRCUIT_TICKS = v; } catch(e){}
@@ -404,7 +304,7 @@
   function saveHyp() { try { localStorage.setItem('gym-hyp', JSON.stringify(HYP)); } catch(e){} }
   function saveSchemeOverride() { try { localStorage.setItem('gym-scheme-override', JSON.stringify(SCHEME_OVERRIDE)); } catch(e){} }
   function saveRepOverride() { try { localStorage.setItem('gym-rep-override', JSON.stringify(REP_OVERRIDE)); } catch(e){} }
-  function saveHome() { try { localStorage.setItem('gym-home-state', JSON.stringify({...HOME, equip:[...HOME.equip]})); } catch(e){} }
+  function saveHome() { try { localStorage.setItem('gym-home-state', JSON.stringify(HOME)); } catch(e){} }
   function savePlateInventory() { try { localStorage.setItem('gym-plate-inventory', JSON.stringify(PLATE_INVENTORY)); } catch(e){} }
   function saveRungState() { try { localStorage.setItem('gym-rung-state', JSON.stringify(RUNG_STATE)); } catch(e){} }
   function saveCircuitTicks() { try { localStorage.setItem('gym-circuit-ticks', JSON.stringify(CIRCUIT_TICKS)); } catch(e){} }
@@ -618,6 +518,7 @@
         <div class="grr-detail-meta">${x.p} · ${x.m}</div>
         ${gifBlock(x)}
         ${x.notes ? `<div class="grr-notes">${x.notes}</div>` : ''}
+        ${buildSchemePickerHtml(x, 'mobility')}
         <button class="grr-save-btn" id="grr-save">Mark Done Today</button>
         <div class="grr-save-msg">${state.saveMsg}</div>
         <div class="grr-section-label" style="padding-left:0;">Recent history</div>
@@ -625,6 +526,7 @@
       </div>
     `;
     wireBackButtons();
+    wireSchemePicker(x);
     root.querySelector('#grr-save').onclick = () => {
       const entry = {date: todayLocal(), exercise: x.n, pattern: x.p, exId: x.id, logId: newLogId(), sets:[{target:'Done', weight:null, reps:null, success:true}], allSuccess:true, tmAction:'none'};
       if (!LOGS[x.id]) LOGS[x.id] = [];
@@ -642,7 +544,7 @@
     // Circuit-scheme exercises ALWAYS use the Home Workout rendering, no matter how you reached them —
     // not just when arriving via the Home Workout page's own click handlers. Closes the leak where
     // Muscle Map / superset suggestions could surface one and render it with the wrong scheme entirely.
-    if (scheme === 'circuit' || (state.homeMode && findMajorLiftDay(x.id))) { renderHomeDetail(x); return; }
+    if (scheme === 'circuit' || (state.homeMode && isHomeWorkoutExercise(x.id))) { renderHomeDetail(x); return; }
     if (scheme === 'mobility') { renderMobilityDetail(x); return; }
 
     const tm = TM[x.id] || null;
@@ -742,8 +644,6 @@
 
         ${repOverrideHtml}
 
-        ${timerBlock(x, scheme === 'hypertrophy' ? 60 : 120)}
-
         <div id="grr-sets">${setsHtml}</div>
         <button class="grr-save-btn" id="grr-save">Save Today's Log</button>
         <div class="grr-save-msg">${state.saveMsg}</div>
@@ -761,7 +661,6 @@
     `;
 
     wireBackButtons();
-    wireTimer(x, scheme === 'hypertrophy' ? 60 : 120);
     root.querySelector('#grr-superset-collapse .grr-collapse-head').onclick = () => {
       root.querySelector('#grr-superset-collapse').classList.toggle('open');
     };
@@ -1014,15 +913,12 @@
   function isIsolationStationExercise(exId) {
     return Object.values(CIRCUIT_DAYS).some(d => d.stations.some(s => !s.ladder && s.exercises.includes(exId)));
   }
+  function isHomeWorkoutExercise(exId) {
+    return !!findMajorLiftDay(exId) || !!findLadderForExercise(exId) ||
+      isDailySupersetExercise(exId) || isIsolationStationExercise(exId);
+  }
   let ISOLATION_STATE = {}; // { exId: {sets, weight, streak} }
   function saveIsolationState() { try { localStorage.setItem('gym-isolation-state', JSON.stringify(ISOLATION_STATE)); } catch(e){} }
-  function currentMajorLiftPlatesUsed() {
-    // Auto-derived from the Major Lift's own tracked weight — no separate duplicate field to fill in
-    const mlState = MAJOR_LIFT_STATE[HOME.majorDay];
-    const weight = mlState && mlState.weight ? mlState.weight : 0;
-    return Math.max(0, weight - BAR_WEIGHT);
-  }
-
   // Shared by both the Home Workout front page and the dedicated exercise detail page —
   // one implementation, so the two never drift out of sync.
   function renderMajorLiftLogger(container, dayKey, msgElId) {
@@ -1083,8 +979,6 @@
         <div class="grr-detail-name">Home Workout</div>
         <div class="grr-detail-meta">Today's session — pick your Major Lift day and Circuit day below.</div>
 
-        <div class="grr-section-label" style="padding-left:0;">Equipment on hand</div>
-        <div class="grr-equip-row" id="grr-home-equip-row"></div>
         <div class="grr-section-label" style="padding-left:0;">Major Lift day</div>
         <div class="grr-equip-row" id="grr-major-day-row"></div>
         <div class="grr-section-label" style="padding-left:0;">Circuit day</div>
@@ -1109,16 +1003,6 @@
     `;
     root.querySelector('#grr-back').onclick = () => { state.view = 'list'; render(); };
 
-    // Home equipment row
-    const homeEqRow = root.querySelector('#grr-home-equip-row');
-    HOME_EQUIPMENT.forEach(e => {
-      const chip = document.createElement('div');
-      chip.className = 'grr-chip' + (HOME.equip.has(e) ? ' active' : '');
-      chip.textContent = EQUIP_LABEL[e] || e;
-      chip.onclick = () => { HOME.equip.has(e) ? HOME.equip.delete(e) : HOME.equip.add(e); saveHome(); render(); };
-      homeEqRow.appendChild(chip);
-    });
-
     const majorRow = root.querySelector('#grr-major-day-row');
     ['A','B','C'].forEach(d => {
       const chip = document.createElement('div');
@@ -1139,8 +1023,6 @@
     // Plate inventory + pool — circuit weight auto-derives from the Major Lift weight field, no duplicate entry
     const plateBody = root.querySelector('#grr-plate-body');
     const sizes = Object.keys(PLATE_INVENTORY).map(Number).sort((a,b)=>a-b);
-    const platesUsed = currentMajorLiftPlatesUsed();
-    const circuitPlatesLeft = Math.max(0, totalPlateWeight() - platesUsed);
     plateBody.innerHTML = `
       <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Pairs owned per plate size. Update as you buy more — no code change needed.</div>
       ${sizes.map(s => `
@@ -1149,8 +1031,6 @@
           <input type="number" class="grr-plate-input" data-size="${s}" value="${PLATE_INVENTORY[s]}" style="width:50px;background:var(--bg);border:1px solid var(--line);color:var(--chalk);padding:5px;border-radius:4px;text-align:center;"/>
         </div>`).join('')}
       <div style="margin-top:10px;font-size:12.5px;">Total loadable plate pool: <b style="color:var(--brand);">${totalPlateWeight()} lb</b> · Bar: ${BAR_WEIGHT} lb · DB handle: ${DB_HANDLE_WEIGHT} lb</div>
-      <div style="margin-top:8px;font-size:12.5px;">Auto-populated from the Major Lift weight below — plates in use there: <b>${platesUsed} lb</b></div>
-      <div style="margin-top:4px;font-size:12.5px;">Circuit dumbbell available: <b style="color:var(--brand);">${circuitPlatesLeft} lb</b> on plates + ${DB_HANDLE_WEIGHT} lb handle = <b>${circuitPlatesLeft + DB_HANDLE_WEIGHT} lb</b> total</div>
     `;
     plateBody.querySelectorAll('.grr-plate-input').forEach(inp => {
       inp.onchange = () => { PLATE_INVENTORY[inp.dataset.size] = parseInt(inp.value,10) || 0; savePlateInventory(); render(); };
@@ -1163,18 +1043,45 @@
       state.cameFrom = {view:'home'}; state.homeMode = true; state.view = 'detail'; state.activeId = majorDay.lift; state.saveMsg=''; render();
     };
 
-    // Daily superset — simple done ticks, clickable through to their own page too
+    // Daily superset — each exercise gets its own card with an explicit log button.
     const dsBlock = root.querySelector('#grr-daily-superset-block');
     majorDay.dailySuperset.forEach(exId => {
       const ex = EX_BY_ID[exId];
       if (!ex) return;
-      const chip = document.createElement('div');
       const done = CIRCUIT_TICKS[exId] === 2;
-      chip.className = 'grr-chip' + (done ? ' active' : '');
-      chip.style.marginRight = '6px'; chip.style.marginBottom = '6px'; chip.style.display='inline-block';
-      chip.textContent = (done ? '✓ ' : '') + ex.n;
-      chip.onclick = () => { CIRCUIT_TICKS[exId] = done ? 0 : 2; saveCircuitTicks(); render(); };
-      dsBlock.appendChild(chip);
+      const card = document.createElement('div');
+      card.className = 'grr-card circuit';
+      card.style.cursor = 'default';
+      card.innerHTML = `
+        <div class="grr-card-top">
+          <div class="grr-card-name">${ex.n}</div>
+          <div class="grr-badge">Daily Superset</div>
+        </div>
+        <div class="grr-card-meta">${ex.m}</div>
+        <div style="display:flex;gap:6px;margin-top:9px;">
+          <button type="button" class="grr-navbtn" data-action="view">View exercise</button>
+          <button type="button" class="grr-save-btn" data-action="done" style="width:auto;margin-top:0;padding:7px 12px;">${done ? '✓ Done' : 'Mark Done'}</button>
+        </div>
+      `;
+      card.querySelector('[data-action="view"]').onclick = () => {
+        state.cameFrom = {view:'home'}; state.homeMode = true; state.view = 'detail'; state.activeId = exId; state.saveMsg=''; render();
+      };
+      card.querySelector('[data-action="done"]').onclick = () => {
+        const wasDone = CIRCUIT_TICKS[exId] === 2;
+        if (wasDone) {
+          CIRCUIT_TICKS[exId] = 0;
+        } else {
+          CIRCUIT_TICKS[exId] = 2;
+          const entry = {date: todayLocal(), exercise: ex.n, pattern: ex.p, exId: ex.id, logId: newLogId(),
+            sets:[{target:'Done', weight:null, reps:null, success:true}], allSuccess:true, tmAction:'none'};
+          if (!LOGS[ex.id]) LOGS[ex.id] = [];
+          LOGS[ex.id].push(entry);
+          saveLogs();
+        }
+        saveCircuitTicks();
+        render();
+      };
+      dsBlock.appendChild(card);
     });
 
     // Circuit block — one row per station, with a prev-rung button and one tick per round (P.startSets rounds)
@@ -1274,6 +1181,69 @@
     };
   }
 
+  function renderHomeCircuitDetail(x) {
+    const P = CIRCUIT_PARAMS.ladder;
+    const ticks = CIRCUIT_TICKS[x.id] || [];
+    const hist = (LOGS[x.id] || []).slice(-5).reverse();
+    const histHtml = hist.length
+      ? hist.map(l => `<div class="grr-history-row"><span>${friendlyDate(l.date)}</span><span>${l.sets.map(s=>s.success?'✓':'—').join('')}</span></div>`).join('')
+      : `<div style="color:var(--muted);font-size:12px;">No sessions logged yet.</div>`;
+
+    let roundsHtml = '';
+    for (let i=0; i<P.startSets; i++) {
+      const tick = ticks[i] || 0;
+      const label = tick === 2 ? '✓✓' : tick === 1 ? '✓' : `R${i+1}`;
+      const cls = tick === 2 ? 'var(--brand)' : tick === 1 ? 'var(--steel)' : 'var(--line)';
+      roundsHtml += `<button type="button" class="grr-circuit-detail-tick" data-round="${i}" style="flex:1;height:42px;border-radius:6px;border:none;background:${cls};color:#fff;font-weight:800;font-size:13px;cursor:pointer;">${label}</button>`;
+    }
+
+    root.innerHTML = `
+      <div class="grr-detail">
+        ${backButtonHtml()}
+        <div class="grr-detail-name">${x.n}</div>
+        <div class="grr-detail-meta">${x.p} · ${x.m} · Home Circuit</div>
+        ${gifBlock(x)}
+        ${x.notes ? `<div class="grr-notes">${x.notes}</div>` : ''}
+        <div class="grr-section-label" style="padding-left:0;">Circuit — tap each round to log it</div>
+        <div style="display:flex;gap:6px;margin-bottom:14px;">${roundsHtml}</div>
+        <button class="grr-save-btn" id="grr-hd-save">Save Round(s)</button>
+        <div class="grr-save-msg" id="grr-hd-msg"></div>
+        <div class="grr-section-label" style="padding-left:0;">Recent history</div>
+        <div class="grr-history">${histHtml}</div>
+      </div>
+    `;
+    wireBackButtons();
+    root.querySelectorAll('.grr-circuit-detail-tick').forEach(btn => {
+      btn.onclick = () => {
+        const arr = CIRCUIT_TICKS[x.id] || [];
+        const i = parseInt(btn.dataset.round, 10);
+        arr[i] = ((arr[i] || 0) + 1) % 3;
+        CIRCUIT_TICKS[x.id] = arr;
+        saveCircuitTicks();
+        renderHomeCircuitDetail(x);
+      };
+    });
+    root.querySelector('#grr-hd-save').onclick = () => {
+      const arr = CIRCUIT_TICKS[x.id] || [];
+      if (!arr.some(t => t > 0)) {
+        root.querySelector('#grr-hd-msg').textContent = 'Nothing ticked yet — tap at least one round.';
+        return;
+      }
+      const entry = {
+        date: todayLocal(), exercise: x.n, pattern: x.p, exId: x.id, logId: newLogId(),
+        sets: arr.map((t,i)=>({target:'Round '+(i+1), weight:null, reps:null, success:t===2})),
+        allSuccess: arr.length === P.startSets && arr.every(t=>t===2), tmAction:'none'
+      };
+      if (!LOGS[x.id]) LOGS[x.id] = [];
+      LOGS[x.id].push(entry);
+      saveLogs();
+      CIRCUIT_TICKS[x.id] = [];
+      saveCircuitTicks();
+      root.querySelector('#grr-hd-msg').textContent = 'Circuit session saved.';
+      render();
+    };
+  }
+
   // ---------- RENDER: HOME WORKOUT EXERCISE DETAIL (Major Lift / Ladder rung / Isolation / Daily Superset) ----------
   function renderHomeDetail(x) {
     const majorKey = findMajorLiftDay(x.id);
@@ -1362,6 +1332,7 @@
           const idx = parseInt(row.dataset.idx, 10);
           RUNG_STATE[ladderInfo.key] = {rungIndex: idx, streak: 0};
           saveRungState();
+          state.homeMode = true;
           state.activeId = ladder.rungs[idx];
           render();
         };
@@ -1394,53 +1365,10 @@
       return;
     }
 
+    // Isolation stations use the exact same Home Circuit logger as every other
+    // non-ladder station: rounds/ticks, no separate isolation progression.
     if (isIsolation) {
-      const iState = ISOLATION_STATE[x.id] || {sets: CIRCUIT_PARAMS.isolation.startSets, weight: null, streak: 0};
-      const P = CIRCUIT_PARAMS.isolation;
-      const hist = (LOGS[x.id] || []).slice(-5).reverse();
-      const histHtml = hist.length ? hist.map(l => `<div class="grr-history-row"><span>${friendlyDate(l.date)}</span><span>${l.sets.map(s=>s.success?'✅':'❌').join('')}</span></div>`).join('') : `<div style="color:var(--muted);font-size:12px;">No sessions logged yet.</div>`;
-      let setsHtml = '';
-      for (let i=1;i<=iState.sets;i++) {
-        setsHtml += `<div class="grr-set-row"><div class="grr-set-row-top"><span>Set ${i}</span><span>target ${P.repCeiling}, floor ${P.repFloor}</span></div><div class="grr-set-inputs"><input type="number" class="grr-hd-reps" data-i="${i}" placeholder="reps" style="width:70px;"/><span class="grr-unit">reps</span></div></div>`;
-      }
-      root.innerHTML = `
-        <div class="grr-detail">
-          ${backButtonHtml()}
-          <div class="grr-detail-name">${x.n}</div>
-          <div class="grr-detail-meta">${x.p} · ${x.m} · Isolation — stage: ${iState.sets} sets</div>
-          ${gifBlock(x)}
-          ${x.notes ? `<div class="grr-notes">${x.notes}</div>` : ''}
-          <div class="grr-tm-box"><div><label>Weight (lb)</label></div><input type="number" id="grr-hd-iso-weight" value="${iState.weight||''}" placeholder="e.g. 20"/></div>
-          <div id="grr-hd-sets">${setsHtml}</div>
-          <button class="grr-save-btn" id="grr-hd-save">Save</button>
-          <div class="grr-save-msg" id="grr-hd-msg"></div>
-          <div class="grr-section-label" style="padding-left:0;">Recent history</div>
-          <div class="grr-history">${histHtml}</div>
-        </div>
-      `;
-      wireBackButtons();
-      root.querySelector('#grr-hd-iso-weight').onchange = (e) => { iState.weight = parseFloat(e.target.value)||null; ISOLATION_STATE[x.id]=iState; saveIsolationState(); };
-      root.querySelector('#grr-hd-save').onclick = () => {
-        const reps = [...root.querySelectorAll('.grr-hd-reps')].map(inp => parseInt(inp.value,10)||0);
-        if (reps.some(r=>r<=0)) { root.querySelector('#grr-hd-msg').textContent = 'Enter reps for every set first.'; return; }
-        const allHit = reps.every(r => r >= P.repCeiling);
-        let msg;
-        if (allHit) {
-          iState.streak = (iState.streak||0)+1;
-          if (iState.streak >= 2) {
-            if (iState.sets < P.maxSets) { iState.sets += 1; iState.streak = 0; msg = `All sets hit ${P.repCeiling} twice in a row — moving to ${iState.sets} sets next session.`; }
-            else { iState.weight = (iState.weight||0)+5; iState.sets = P.startSets; iState.streak = 0; msg = `All sets hit ${P.repCeiling} twice in a row — weight bumped to ${iState.weight} lb, back to ${iState.sets} sets.`; }
-          } else { msg = `All sets hit ${P.repCeiling} — one more session like this and you'll advance.`; }
-        } else { iState.streak = 0; msg = 'Saved — not every set hit the ceiling, no stage change.'; }
-        ISOLATION_STATE[x.id] = iState; saveIsolationState();
-        const entry = {date: todayLocal(), exercise: x.n, pattern: x.p, exId: x.id, logId: newLogId(),
-          sets: reps.map((r,i)=>({target:'Set '+(i+1), weight: iState.weight, reps:r, success: r>=P.repCeiling})), allSuccess: allHit, tmAction: msg.includes('bumped')?'increase':'none'};
-        if (!LOGS[x.id]) LOGS[x.id] = [];
-        LOGS[x.id].push(entry); saveLogs();
-        root.querySelector('#grr-hd-msg').textContent = msg;
-        render();
-      };
-      return;
+      return renderHomeCircuitDetail(x);
     }
 
     // Fallback — shouldn't normally hit this, but keeps the app from breaking on an unrecognized circuit exercise
