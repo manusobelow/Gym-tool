@@ -19,7 +19,7 @@
   #gym-ref-root {
     --bg: #131313; --surface: #1d1d1d; --surface-2: #262626; --line: #333333;
     --chalk: #f2f0ea; --muted: #8f8c86; --brand: #c8362a; --steel: #5b84b8;
-    --green: #6fae6f; --red: #7a3b34; --hyper: #f2f0ea;
+    --green: #6fae6f; --red: #7a3b34;
     background: var(--bg); color: var(--chalk);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     min-height: 100vh; max-width: 480px; margin: 0 auto; padding-bottom: 60px;
@@ -37,13 +37,11 @@
   .grr-list { padding: 4px 16px 8px; display:flex; flex-direction:column; gap:8px; }
   .grr-card { background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--steel); border-radius:4px; padding:10px 12px; cursor:pointer; }
   .grr-card.main { border-left-color: var(--brand); }
-  .grr-card.hypertrophy { border-left-color: var(--hyper); }
   .grr-card-top { display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
   .grr-card-name { font-weight:700; font-size:14.5px; }
   .grr-badge { font-size:9.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; padding:2px 6px; border-radius:3px; white-space:nowrap; background:var(--steel); color:#fff; }
   .grr-badge.main { background: var(--brand); color:#fff; }
   .grr-badge.mobility { background: #4a4a4a; }
-  .grr-badge.hypertrophy { background: var(--hyper); color:#111111; }
   .grr-card-meta { font-size:11.5px; color:var(--muted); margin-top:3px; }
   .grr-card-tm { font-size:11px; color:var(--brand); margin-top:4px; font-weight:700; }
   .grr-empty { color:var(--muted); font-size:13px; padding:24px 16px; text-align:center; }
@@ -415,7 +413,7 @@
     const scheme = effectiveScheme(x);
     card.className = 'grr-card ' + scheme;
     const schemeLabel = {main:'Major Lift', strength:'Strength', hypertrophy:'Hypertrophy', mobility:'Mobility'}[scheme];
-    const badgeClass = scheme === 'main' ? 'main' : scheme === 'mobility' ? 'mobility' : scheme === 'hypertrophy' ? 'hypertrophy' : '';
+    const badgeClass = scheme === 'main' ? 'main' : scheme === 'mobility' ? 'mobility' : '';
     const tmLine = (scheme !== 'hypertrophy' && scheme !== 'mobility' && TM[x.id]) ? `<div class="grr-card-tm">1RM: ${TM[x.id]} lb</div>` : '';
     card.innerHTML = `
       <div class="grr-card-top">
@@ -556,13 +554,6 @@
     const histHtml = hist.length ? hist.map(l => `<div class="grr-history-row"><span>${friendlyDate(l.date)}</span><span>✅ Done</span></div>`).join('')
       : `<div style="color:var(--muted);font-size:12px;">Not logged yet.</div>`;
 
-    const schemeLabels = {main:'Major Lift', strength:'Strength', hypertrophy:'Hypertrophy', mobility:'Mobility'};
-    const schemePickerHtml = `
-      <div class="grr-section-label" style="padding-left:0;">Scheme</div>
-      <div class="grr-equip-row" id="grr-scheme-picker" style="padding:0 0 10px;">
-        ${schemeChoicesFor(x).map(s => `<div class="grr-chip${s==='mobility'?' active':''}" data-scheme="${s}">${schemeLabels[s]}</div>`).join('')}
-      </div>`;
-
     root.innerHTML = `
       <div class="grr-detail">
         ${backButtonHtml()}
@@ -570,7 +561,6 @@
         <div class="grr-detail-meta">${x.p} · ${x.m}</div>
         ${gifBlock(x)}
         ${x.notes ? `<div class="grr-notes">${x.notes}</div>` : ''}
-        ${schemePickerHtml}
         <button class="grr-save-btn" id="grr-save">Mark Done Today</button>
         <div class="grr-save-msg">${state.saveMsg}</div>
         <div class="grr-section-label" style="padding-left:0;">Recent history</div>
@@ -578,13 +568,6 @@
       </div>
     `;
     wireBackButtons();
-    root.querySelectorAll('#grr-scheme-picker .grr-chip').forEach(chip => {
-      chip.onclick = () => {
-        const s = chip.dataset.scheme;
-        if (s === x.scheme) delete SCHEME_OVERRIDE[x.id]; else SCHEME_OVERRIDE[x.id] = s;
-        saveSchemeOverride(); state.saveMsg = ''; render();
-      };
-    });
     root.querySelector('#grr-save').onclick = () => {
       const entry = {date: todayLocal(), exercise: x.n, pattern: x.p, exId: x.id, logId: newLogId(), sets:[{target:'Done', weight:null, reps:null, success:true}], allSuccess:true, tmAction:'none'};
       if (!LOGS[x.id]) LOGS[x.id] = [];
@@ -733,7 +716,7 @@
       chip.onclick = () => {
         const s = chip.dataset.scheme;
         if (s === x.scheme) delete SCHEME_OVERRIDE[x.id]; else SCHEME_OVERRIDE[x.id] = s;
-        saveSchemeOverride(); state.saveMsg = ''; render();
+        saveSchemeOverride(); clearDraft(x.id); state.saveMsg = ''; render();
       };
     });
 
