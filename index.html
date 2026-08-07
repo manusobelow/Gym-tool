@@ -25,7 +25,7 @@
     min-height: 100vh; max-width: 480px; margin: 0 auto; padding-bottom: 60px;
   }
   #gym-ref-root * { box-sizing: border-box; }
-  .grr-header { padding: 16px 16px 10px; border-bottom: 3px solid var(--brand); position: sticky; top: 0; background: var(--bg); z-index: 30; display:flex; justify-content:space-between; align-items:center; }
+  .grr-header { padding: 16px 16px 10px; border-bottom: 3px solid var(--brand); position: sticky; top: 0; background: var(--bg); z-index: 30; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; }
   .grr-title { font-size: 20px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; margin:0; }
   .grr-title .grr-title-accent { color: var(--brand); }
   .grr-navbtn { font-size: 11px; font-weight:700; text-transform:uppercase; color: var(--steel); border:1px solid var(--steel); border-radius:999px; padding:5px 10px; cursor:pointer; background:none; }
@@ -100,6 +100,7 @@
 </style>
 
 <script src="exercises.js?v=2"></script>
+<script src="home-workouts.js?v=1"></script>
 <script>
 (function() {
   const root = document.getElementById('gym-ref-root');
@@ -108,10 +109,11 @@
     root.innerHTML = '<div style="padding:24px;color:#f2f0ea;font-family:sans-serif;">Could not load exercises.js — make sure it is uploaded in the same folder as this file.</div>';
     return;
   }
+  const HOME_DATA_LOADED = typeof LADDERS !== 'undefined';
 
   const PATTERNS = ["Squat","Hinge","Lunge","Push Horizontal","Pull Horizontal","Push Vertical","Pull Vertical","Core / Carry","Isolation","Warm-up / Mobility","Conditioning"];
-  const EQUIP = ["barbell","dumbbell","kettlebell","cable","machine","bodyweight","band","trapbar","landmine"];
-  const EQUIP_LABEL = {barbell:"Barbell",dumbbell:"DB",kettlebell:"KB",cable:"Cable",machine:"Machine",bodyweight:"Bodyweight",band:"Band",trapbar:"Trap Bar",landmine:"Landmine"};
+  const EQUIP = ["barbell","dumbbell","kettlebell","cable","machine","bodyweight","band","trapbar","landmine","rings"];
+  const EQUIP_LABEL = {barbell:"Barbell",dumbbell:"DB",kettlebell:"KB",cable:"Cable",machine:"Machine",bodyweight:"Bodyweight",band:"Band",trapbar:"Trap Bar",landmine:"Landmine",rings:"Rings"};
   const MUSCLE_LABELS = {
     'rear-delts':'Rear Delts','transverse-abdominal':'Transverse Abdominal','serratus':'Serratus',
     'quadratus-lumborum':'Quadratus Lumborum','side-delts':'Side Delts','upper-back':'Upper Back',
@@ -324,6 +326,22 @@
   let HYP = {};
   let SCHEME_OVERRIDE = {}; // { exId: 'main'|'strength'|'hypertrophy'|'mobility' } — overrides exercises.js default
   let REP_OVERRIDE = {};    // { exId: {mainReps, hypLow, hypHigh} } — overrides hardcoded rep targets
+
+  // ---------- HOME WORKOUT STATE ----------
+  let HOME = { majorDay: 'A', circuitDay: 1, equip: HOME_DATA_LOADED ? new Set(HOME_EQUIPMENT) : new Set() };
+  let PLATE_INVENTORY = HOME_DATA_LOADED ? {...DEFAULT_PLATE_INVENTORY} : {};
+  let RUNG_STATE = {};   // { ladderKey: { rungIndex: 0, streak: 0 } }
+  let CIRCUIT_TICKS = {}; // { exId: 0|1|2 } — 0=blank, 1=partial (didn't hit ceiling), 2=full success (hit ceiling)
+  let MAJOR_LIFT_STATE = {}; // { A: {sets:3, weight:null, streak:0, lastAmrap:null}, B: {...}, C: {...} }
+  function saveMajorLiftState() { try { localStorage.setItem('gym-major-lift-state', JSON.stringify(MAJOR_LIFT_STATE)); } catch(e){} }
+  function totalPlateWeight() {
+    return Object.entries(PLATE_INVENTORY).reduce((sum,[size,pairs]) => sum + (parseFloat(size) * 2 * pairs), 0);
+  }
+  function currentRungId(ladderKey) {
+    const ladder = LADDERS[ladderKey];
+    const st = RUNG_STATE[ladderKey] || {rungIndex:0, streak:0};
+    return ladder.rungs[Math.min(st.rungIndex, ladder.rungs.length-1)];
+  }
   function isBodyweightOnly(x) { return x.eq.length === 1 && x.eq[0] === 'bodyweight'; }
   function effectiveScheme(x) { return SCHEME_OVERRIDE[x.id] || x.scheme; }
   function schemeChoicesFor(x) {
@@ -343,6 +361,11 @@
     try { const v = JSON.parse(localStorage.getItem('gym-hyp')); if (v) HYP = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-scheme-override')); if (v) SCHEME_OVERRIDE = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-rep-override')); if (v) REP_OVERRIDE = v; } catch(e){}
+    try { const v = JSON.parse(localStorage.getItem('gym-home-state')); if (v) HOME = {...HOME, ...v, equip: new Set(v.equip || [])}; } catch(e){}
+    try { const v = JSON.parse(localStorage.getItem('gym-plate-inventory')); if (v) PLATE_INVENTORY = v; } catch(e){}
+    try { const v = JSON.parse(localStorage.getItem('gym-rung-state')); if (v) RUNG_STATE = v; } catch(e){}
+    try { const v = JSON.parse(localStorage.getItem('gym-circuit-ticks')); if (v) CIRCUIT_TICKS = v; } catch(e){}
+    try { const v = JSON.parse(localStorage.getItem('gym-major-lift-state')); if (v) MAJOR_LIFT_STATE = v; } catch(e){}
     Object.keys(HYP).forEach(id => {
       if (HYP[id].tier === '6-8' || HYP[id].tier === 8) HYP[id].tier = 'low';
       else if (HYP[id].tier === '8-10' || HYP[id].tier === 10) HYP[id].tier = 'high';
@@ -364,6 +387,10 @@
   function saveHyp() { try { localStorage.setItem('gym-hyp', JSON.stringify(HYP)); } catch(e){} }
   function saveSchemeOverride() { try { localStorage.setItem('gym-scheme-override', JSON.stringify(SCHEME_OVERRIDE)); } catch(e){} }
   function saveRepOverride() { try { localStorage.setItem('gym-rep-override', JSON.stringify(REP_OVERRIDE)); } catch(e){} }
+  function saveHome() { try { localStorage.setItem('gym-home-state', JSON.stringify({...HOME, equip:[...HOME.equip]})); } catch(e){} }
+  function savePlateInventory() { try { localStorage.setItem('gym-plate-inventory', JSON.stringify(PLATE_INVENTORY)); } catch(e){} }
+  function saveRungState() { try { localStorage.setItem('gym-rung-state', JSON.stringify(RUNG_STATE)); } catch(e){} }
+  function saveCircuitTicks() { try { localStorage.setItem('gym-circuit-ticks', JSON.stringify(CIRCUIT_TICKS)); } catch(e){} }
   function saveLogs() { try { localStorage.setItem('gym-logs', JSON.stringify(LOGS)); } catch(e){} }
   function saveDrafts() { try { localStorage.setItem('gym-drafts', JSON.stringify(DRAFTS)); } catch(e){} }
   function updateDraft(exId, i, field, value) {
@@ -412,7 +439,7 @@
     const card = document.createElement('div');
     const scheme = effectiveScheme(x);
     card.className = 'grr-card ' + scheme;
-    const schemeLabel = {main:'Major Lift', strength:'Strength', hypertrophy:'Hypertrophy', mobility:'Mobility'}[scheme];
+    const schemeLabel = {main:'Major Lift', strength:'Strength', hypertrophy:'Hypertrophy', mobility:'Mobility', circuit:'Home Circuit'}[scheme];
     const badgeClass = scheme === 'main' ? 'main' : scheme === 'mobility' ? 'mobility' : '';
     const tmLine = (scheme !== 'hypertrophy' && scheme !== 'mobility' && TM[x.id]) ? `<div class="grr-card-tm">1RM: ${TM[x.id]} lb</div>` : '';
     card.innerHTML = `
@@ -434,6 +461,7 @@
         <div class="grr-title">GYM <span class="grr-title-accent">REFERENCE</span></div>
         <div style="display:flex;gap:6px;">
           <button class="grr-navbtn" id="grr-goto-muscles">Muscle Map</button>
+          <button class="grr-navbtn" id="grr-goto-home">Home Workout</button>
           <button class="grr-navbtn" id="grr-goto-history">Log / Export</button>
         </div>
       </div>
@@ -505,7 +533,7 @@
     list.innerHTML = '';
     let anyShown = false;
     PATTERNS.filter(p => pats.has(p)).forEach(p => {
-      const group = EX.filter(x => x.p === p && x.eq.some(e => state.equip.has(e)));
+      const group = EX.filter(x => x.p === p && x.scheme !== 'circuit' && x.eq.some(e => state.equip.has(e)));
       if (!group.length) return;
       anyShown = true;
       group.sort((a,b) => (effectiveScheme(a) === effectiveScheme(b) ? 0 : effectiveScheme(a) === 'main' ? -1 : 1));
@@ -524,6 +552,7 @@
     });
     root.querySelector('#grr-goto-history').onclick = () => { state.view = 'log'; render(); };
     root.querySelector('#grr-goto-muscles').onclick = () => { state.view = 'muscles'; render(); };
+    root.querySelector('#grr-goto-home').onclick = () => { state.view = 'home'; render(); };
   }
 
   // ---------- RENDER: DETAIL VIEW (mobility) ----------
@@ -629,7 +658,7 @@
       <div class="grr-history-row"><span>${friendlyDate(l.date)}</span><span>${l.sets.map(s=>s.success?'✅':'❌').join('')} ${l.tmAction==='increase'?'⬆️':''}</span></div>
     `).join('') : `<div style="color:var(--muted);font-size:12px;">No sessions logged yet.</div>`;
 
-    const schemeLabels = {main:'Major Lift', strength:'Strength', hypertrophy:'Hypertrophy', mobility:'Mobility'};
+    const schemeLabels = {main:'Major Lift', strength:'Strength', hypertrophy:'Hypertrophy', mobility:'Mobility', circuit:'Home Circuit'};
     const schemePickerHtml = `
       <div class="grr-section-label" style="padding-left:0;">Scheme</div>
       <div class="grr-equip-row" id="grr-scheme-picker" style="padding:0 0 10px;">
@@ -945,10 +974,225 @@
     };
   }
 
+  function renderHome() {
+    if (!HOME_DATA_LOADED) {
+      root.innerHTML = `<div class="grr-detail"><span class="grr-back" id="grr-back">← Back to list</span><div class="grr-empty">Couldn't load home-workouts.js — make sure it's uploaded in the same folder as index.html.</div></div>`;
+      root.querySelector('#grr-back').onclick = () => { state.view = 'list'; render(); };
+      return;
+    }
+
+    const majorDay = MAJOR_LIFT_DAYS[HOME.majorDay];
+    const circuitDay = CIRCUIT_DAYS[HOME.circuitDay];
+    const mlState = MAJOR_LIFT_STATE[HOME.majorDay] || {sets: CIRCUIT_PARAMS.majorLift.startSets, weight: null, streak: 0, lastAmrap: null};
+
+    root.innerHTML = `
+      <div class="grr-detail">
+        <span class="grr-back" id="grr-back">← Back to list</span>
+        <div class="grr-detail-name">Home Workout</div>
+        <div class="grr-detail-meta">Today's session — pick your Major Lift day and Circuit day below.</div>
+
+        <div class="grr-section-label" style="padding-left:0;">Major Lift day</div>
+        <div class="grr-equip-row" id="grr-major-day-row"></div>
+        <div class="grr-section-label" style="padding-left:0;">Circuit day</div>
+        <div class="grr-equip-row" id="grr-circuit-day-row"></div>
+
+        <div class="grr-collapse" id="grr-plate-collapse" style="margin:10px 0 14px;">
+          <div class="grr-collapse-head">Plate Inventory & Pool ▾</div>
+          <div class="grr-collapse-body" id="grr-plate-body" style="padding:0 0 12px;"></div>
+        </div>
+
+        <div class="grr-section-label" style="padding-left:0;">${majorDay.label}: ${EX_BY_ID[majorDay.lift] ? EX_BY_ID[majorDay.lift].n : majorDay.lift}</div>
+        <div id="grr-major-lift-block"></div>
+        <button class="grr-save-btn" id="grr-save-major" style="margin-bottom:14px;">Save Major Lift</button>
+        <div class="grr-save-msg" id="grr-major-msg"></div>
+
+        <div class="grr-section-label" style="padding-left:0;">Daily Superset</div>
+        <div id="grr-daily-superset-block" style="margin-bottom:14px;"></div>
+
+        <div class="grr-section-label" style="padding-left:0;">${circuitDay.label}</div>
+        <div id="grr-circuit-block"></div>
+        <button class="grr-save-btn" id="grr-save-circuit">Save Circuit Session</button>
+        <div class="grr-save-msg" id="grr-home-msg"></div>
+      </div>
+    `;
+    root.querySelector('#grr-back').onclick = () => { state.view = 'list'; render(); };
+
+    const majorRow = root.querySelector('#grr-major-day-row');
+    ['A','B','C'].forEach(d => {
+      const chip = document.createElement('div');
+      chip.className = 'grr-chip' + (HOME.majorDay === d ? ' active' : '');
+      chip.textContent = 'Day ' + d;
+      chip.onclick = () => { HOME.majorDay = d; saveHome(); render(); };
+      majorRow.appendChild(chip);
+    });
+    const circuitRow = root.querySelector('#grr-circuit-day-row');
+    [1,2].forEach(d => {
+      const chip = document.createElement('div');
+      chip.className = 'grr-chip' + (HOME.circuitDay === d ? ' active' : '');
+      chip.textContent = 'Circuit ' + d;
+      chip.onclick = () => { HOME.circuitDay = d; saveHome(); render(); };
+      circuitRow.appendChild(chip);
+    });
+
+    const plateBody = root.querySelector('#grr-plate-body');
+    const sizes = Object.keys(PLATE_INVENTORY).map(Number).sort((a,b)=>a-b);
+    plateBody.innerHTML = `
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Pairs owned per plate size. Update as you buy more — no code change needed.</div>
+      ${sizes.map(s => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);">
+          <span>${s} lb (pair)</span>
+          <input type="number" class="grr-plate-input" data-size="${s}" value="${PLATE_INVENTORY[s]}" style="width:50px;background:var(--bg);border:1px solid var(--line);color:var(--chalk);padding:5px;border-radius:4px;text-align:center;"/>
+        </div>`).join('')}
+      <div style="margin-top:10px;font-size:12.5px;">Total loadable plate pool: <b style="color:var(--brand);">${totalPlateWeight()} lb</b> · Bar: ${BAR_WEIGHT} lb · DB handle: ${DB_HANDLE_WEIGHT} lb</div>
+      <div style="margin-top:10px;">
+        <label style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;">Plates on the Major Lift bar right now (lb, not counting the 20lb bar itself)</label>
+        <input type="number" id="grr-major-plates-used" value="${HOME.majorPlatesUsed || 0}" style="width:70px;display:block;margin-top:6px;background:var(--bg);border:1px solid var(--line);color:var(--chalk);padding:6px;border-radius:4px;text-align:center;"/>
+      </div>
+      <div style="margin-top:8px;font-size:12.5px;">Circuit dumbbell available: <b style="color:var(--brand);">${Math.max(0, totalPlateWeight() - (HOME.majorPlatesUsed||0))} lb</b> on plates + ${DB_HANDLE_WEIGHT} lb handle = <b>${Math.max(0, totalPlateWeight() - (HOME.majorPlatesUsed||0)) + DB_HANDLE_WEIGHT} lb</b> total</div>
+    `;
+    plateBody.querySelectorAll('.grr-plate-input').forEach(inp => {
+      inp.onchange = () => { PLATE_INVENTORY[inp.dataset.size] = parseInt(inp.value,10) || 0; savePlateInventory(); render(); };
+    });
+    root.querySelector('#grr-major-plates-used').onchange = (e) => { HOME.majorPlatesUsed = parseFloat(e.target.value) || 0; saveHome(); render(); };
+    root.querySelector('#grr-plate-collapse .grr-collapse-head').onclick = () => root.querySelector('#grr-plate-collapse').classList.toggle('open');
+
+    const mlBlock = root.querySelector('#grr-major-lift-block');
+    const P = CIRCUIT_PARAMS.majorLift;
+    let mlHtml = `<div class="grr-tm-box" style="margin-bottom:10px;"><div><label>Weight (lb)</label><div style="font-size:11px;color:var(--muted);margin-top:2px;">Stage: ${mlState.sets} sets · target ${P.repCeiling} reps, floor ${P.repFloor}</div></div><input type="number" id="grr-ml-weight" value="${mlState.weight||''}" placeholder="e.g. 70"/></div>`;
+    for (let i=1; i<=mlState.sets; i++) {
+      const isAmrap = i === mlState.sets;
+      mlHtml += `<div class="grr-set-row"><div class="grr-set-row-top"><span>Set ${i}${isAmrap?' (AMRAP)':''}</span><span>${isAmrap ? `beat last: ${mlState.lastAmrap ?? '—'}`: `target ${P.repCeiling}`}</span></div>
+        <div class="grr-set-inputs"><input type="number" class="grr-ml-reps" data-i="${i}" placeholder="reps" style="width:70px;"/><span class="grr-unit">reps</span></div></div>`;
+    }
+    mlBlock.innerHTML = mlHtml;
+    root.querySelector('#grr-ml-weight').onchange = (e) => { mlState.weight = parseFloat(e.target.value)||null; MAJOR_LIFT_STATE[HOME.majorDay]=mlState; saveMajorLiftState(); };
+
+    root.querySelector('#grr-save-major').onclick = () => {
+      const repInputs = root.querySelectorAll('.grr-ml-reps');
+      const reps = [...repInputs].map(inp => parseInt(inp.value,10) || 0);
+      if (reps.some(r => r <= 0)) {
+        root.querySelector('#grr-major-msg').textContent = 'Enter a rep count for every set first.';
+        return;
+      }
+      const ex = EX_BY_ID[majorDay.lift];
+      const amrapReps = reps[reps.length - 1];
+      const allHitCeiling = reps.every(r => r >= P.repCeiling);
+      let msg;
+      if (allHitCeiling) {
+        mlState.streak = (mlState.streak || 0) + 1;
+        if (mlState.streak >= 2) {
+          if (mlState.sets < P.maxSets) {
+            mlState.sets += 1; mlState.streak = 0;
+            msg = `All sets hit ${P.repCeiling} twice in a row — moving to ${mlState.sets} sets next session, reps reset to target.`;
+          } else {
+            mlState.weight = (mlState.weight || 0) + 10; // smallest available jump: 5lb/side
+            mlState.sets = CIRCUIT_PARAMS.majorLift.startSets; mlState.streak = 0;
+            msg = `All ${P.maxSets} sets hit ${P.repCeiling} twice in a row — weight bumped to ${mlState.weight} lb, back to ${mlState.sets} sets.`;
+          }
+        } else {
+          msg = `All sets hit ${P.repCeiling} — one more session like this and you'll advance.`;
+        }
+      } else {
+        mlState.streak = 0;
+        msg = amrapReps > (mlState.lastAmrap||0) ? `Didn't hit ${P.repCeiling} on every set, but the AMRAP beat last time (${amrapReps} vs ${mlState.lastAmrap}). Keep pushing that number up.` : 'Saved. Not every set hit the ceiling — no stage change.';
+      }
+      mlState.lastAmrap = amrapReps;
+      MAJOR_LIFT_STATE[HOME.majorDay] = mlState;
+      saveMajorLiftState();
+      const entry = {date: todayLocal(), exercise: ex.n, pattern: ex.p, exId: majorDay.lift, logId: newLogId(),
+        sets: reps.map((r,i) => ({target: i===reps.length-1?'AMRAP':'Set '+(i+1), weight: mlState.weight, reps: r, success: r >= P.repFloor})),
+        allSuccess: allHitCeiling, tmAction: 'none'};
+      if (!LOGS[majorDay.lift]) LOGS[majorDay.lift] = [];
+      LOGS[majorDay.lift].push(entry);
+      saveLogs();
+      root.querySelector('#grr-major-msg').textContent = msg;
+      render();
+    };
+
+    const dsBlock = root.querySelector('#grr-daily-superset-block');
+    majorDay.dailySuperset.forEach(exId => {
+      const ex = EX_BY_ID[exId];
+      if (!ex) return;
+      const chip = document.createElement('div');
+      const done = CIRCUIT_TICKS[exId] === 2;
+      chip.className = 'grr-chip' + (done ? ' active' : '');
+      chip.style.marginRight = '6px'; chip.style.marginBottom = '6px'; chip.style.display='inline-block';
+      chip.textContent = (done ? '✓ ' : '') + ex.n;
+      chip.onclick = () => { CIRCUIT_TICKS[exId] = done ? 0 : 2; saveCircuitTicks(); render(); };
+      dsBlock.appendChild(chip);
+    });
+
+    const circBlock = root.querySelector('#grr-circuit-block');
+    circuitDay.stations.forEach(station => {
+      const isLadder = !!station.ladder;
+      const exIds = isLadder ? [currentRungId(station.ladder)] : station.exercises;
+      exIds.forEach(exId => {
+        const ex = EX_BY_ID[exId];
+        if (!ex) return;
+        const tick = CIRCUIT_TICKS[exId] || 0;
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px;margin-bottom:6px;border-radius:6px;background:var(--surface);border:1px solid var(--line);';
+        const nameSpan = document.createElement('div');
+        nameSpan.style.cssText = 'flex:1;cursor:pointer;';
+        nameSpan.innerHTML = `<div style="font-weight:700;font-size:13px;">${station.pattern}</div><div style="font-size:11.5px;color:var(--muted);">${ex.n}${isLadder ? ' · rung ' + (LADDERS[station.ladder].rungs.indexOf(exId)+1) + '/' + LADDERS[station.ladder].rungs.length : ''}</div>`;
+        nameSpan.onclick = () => { state.cameFrom = {view:'home'}; state.view = 'detail'; state.activeId = exId; state.saveMsg=''; render(); };
+        const tickBtn = document.createElement('button');
+        tickBtn.type = 'button';
+        const tickLabel = tick === 2 ? '✓✓' : tick === 1 ? '✓' : '—';
+        const tickColor = tick === 2 ? 'var(--brand)' : tick === 1 ? 'var(--steel)' : 'var(--line)';
+        tickBtn.textContent = tickLabel;
+        tickBtn.style.cssText = `width:52px;height:40px;border-radius:6px;border:none;background:${tickColor};color:#fff;font-weight:800;font-size:14px;cursor:pointer;flex-shrink:0;`;
+        tickBtn.onclick = () => { CIRCUIT_TICKS[exId] = (tick + 1) % 3; saveCircuitTicks(); render(); };
+        row.appendChild(nameSpan);
+        row.appendChild(tickBtn);
+        circBlock.appendChild(row);
+      });
+    });
+
+    function logCircuitTick(exId, tick) {
+      const entry = {date: todayLocal(), exercise: EX_BY_ID[exId].n, pattern: EX_BY_ID[exId].p, exId, logId: newLogId(),
+        sets:[{target:'Circuit', weight:null, reps:null, success: tick===2}], allSuccess: tick===2, tmAction:'none'};
+      if (!LOGS[exId]) LOGS[exId] = [];
+      LOGS[exId].push(entry);
+    }
+
+    root.querySelector('#grr-save-circuit').onclick = () => {
+      circuitDay.stations.forEach(station => {
+        if (!station.ladder) {
+          const exId = station.exercises[0];
+          const tick = CIRCUIT_TICKS[exId] || 0;
+          if (tick > 0 && EX_BY_ID[exId]) logCircuitTick(exId, tick);
+          return;
+        }
+        const exId = currentRungId(station.ladder);
+        const tick = CIRCUIT_TICKS[exId] || 0;
+        if (tick === 0) return;
+        logCircuitTick(exId, tick);
+        const st = RUNG_STATE[station.ladder] || {rungIndex:0, streak:0};
+        if (tick === 2) {
+          st.streak = (st.streak||0) + 1;
+          if (st.streak >= 2 && st.rungIndex < LADDERS[station.ladder].rungs.length - 1) {
+            st.rungIndex++; st.streak = 0;
+          }
+        } else {
+          st.streak = 0;
+        }
+        RUNG_STATE[station.ladder] = st;
+      });
+      saveRungState();
+      saveLogs();
+      CIRCUIT_TICKS = {};
+      saveCircuitTicks();
+      root.querySelector('#grr-home-msg').textContent = 'Circuit session saved. Any rung that hit its ceiling twice in a row has advanced.';
+      render();
+    };
+  }
+
   function render() {
     if (state.view === 'detail') renderDetail();
     else if (state.view === 'log') renderLog();
     else if (state.view === 'muscles') renderMuscles();
+    else if (state.view === 'home') renderHome();
     else renderList();
   }
 

@@ -1,8 +1,10 @@
 // Gym Reference — exercise data
 // Edit this file to add/remove/change exercises. Re-upload just this file to GitHub — no need to touch index.html.
-// Fields: id (unique), n (name), p (movement pattern), scheme (main|strength|hypertrophy|mobility) — this is the DEFAULT scheme;
+// Fields: id (unique), n (name), p (movement pattern), scheme (main|strength|hypertrophy|mobility|circuit) — this is the DEFAULT scheme;
 // can be overridden per-exercise inside the app itself, saved locally, without editing this file.
-// eq (equipment array), m (muscle text, display label), region (lower|upper), gif (image URL, optional), notes (optional),
+// scheme:"circuit" = Home Workout exercises only — excluded from normal gym browsing, only reachable via the Home Workout page.
+// eq (equipment array — includes "rings" as of Home Workout support), m (muscle text, display label), region (lower|upper),
+// gif (image URL, optional), notes (optional),
 // muscles (weighted body-map targets: [{id, w}], w=3 primary/2 secondary/1 tertiary, id matches the muscle SVG taxonomy)
 const EXERCISES = [
   {
@@ -3026,7 +3028,7 @@ const EXERCISES = [
     ],
     "m": "Quads / Glute Max",
     "region": "lower",
-    "gif": "https://www.projectinvictus.it/wp-content/uploads/2023/05/Zercher-Squat-flessione-busto.png",
+    "gif": "https://drive.google.com/file/d/1opuSfWxe55zxmFgESiOpm6EnwnSd7J9o/view",
     "notes": "Brace core.",
     "muscles": [
       {
@@ -3504,6 +3506,1338 @@ const EXERCISES = [
       },
       {
         "id": "quads",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "HSPU_R1",
+    "n": "Pike Push-Up (Feet on Floor)",
+    "p": "Push Vertical",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Front Delts / Chest",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 1 of Handstand Progression.",
+    "muscles": [
+      {
+        "id": "front-delts",
+        "w": 3
+      },
+      {
+        "id": "chest",
+        "w": 2
+      },
+      {
+        "id": "triceps",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "HSPU_R2",
+    "n": "Pike Push-Up (Feet Elevated)",
+    "p": "Push Vertical",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Front Delts / Triceps",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 2 of Handstand Progression.",
+    "muscles": [
+      {
+        "id": "front-delts",
+        "w": 3
+      },
+      {
+        "id": "triceps",
+        "w": 2
+      },
+      {
+        "id": "chest",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "HSPU_R3",
+    "n": "Wall HSPU \u2014 Negatives Only",
+    "p": "Push Vertical",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Front Delts / Triceps",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 3 of Handstand Progression.",
+    "muscles": [
+      {
+        "id": "front-delts",
+        "w": 3
+      },
+      {
+        "id": "triceps",
+        "w": 2
+      },
+      {
+        "id": "upper-traps",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "HSPU_R4",
+    "n": "Wall HSPU \u2014 Full Rep",
+    "p": "Push Vertical",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Front Delts / Triceps",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 4 of Handstand Progression.",
+    "muscles": [
+      {
+        "id": "front-delts",
+        "w": 3
+      },
+      {
+        "id": "triceps",
+        "w": 2
+      },
+      {
+        "id": "upper-traps",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "HSPU_R5",
+    "n": "Wall HSPU \u2014 Deficit",
+    "p": "Push Vertical",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Front Delts / Triceps",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 5 of Handstand Progression.",
+    "muscles": [
+      {
+        "id": "front-delts",
+        "w": 3
+      },
+      {
+        "id": "triceps",
+        "w": 2
+      },
+      {
+        "id": "upper-traps",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "HSPU_R6",
+    "n": "Freestanding HSPU",
+    "p": "Push Vertical",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Front Delts / Triceps",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 6 of Handstand Progression. No wall support \u2014 real balance/core demand.",
+    "muscles": [
+      {
+        "id": "front-delts",
+        "w": 3
+      },
+      {
+        "id": "triceps",
+        "w": 2
+      },
+      {
+        "id": "abs",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "HSPU_R7",
+    "n": "Weighted Wall HSPU",
+    "p": "Push Vertical",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Front Delts / Triceps",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 7 of Handstand Progression.",
+    "muscles": [
+      {
+        "id": "front-delts",
+        "w": 3
+      },
+      {
+        "id": "triceps",
+        "w": 2
+      },
+      {
+        "id": "upper-traps",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "PULLUP_R1",
+    "n": "Scapular Pulls (Active Hang)",
+    "p": "Pull Vertical",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Lower Traps / Lats",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 1 of Pull-up Progression.",
+    "muscles": [
+      {
+        "id": "lower-traps",
+        "w": 3
+      },
+      {
+        "id": "lats",
+        "w": 2
+      },
+      {
+        "id": "forearms",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "PULLUP_R2",
+    "n": "Arch Hang, Supported",
+    "p": "Pull Vertical",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Forearms / Lats",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 2 of Pull-up Progression. Feet lightly touching floor/box.",
+    "muscles": [
+      {
+        "id": "forearms",
+        "w": 3
+      },
+      {
+        "id": "lats",
+        "w": 2
+      },
+      {
+        "id": "lower-traps",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "PULLUP_R3",
+    "n": "Arch Hang, Free",
+    "p": "Pull Vertical",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Forearms / Lats",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 3 of Pull-up Progression. Working toward 90\u00b0 shoulder position.",
+    "muscles": [
+      {
+        "id": "forearms",
+        "w": 3
+      },
+      {
+        "id": "lats",
+        "w": 2
+      },
+      {
+        "id": "lower-traps",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "PULLUP_R4",
+    "n": "Jackknife Pull-Up",
+    "p": "Pull Vertical",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Lats / Biceps",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 4 of Pull-up Progression. Feet on bench, low bar/rings, reduce leg assist over time.",
+    "muscles": [
+      {
+        "id": "lats",
+        "w": 3
+      },
+      {
+        "id": "biceps",
+        "w": 2
+      },
+      {
+        "id": "rhomboids",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "PULLUP_R5",
+    "n": "Pull-Up Negatives",
+    "p": "Pull Vertical",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Lats / Biceps",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 5 of Pull-up Progression. Jump to top, lower as slowly as possible.",
+    "muscles": [
+      {
+        "id": "lats",
+        "w": 3
+      },
+      {
+        "id": "biceps",
+        "w": 2
+      },
+      {
+        "id": "teres-major",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "PULLUP_R6",
+    "n": "Bodyweight Pull-Up",
+    "p": "Pull Vertical",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Lats / Biceps",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 6 of Pull-up Progression.",
+    "muscles": [
+      {
+        "id": "lats",
+        "w": 3
+      },
+      {
+        "id": "biceps",
+        "w": 2
+      },
+      {
+        "id": "teres-major",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "ROW_R1",
+    "n": "Ring Row, Steep/Upright",
+    "p": "Pull Horizontal",
+    "scheme": "circuit",
+    "eq": [
+      "rings"
+    ],
+    "m": "Lats / Rhomboids",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 1 of Row Progression.",
+    "muscles": [
+      {
+        "id": "lats",
+        "w": 3
+      },
+      {
+        "id": "rhomboids",
+        "w": 2
+      },
+      {
+        "id": "biceps",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "ROW_R2",
+    "n": "Ring Row, 45\u00b0 Body Angle",
+    "p": "Pull Horizontal",
+    "scheme": "circuit",
+    "eq": [
+      "rings"
+    ],
+    "m": "Lats / Rhomboids",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 2 of Row Progression.",
+    "muscles": [
+      {
+        "id": "lats",
+        "w": 3
+      },
+      {
+        "id": "rhomboids",
+        "w": 2
+      },
+      {
+        "id": "biceps",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "ROW_R3",
+    "n": "Ring Row, Near-Horizontal",
+    "p": "Pull Horizontal",
+    "scheme": "circuit",
+    "eq": [
+      "rings"
+    ],
+    "m": "Lats / Rhomboids",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 3 of Row Progression. Feet on ottoman.",
+    "muscles": [
+      {
+        "id": "lats",
+        "w": 3
+      },
+      {
+        "id": "rhomboids",
+        "w": 2
+      },
+      {
+        "id": "biceps",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "ROW_R5",
+    "n": "Weighted Ring Row",
+    "p": "Pull Horizontal",
+    "scheme": "circuit",
+    "eq": [
+      "rings"
+    ],
+    "m": "Lats / Rhomboids",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 5 of Row Progression.",
+    "muscles": [
+      {
+        "id": "lats",
+        "w": 3
+      },
+      {
+        "id": "rhomboids",
+        "w": 2
+      },
+      {
+        "id": "biceps",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "PUSHUP_R1",
+    "n": "Incline Push-Up",
+    "p": "Push Horizontal",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Chest / Triceps",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 1 of Push-up Progression. Hands on ottoman.",
+    "muscles": [
+      {
+        "id": "chest",
+        "w": 3
+      },
+      {
+        "id": "triceps",
+        "w": 2
+      },
+      {
+        "id": "front-delts",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "PUSHUP_R2",
+    "n": "Knee Push-Up",
+    "p": "Push Horizontal",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Chest / Triceps",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 2 of Push-up Progression.",
+    "muscles": [
+      {
+        "id": "chest",
+        "w": 3
+      },
+      {
+        "id": "triceps",
+        "w": 2
+      },
+      {
+        "id": "front-delts",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "PUSHUP_R3",
+    "n": "Full Push-Up with Push-Up Plus",
+    "p": "Push Horizontal",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Chest / Serratus",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 3 of Push-up Progression. Protraction at lockout.",
+    "muscles": [
+      {
+        "id": "chest",
+        "w": 3
+      },
+      {
+        "id": "serratus",
+        "w": 2
+      },
+      {
+        "id": "triceps",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "PUSHUP_R4",
+    "n": "Feet-Elevated Push-Up",
+    "p": "Push Horizontal",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Chest / Triceps",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 4 of Push-up Progression.",
+    "muscles": [
+      {
+        "id": "chest",
+        "w": 3
+      },
+      {
+        "id": "triceps",
+        "w": 2
+      },
+      {
+        "id": "front-delts",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "PUSHUP_R5",
+    "n": "Ring Push-Up",
+    "p": "Push Horizontal",
+    "scheme": "circuit",
+    "eq": [
+      "rings",
+      "bodyweight"
+    ],
+    "m": "Chest / Triceps",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 5 of Push-up Progression.",
+    "muscles": [
+      {
+        "id": "chest",
+        "w": 3
+      },
+      {
+        "id": "triceps",
+        "w": 2
+      },
+      {
+        "id": "serratus",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "PUSHUP_R6",
+    "n": "Archer Ring Push-Up",
+    "p": "Push Horizontal",
+    "scheme": "circuit",
+    "eq": [
+      "rings"
+    ],
+    "m": "Chest / Triceps",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 6 of Push-up Progression.",
+    "muscles": [
+      {
+        "id": "chest",
+        "w": 3
+      },
+      {
+        "id": "triceps",
+        "w": 2
+      },
+      {
+        "id": "obliques",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "PUSHUP_R7",
+    "n": "Weighted Push-Up",
+    "p": "Push Horizontal",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Chest / Triceps",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 7 of Push-up Progression. Plate on back.",
+    "muscles": [
+      {
+        "id": "chest",
+        "w": 3
+      },
+      {
+        "id": "triceps",
+        "w": 2
+      },
+      {
+        "id": "front-delts",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "PUSHUP_R8",
+    "n": "Plyo / Jump Push-Up",
+    "p": "Push Horizontal",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Chest / Triceps",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 8 of Push-up Progression.",
+    "muscles": [
+      {
+        "id": "chest",
+        "w": 3
+      },
+      {
+        "id": "triceps",
+        "w": 2
+      },
+      {
+        "id": "front-delts",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "SPLITSQ_R1",
+    "n": "BW Split Squat, Hand-Assisted",
+    "p": "Lunge",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Quads / Glute Max",
+    "region": "lower",
+    "gif": "",
+    "notes": "Rung 1 of Split Squat Progression.",
+    "muscles": [
+      {
+        "id": "quads",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "adductors",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "SPLITSQ_R2",
+    "n": "BW Split Squat",
+    "p": "Lunge",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Quads / Glute Max",
+    "region": "lower",
+    "gif": "",
+    "notes": "Rung 2 of Split Squat Progression.",
+    "muscles": [
+      {
+        "id": "quads",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "adductors",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "SPLITSQ_R3",
+    "n": "BW Bulgarian Split Squat",
+    "p": "Lunge",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Glute Max / Quads",
+    "region": "lower",
+    "gif": "",
+    "notes": "Rung 3 of Split Squat Progression. Rear foot elevated.",
+    "muscles": [
+      {
+        "id": "glute-max",
+        "w": 3
+      },
+      {
+        "id": "quads",
+        "w": 2
+      },
+      {
+        "id": "hip-flexors",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "SPLITSQ_R4",
+    "n": "Goblet-Loaded Split Squat",
+    "p": "Lunge",
+    "scheme": "circuit",
+    "eq": [
+      "dumbbell"
+    ],
+    "m": "Quads / Glute Max",
+    "region": "lower",
+    "gif": "",
+    "notes": "Rung 4 of Split Squat Progression.",
+    "muscles": [
+      {
+        "id": "quads",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "adductors",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "SPLITSQ_R5",
+    "n": "Goblet-Loaded Bulgarian Split Squat",
+    "p": "Lunge",
+    "scheme": "circuit",
+    "eq": [
+      "dumbbell"
+    ],
+    "m": "Glute Max / Quads",
+    "region": "lower",
+    "gif": "",
+    "notes": "Rung 5 of Split Squat Progression. Heavier.",
+    "muscles": [
+      {
+        "id": "glute-max",
+        "w": 3
+      },
+      {
+        "id": "quads",
+        "w": 2
+      },
+      {
+        "id": "hip-flexors",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "SPLITSQ_R6",
+    "n": "Loaded Walking Lunge",
+    "p": "Lunge",
+    "scheme": "circuit",
+    "eq": [
+      "dumbbell"
+    ],
+    "m": "Quads / Glute Max",
+    "region": "lower",
+    "gif": "",
+    "notes": "Rung 6 of Split Squat Progression. Single-arm rack or suitcase hold.",
+    "muscles": [
+      {
+        "id": "quads",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "obliques",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "LATLUNGE_R1",
+    "n": "BW Lateral Lunge, Shallow",
+    "p": "Lunge",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Adductors / Glute Max",
+    "region": "lower",
+    "gif": "",
+    "notes": "Rung 1 of Lateral Lunge Progression.",
+    "muscles": [
+      {
+        "id": "adductors",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "quads",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "LATLUNGE_R2",
+    "n": "BW Lateral Lunge, Full Depth",
+    "p": "Lunge",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Adductors / Glute Max",
+    "region": "lower",
+    "gif": "",
+    "notes": "Rung 2 of Lateral Lunge Progression.",
+    "muscles": [
+      {
+        "id": "adductors",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "quads",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "LATLUNGE_R3",
+    "n": "Curtsy Lunge",
+    "p": "Lunge",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Glute Med / Adductors",
+    "region": "lower",
+    "gif": "",
+    "notes": "Rung 3 of Lateral Lunge Progression.",
+    "muscles": [
+      {
+        "id": "glute-med",
+        "w": 3
+      },
+      {
+        "id": "adductors",
+        "w": 2
+      },
+      {
+        "id": "quads",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "LATLUNGE_R4",
+    "n": "Goblet-Loaded Lateral Lunge",
+    "p": "Lunge",
+    "scheme": "circuit",
+    "eq": [
+      "dumbbell"
+    ],
+    "m": "Adductors / Glute Max",
+    "region": "lower",
+    "gif": "",
+    "notes": "Rung 4 of Lateral Lunge Progression.",
+    "muscles": [
+      {
+        "id": "adductors",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "quads",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "LATLUNGE_R6",
+    "n": "Goblet-Loaded Cossack Squat",
+    "p": "Squat",
+    "scheme": "circuit",
+    "eq": [
+      "dumbbell"
+    ],
+    "m": "Adductors / Glute Max",
+    "region": "lower",
+    "gif": "",
+    "notes": "Rung 6 of Lateral Lunge Progression.",
+    "muscles": [
+      {
+        "id": "adductors",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "quads",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "HIPTHRUST_R1",
+    "n": "Bilateral Glute Bridge",
+    "p": "Hinge",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Glute Max / Hamstrings",
+    "region": "lower",
+    "gif": "",
+    "notes": "Rung 1 of Hip Thrust Progression.",
+    "muscles": [
+      {
+        "id": "glute-max",
+        "w": 3
+      },
+      {
+        "id": "hamstrings",
+        "w": 2
+      },
+      {
+        "id": "adductors",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "HIPTHRUST_R2",
+    "n": "Single-Leg Glute Bridge",
+    "p": "Hinge",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Glute Max / Glute Med",
+    "region": "lower",
+    "gif": "",
+    "notes": "Rung 2 of Hip Thrust Progression.",
+    "muscles": [
+      {
+        "id": "glute-max",
+        "w": 3
+      },
+      {
+        "id": "glute-med",
+        "w": 2
+      },
+      {
+        "id": "hamstrings",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "HIPTHRUST_R3",
+    "n": "Single-Leg Hip Thrust, Elevated",
+    "p": "Hinge",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Glute Max / Glute Med",
+    "region": "lower",
+    "gif": "",
+    "notes": "Rung 3 of Hip Thrust Progression. Shoulders on ottoman.",
+    "muscles": [
+      {
+        "id": "glute-max",
+        "w": 3
+      },
+      {
+        "id": "glute-med",
+        "w": 2
+      },
+      {
+        "id": "hamstrings",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "HIPTHRUST_R4",
+    "n": "Single-Leg Hip Thrust, Elevated + DB",
+    "p": "Hinge",
+    "scheme": "circuit",
+    "eq": [
+      "dumbbell"
+    ],
+    "m": "Glute Max / Glute Med",
+    "region": "lower",
+    "gif": "",
+    "notes": "Rung 4 of Hip Thrust Progression. DB on hips.",
+    "muscles": [
+      {
+        "id": "glute-max",
+        "w": 3
+      },
+      {
+        "id": "glute-med",
+        "w": 2
+      },
+      {
+        "id": "hamstrings",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "SLRDL_R1",
+    "n": "Single-Leg RDL, Hand Support",
+    "p": "Hinge",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Hamstrings / Glute Max",
+    "region": "lower",
+    "gif": "",
+    "notes": "Rung 1 of Single-Leg RDL Progression.",
+    "muscles": [
+      {
+        "id": "hamstrings",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "glute-med",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "SLRDL_R2",
+    "n": "Single-Leg RDL, No Support",
+    "p": "Hinge",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Hamstrings / Glute Max",
+    "region": "lower",
+    "gif": "",
+    "notes": "Rung 2 of Single-Leg RDL Progression.",
+    "muscles": [
+      {
+        "id": "hamstrings",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "glute-med",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "SLRDL_R4",
+    "n": "Single-Leg RDL, Same-Side DB",
+    "p": "Hinge",
+    "scheme": "circuit",
+    "eq": [
+      "dumbbell"
+    ],
+    "m": "Hamstrings / Glute Max",
+    "region": "lower",
+    "gif": "",
+    "notes": "Rung 4 of Single-Leg RDL Progression.",
+    "muscles": [
+      {
+        "id": "hamstrings",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "obliques",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "CORE_R1",
+    "n": "Bent-Knee Crunch",
+    "p": "Core / Carry",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Abs / Obliques",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 1 of Core Progression.",
+    "muscles": [
+      {
+        "id": "abs",
+        "w": 3
+      },
+      {
+        "id": "obliques",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "CORE_R3",
+    "n": "Weighted Crunch",
+    "p": "Core / Carry",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight",
+      "dumbbell"
+    ],
+    "m": "Abs / Obliques",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 3 of Core Progression. Light plate.",
+    "muscles": [
+      {
+        "id": "abs",
+        "w": 3
+      },
+      {
+        "id": "obliques",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "CORE_R4",
+    "n": "Bicycle Crunch",
+    "p": "Core / Carry",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Abs / Obliques",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 4 of Core Progression.",
+    "muscles": [
+      {
+        "id": "abs",
+        "w": 3
+      },
+      {
+        "id": "obliques",
+        "w": 2
+      },
+      {
+        "id": "hip-flexors",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "CALF_RAISE_DB",
+    "n": "Standing Calf Raise (Dumbbell-Loaded)",
+    "p": "Isolation",
+    "scheme": "circuit",
+    "eq": [
+      "dumbbell"
+    ],
+    "m": "Calves / Tibialis Anterior",
+    "region": "lower",
+    "gif": "",
+    "notes": "Isolation Slot A (part 1). Hold DB at side.",
+    "muscles": [
+      {
+        "id": "calves",
+        "w": 3
+      },
+      {
+        "id": "tibialis-anterior",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "STIFF_LEG_DEADLIFT",
+    "n": "Stiff-Legged Deadlift",
+    "p": "Hinge",
+    "scheme": "circuit",
+    "eq": [
+      "barbell"
+    ],
+    "m": "Hamstrings / Spinal Erectors",
+    "region": "lower",
+    "gif": "",
+    "notes": "Home Major Lift C. Minimal knee bend, more restrictive ROM than an RDL.",
+    "muscles": [
+      {
+        "id": "hamstrings",
+        "w": 3
+      },
+      {
+        "id": "spinal-erectors",
+        "w": 2
+      },
+      {
+        "id": "glute-max",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "WORLDS_GREATEST_STRETCH",
+    "n": "World's Greatest Stretch",
+    "p": "Warm-up / Mobility",
+    "scheme": "mobility",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Hip Flexors / Spinal Erectors",
+    "region": "upper",
+    "gif": "",
+    "notes": "Daily superset for Home Major Lift days.",
+    "muscles": [
+      {
+        "id": "hip-flexors",
+        "w": 2
+      },
+      {
+        "id": "spinal-erectors",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "TERES_MAJOR_BAND_HOLD",
+    "n": "Teres Major Band Hold",
+    "p": "Warm-up / Mobility",
+    "scheme": "mobility",
+    "eq": [
+      "band"
+    ],
+    "m": "Teres Major / Rear Delts",
+    "region": "upper",
+    "gif": "",
+    "notes": "Daily superset for Home Major Lift days.",
+    "muscles": [
+      {
+        "id": "teres-major",
+        "w": 3
+      },
+      {
+        "id": "rear-delts",
         "w": 1
       }
     ]
