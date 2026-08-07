@@ -4594,7 +4594,7 @@ const EXERCISES = [
     ],
     "m": "Hamstrings / Spinal Erectors",
     "region": "lower",
-    "gif": "",
+    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2022/03/Barbell-Row.gif?resize=600%2C600&ssl=1",
     "notes": "Home Major Lift C. Minimal knee bend, more restrictive ROM than an RDL.",
     "muscles": [
       {
