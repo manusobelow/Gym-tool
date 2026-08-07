@@ -1096,10 +1096,27 @@ dsSave.onclick = () => {
     const ex = EX_BY_ID[exId];
     const tick = CIRCUIT_TICKS[exId] || 0;
     if (!ex || !tick) return;
+    
+    // Create 3 sets instead of 1
+    const sets = [];
+    for (let i = 0; i < 3; i++) {
+      sets.push({
+        target: 'Daily Superset',
+        weight: null,
+        reps: null,
+        success: true
+      });
+    }
+    
     const entry = {
-      date: todayLocal(), exercise: ex.n, pattern: ex.p, exId: ex.id, logId: newLogId(),
-      sets:[{target:'Daily Superset', weight:null, reps:null, success:true}],
-      allSuccess:true, tmAction:'none'
+      date: todayLocal(), 
+      exercise: ex.n, 
+      pattern: ex.p, 
+      exId: ex.id, 
+      logId: newLogId(),
+      sets: sets, // Now has 3 sets instead of 1
+      allSuccess: true, 
+      tmAction: 'none'
     };
     if (!LOGS[ex.id]) LOGS[ex.id] = [];
     LOGS[ex.id].push(entry);
@@ -1109,7 +1126,7 @@ dsSave.onclick = () => {
   saveLogs();
   saveCircuitTicks();
   root.querySelector('#grr-home-msg').textContent = anySaved
-    ? 'Superset saved. Tap an exercise once to mark it as done.'
+    ? 'Superset saved. Each tick counts as 3 sets.'
     : 'Nothing ticked yet — tap an exercise to log it as done.';
   render();
 };
