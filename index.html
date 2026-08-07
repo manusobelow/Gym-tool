@@ -1051,25 +1051,26 @@
       state.cameFrom = {view:'home'}; state.homeMode = true; state.view = 'detail'; state.activeId = majorDay.lift; state.saveMsg=''; render();
     };
 
-    // Daily superset — same card interaction as the Home Circuit UI, but one
-    // completion control per exercise instead of multiple rounds.
-    const dsBlock = root.querySelector('#grr-daily-superset-block');
-    majorDay.dailySuperset.forEach(exId => {
-      const ex = EX_BY_ID[exId];
-      if (!ex) return;
-      const tick = CIRCUIT_TICKS[exId] || 0;
-      const card = document.createElement('div');
-      card.className = 'grr-card circuit';
-      card.innerHTML = `
-        <div class="grr-card-top">
-          <div class="grr-card-name">${ex.n}</div>
-          <div class="grr-badge">Daily Superset</div>
-        </div>
-        <div class="grr-card-meta">${ex.m}</div>
-        <div style="display:flex;gap:6px;margin-top:9px;">
-          <button type="button" class="grr-circuit-detail-tick" data-action="tick" title="Tap once for done, twice for max" style="flex:1;height:38px;border-radius:6px;border:none;background:${tick===2?'var(--brand)':tick===1?'var(--steel)':'var(--line)'};color:#fff;font-weight:800;font-size:13px;cursor:pointer;">${tick===2?'✓✓ Max':tick===1?'✓ Done':'Tap to log'}</button>
-        </div>
-      `;
+ // Daily superset — same card interaction as the Home Circuit UI, but one
+// completion control per exercise instead of multiple rounds.
+const dsBlock = root.querySelector('#grr-daily-superset-block');
+majorDay.dailySuperset.forEach(exId => {
+  const ex = EX_BY_ID[exId];
+  if (!ex) return;
+  const tick = CIRCUIT_TICKS[exId] || 0;
+  const card = document.createElement('div');
+  card.className = 'grr-card circuit';
+  card.innerHTML = `
+    <div class="grr-card-top">
+      <div class="grr-card-name">${ex.n}</div>
+      <div class="grr-badge">Daily Superset</div>
+    </div>
+    <div class="grr-card-meta">${ex.m}</div>
+    <div style="display:flex;gap:6px;margin-top:9px;">
+      <button type="button" class="grr-circuit-detail-tick" data-action="tick" title="Tap to log as done" style="flex:1;height:38px;border-radius:6px;border:none;background:${tick ? 'var(--brand)' : 'var(--line)'};color:#fff;font-weight:800;font-size:13px;cursor:pointer;">${tick ? '✓ Done' : 'Tap to log'}</button>
+    </div>
+  `;
+});
 
       // Clicking the card opens the same exercise detail/progression view used by
       // Home Circuit exercises. The tick control is the only exception.
