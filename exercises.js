@@ -433,7 +433,7 @@ const EXERCISES = [
     ],
     "m": "Hamstrings / Glute Max",
     "region": "lower",
-    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2022/01/Romanian-deadlift.gif?resize=600%2C600&ssl=1",
+    "gif": "https://legionathletics.com/wp-content/uploads/2024/11/Deficit-Romanian-Deadlift-gif.gif",
     "notes": "",
     "muscles": [
       {
