@@ -431,6 +431,9 @@
       const fileId = driveMatch[1];
       return `<iframe class="grr-gif grr-gif-frame" src="https://drive.google.com/file/d/${fileId}/preview" allow="autoplay" loading="lazy"></iframe>`;
     }
+    if (/\.mp4(\?|$)/i.test(x.gif)) {
+      return `<video class="grr-gif" src="${x.gif}" autoplay loop muted playsinline onerror="this.style.display='none'"></video>`;
+    }
     return `<img class="grr-gif" src="${x.gif}" alt="${x.n} demo" loading="lazy" onerror="this.style.display='none'"/>`;
   }
 

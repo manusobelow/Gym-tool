@@ -49,7 +49,7 @@ const LADDERS = {
 // reps→sets→weight staging, just with different numbers.
 const CIRCUIT_PARAMS = {
   majorLift:  { repFloor: 5,  repCeiling: 8,  startSets: 3, maxSets: 4, hasAMRAP: true  }, // set 3/4 is AMRAP
-  ladder:     { repFloor: 8,  repCeiling: 15, startSets: 2, maxSets: 2, hasAMRAP: false }, // fixed 2 rounds — timed to keep Major Lift and Circuit sides roughly matched (~15 min each)
+  ladder:     { repFloor: 8,  repCeiling: 12, startSets: 2, maxSets: 2, hasAMRAP: false }, // fixed 2 rounds — timed to keep Major Lift and Circuit sides roughly matched (~15 min each)
   isolation:  { repFloor: 8,  repCeiling: 12, startSets: 3, maxSets: 4, hasAMRAP: false }
 };
 

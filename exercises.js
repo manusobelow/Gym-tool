@@ -4,7 +4,7 @@
 // can be overridden per-exercise inside the app itself, saved locally, without editing this file.
 // scheme:"circuit" = Home Workout exercises only — excluded from normal gym browsing, only reachable via the Home Workout page.
 // eq (equipment array — includes "rings" for Home Workout), m (muscle text, display label), region (lower|upper),
-// gif (image URL, optional), notes (optional),
+// gif (image/video URL, optional — supports direct .gif/.jpg, Google Drive links, and .mp4 video), notes (optional),
 // muscles (weighted body-map targets: [{id, w}], w=3 primary/2 secondary/1 tertiary, id matches the muscle SVG taxonomy)
 const EXERCISES = [
   {
@@ -871,7 +871,7 @@ const EXERCISES = [
     ],
     "m": "Adductors / Glute Max",
     "region": "lower",
-    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2024/10/cossack-squat.gif?resize=600%2C600&ssl=1",
+    "gif": "https://fitnessprogramer.com/wp-content/uploads/2021/05/Cossack-Squat.gif",
     "notes": "Mobility + adductors.",
     "muscles": [
       {
@@ -1306,7 +1306,7 @@ const EXERCISES = [
     ],
     "m": "Triceps / Front Delts",
     "region": "upper",
-    "gif": "",
+    "gif": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRzAtRzPVnCRBO0hrxy5rsC3GNvT6SgcElH5WzbKKe_Iw&s=10",
     "notes": "",
     "muscles": [
       {
@@ -3028,7 +3028,7 @@ const EXERCISES = [
     ],
     "m": "Quads / Glute Max",
     "region": "lower",
-    "gif": "https://drive.google.com/file/d/1opuSfWxe55zxmFgESiOpm6EnwnSd7J9o/view",
+    "gif": "https://drive.google.com/file/d/1nMV0WimJr8hvfB09HNxPRkWWQtqmIbOK/view?usp=sharing",
     "notes": "Brace core.",
     "muscles": [
       {
@@ -3470,7 +3470,7 @@ const EXERCISES = [
     ],
     "m": "Front Delts / Side Delts",
     "region": "upper",
-    "gif": "https://drive.google.com/file/d/1VK8Ha99sFOPi-Pse7q6P2b3k6w1KeAlZ/view?usp=drive_link",
+    "gif": "https://drive.google.com/file/d/1eozJ55Hhkibz-TJpvHgxxFMhWaVAvcrx/view?usp=sharing",
     "notes": "Sweep DBs from front to side with a slight internal rotation at the top; combines front and lateral raise into one continuous rep.",
     "muscles": [
       {
@@ -3520,7 +3520,7 @@ const EXERCISES = [
     ],
     "m": "Front Delts / Chest",
     "region": "upper",
-    "gif": "",
+    "gif": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Pike-Push-up.gif",
     "notes": "Rung 1 of Handstand Progression.",
     "muscles": [
       {
@@ -3547,7 +3547,7 @@ const EXERCISES = [
     ],
     "m": "Front Delts / Triceps",
     "region": "upper",
-    "gif": "",
+    "gif": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Bench-Pike-Push-up.gif",
     "notes": "Rung 2 of Handstand Progression.",
     "muscles": [
       {
@@ -3574,7 +3574,7 @@ const EXERCISES = [
     ],
     "m": "Front Delts / Triceps",
     "region": "upper",
-    "gif": "",
+    "gif": "https://fitnessprogramer.com/wp-content/uploads/2023/07/wall-supported-handstand-push-up.gif",
     "notes": "Rung 3 of Handstand Progression. Facing the wall.",
     "muscles": [
       {
@@ -3601,7 +3601,7 @@ const EXERCISES = [
     ],
     "m": "Front Delts / Triceps",
     "region": "upper",
-    "gif": "",
+    "gif": "https://fitnessprogramer.com/wp-content/uploads/2023/07/wall-supported-handstand-push-up.gif",
     "notes": "Rung 4 of Handstand Progression. Back to the wall \u2014 deeper, more advanced ROM.",
     "muscles": [
       {
@@ -3628,7 +3628,7 @@ const EXERCISES = [
     ],
     "m": "Front Delts / Triceps",
     "region": "upper",
-    "gif": "",
+    "gif": "https://media1.giphy.com/media/v1.Y2lkPTZjMDliOTUydGM3NHY1YjBreGF4MTZpZmVoMnpiMXV4eTFjejEwcWdnaWc3dnNpbiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/xThta8ZR0THqoBOOTC/giphy.gif",
     "notes": "Rung 5 of Handstand Progression.",
     "muscles": [
       {
@@ -3655,7 +3655,7 @@ const EXERCISES = [
     ],
     "m": "Front Delts / Triceps",
     "region": "upper",
-    "gif": "",
+    "gif": "https://fitnessprogramer.com/wp-content/uploads/2021/06/handstand-push-up.gif",
     "notes": "Rung 6 of Handstand Progression. No wall support \u2014 real balance/core demand.",
     "muscles": [
       {
@@ -3682,7 +3682,7 @@ const EXERCISES = [
     ],
     "m": "Front Delts / Triceps",
     "region": "upper",
-    "gif": "",
+    "gif": "https://fitnessprogramer.com/wp-content/uploads/2021/06/handstand-push-up.gif",
     "notes": "Rung 7 of Handstand Progression.",
     "muscles": [
       {
@@ -3709,7 +3709,7 @@ const EXERCISES = [
     ],
     "m": "Lower Traps / Lats",
     "region": "upper",
-    "gif": "",
+    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2024/10/scap-pull-ups.gif?fit=600%2C600&ssl=1",
     "notes": "Rung 1 of Pull-up Progression.",
     "muscles": [
       {
@@ -3736,7 +3736,7 @@ const EXERCISES = [
     ],
     "m": "Forearms / Lats",
     "region": "upper",
-    "gif": "",
+    "gif": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQPRNNryimUzCFFJ0q77Vp-qnqIMYRfD9Evuh2Cdw3rBTEQKcqCwNPmRDw&s=10",
     "notes": "Rung 2 of Pull-up Progression. Feet lightly touching floor/box.",
     "muscles": [
       {
@@ -3763,7 +3763,7 @@ const EXERCISES = [
     ],
     "m": "Forearms / Lats",
     "region": "upper",
-    "gif": "",
+    "gif": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQPRNNryimUzCFFJ0q77Vp-qnqIMYRfD9Evuh2Cdw3rBTEQKcqCwNPmRDw&s=10",
     "notes": "Rung 3 of Pull-up Progression. Working toward 90\u00b0 shoulder position.",
     "muscles": [
       {
@@ -3790,7 +3790,7 @@ const EXERCISES = [
     ],
     "m": "Lats / Biceps",
     "region": "upper",
-    "gif": "",
+    "gif": "https://cdn.sanity.io/images/x29g0y1m/production/93ee798e7a5fa98deb226f47e209c88d5923aead-2160x2160.webp",
     "notes": "Rung 4 of Pull-up Progression. Feet on bench, low bar/rings, reduce leg assist over time.",
     "muscles": [
       {
@@ -3817,7 +3817,7 @@ const EXERCISES = [
     ],
     "m": "Lats / Biceps",
     "region": "upper",
-    "gif": "",
+    "gif": "https://fitnessprogramer.com/wp-content/uploads/2025/05/eccentric-pull-up-female.gif",
     "notes": "Rung 5 of Pull-up Progression. Jump to top, lower as slowly as possible.",
     "muscles": [
       {
@@ -3844,7 +3844,7 @@ const EXERCISES = [
     ],
     "m": "Lats / Biceps",
     "region": "upper",
-    "gif": "",
+    "gif": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Pull-up.gif",
     "notes": "Rung 6 of Pull-up Progression.",
     "muscles": [
       {
@@ -3871,7 +3871,7 @@ const EXERCISES = [
     ],
     "m": "Lats / Rhomboids",
     "region": "upper",
-    "gif": "",
+    "gif": "https://i.makeagif.com/media/9-23-2016/oCNSiL.gif",
     "notes": "Rung 1 of Row Progression.",
     "muscles": [
       {
@@ -3898,7 +3898,7 @@ const EXERCISES = [
     ],
     "m": "Lats / Rhomboids",
     "region": "upper",
-    "gif": "",
+    "gif": "https://i.makeagif.com/media/9-23-2016/oCNSiL.gif",
     "notes": "Rung 2 of Row Progression.",
     "muscles": [
       {
@@ -3925,7 +3925,7 @@ const EXERCISES = [
     ],
     "m": "Lats / Rhomboids",
     "region": "upper",
-    "gif": "",
+    "gif": "https://i.makeagif.com/media/9-23-2016/oCNSiL.gif",
     "notes": "Rung 3 of Row Progression. Feet on ottoman.",
     "muscles": [
       {
@@ -3952,7 +3952,7 @@ const EXERCISES = [
     ],
     "m": "Lats / Rhomboids",
     "region": "upper",
-    "gif": "",
+    "gif": "https://i.ytimg.com/vi/Fr5b0mOvhSY/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLCeUEaD7z2yfpKovq5Rm66d4Q91wQ",
     "notes": "Rung 5 of Row Progression.",
     "muscles": [
       {
@@ -3979,7 +3979,7 @@ const EXERCISES = [
     ],
     "m": "Chest / Triceps",
     "region": "upper",
-    "gif": "",
+    "gif": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Incline-Push-Up.gif",
     "notes": "Rung 1 of Push-up Progression. Hands on ottoman.",
     "muscles": [
       {
@@ -4006,7 +4006,7 @@ const EXERCISES = [
     ],
     "m": "Chest / Triceps",
     "region": "upper",
-    "gif": "",
+    "gif": "https://fitnessprogramer.com/wp-content/uploads/2022/01/Kneeling-Push-up.gif",
     "notes": "Rung 2 of Push-up Progression.",
     "muscles": [
       {
@@ -4033,7 +4033,7 @@ const EXERCISES = [
     ],
     "m": "Chest / Serratus",
     "region": "upper",
-    "gif": "",
+    "gif": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Push-Up-Plus.gif",
     "notes": "Rung 3 of Push-up Progression. Protraction at lockout.",
     "muscles": [
       {
@@ -4060,7 +4060,7 @@ const EXERCISES = [
     ],
     "m": "Chest / Triceps",
     "region": "upper",
-    "gif": "",
+    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2023/01/Push-ups-with-feet-in-rings.gif?fit=600%2C600&ssl=1",
     "notes": "Rung 4 of Push-up Progression.",
     "muscles": [
       {
@@ -4088,7 +4088,7 @@ const EXERCISES = [
     ],
     "m": "Chest / Triceps",
     "region": "upper",
-    "gif": "",
+    "gif": "https://i.makeagif.com/media/7-01-2017/4U4EUW.gif",
     "notes": "Rung 5 of Push-up Progression.",
     "muscles": [
       {
@@ -4115,7 +4115,7 @@ const EXERCISES = [
     ],
     "m": "Chest / Triceps",
     "region": "upper",
-    "gif": "",
+    "gif": "https://s3assets.skimble.com/assets/516814/skimble-workout-trainer-exercise-ring-archer-push-ups_279a0283-2_full.jpg",
     "notes": "Rung 6 of Push-up Progression.",
     "muscles": [
       {
@@ -4142,7 +4142,7 @@ const EXERCISES = [
     ],
     "m": "Chest / Triceps",
     "region": "upper",
-    "gif": "",
+    "gif": "https://www.hevyapp.com/wp-content/uploads/DSC03828-e1762512414205.jpg",
     "notes": "Rung 7 of Push-up Progression. Plate on back.",
     "muscles": [
       {
@@ -4169,7 +4169,7 @@ const EXERCISES = [
     ],
     "m": "Chest / Triceps",
     "region": "upper",
-    "gif": "",
+    "gif": "https://i.pinimg.com/originals/96/03/73/960373f13e98b814a2ffa028f3fbeaf6.gif",
     "notes": "Rung 8 of Push-up Progression.",
     "muscles": [
       {
@@ -4196,7 +4196,7 @@ const EXERCISES = [
     ],
     "m": "Quads / Glute Max",
     "region": "lower",
-    "gif": "",
+    "gif": "https://media.musclewiki.com/media/uploads/videos/branded/male-Dumbbells-dumbbell-assisted-bulgarian-split-squat-side.mp4",
     "notes": "Rung 1 of Split Squat Progression.",
     "muscles": [
       {
@@ -4223,7 +4223,7 @@ const EXERCISES = [
     ],
     "m": "Quads / Glute Max",
     "region": "lower",
-    "gif": "",
+    "gif": "https://fitnessprogramer.com/wp-content/uploads/2022/12/ATG-Split-Squat.gif",
     "notes": "Rung 2 of Split Squat Progression.",
     "muscles": [
       {
@@ -4250,7 +4250,7 @@ const EXERCISES = [
     ],
     "m": "Glute Max / Quads",
     "region": "lower",
-    "gif": "",
+    "gif": "https://fitnessprogramer.com/wp-content/uploads/2023/03/Bulgarian-Jump-Squat.gif",
     "notes": "Rung 3 of Split Squat Progression. Rear foot elevated.",
     "muscles": [
       {
@@ -4277,7 +4277,7 @@ const EXERCISES = [
     ],
     "m": "Quads / Glute Max",
     "region": "lower",
-    "gif": "",
+    "gif": "https://liftmanual.com/wp-content/uploads/2023/04/dumbbell-goblet-split-squat.jpg",
     "notes": "Rung 4 of Split Squat Progression.",
     "muscles": [
       {
@@ -4296,7 +4296,7 @@ const EXERCISES = [
   },
   {
     "id": "LATLUNGE_R1",
-    "n": "BW Lateral Lunge, Shallow",
+    "n": "Bodyweight Lateral Lunge",
     "p": "Lunge",
     "scheme": "circuit",
     "eq": [
@@ -4304,7 +4304,7 @@ const EXERCISES = [
     ],
     "m": "Adductors / Glute Max",
     "region": "lower",
-    "gif": "",
+    "gif": "https://cdn.shopify.com/s/files/1/0618/9462/3460/files/52.gif",
     "notes": "Rung 1 of Lateral Lunge Progression.",
     "muscles": [
       {
@@ -4331,7 +4331,7 @@ const EXERCISES = [
     ],
     "m": "Adductors / Glute Max",
     "region": "lower",
-    "gif": "",
+    "gif": "https://i.makeagif.com/media/5-31-2015/4PY4Ss.gif",
     "notes": "Rung 4 of Lateral Lunge Progression.",
     "muscles": [
       {
@@ -4358,7 +4358,7 @@ const EXERCISES = [
     ],
     "m": "Adductors / Glute Max",
     "region": "lower",
-    "gif": "",
+    "gif": "https://i.pinimg.com/originals/53/56/28/5356288ab37e3b6296b4141a015be7ed.gif",
     "notes": "Rung 6 of Lateral Lunge Progression.",
     "muscles": [
       {
@@ -4385,7 +4385,7 @@ const EXERCISES = [
     ],
     "m": "Glute Max / Hamstrings",
     "region": "lower",
-    "gif": "",
+    "gif": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQC8bKnZctuW85eo7YzE_-Hh4tHD8JSnhobMhgZdTUZA&s=10",
     "notes": "Rung 1 of Hip Thrust Progression.",
     "muscles": [
       {
@@ -4412,7 +4412,7 @@ const EXERCISES = [
     ],
     "m": "Glute Max / Glute Med",
     "region": "lower",
-    "gif": "",
+    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2022/09/One-legged-glute-bridge.gif?fit=600%2C600&ssl=1",
     "notes": "Rung 2 of Hip Thrust Progression.",
     "muscles": [
       {
@@ -4439,7 +4439,7 @@ const EXERCISES = [
     ],
     "m": "Glute Max / Glute Med",
     "region": "lower",
-    "gif": "",
+    "gif": "https://media0.giphy.com/media/v1.Y2lkPTZjMDliOTUybjhuN3puYm83MnMxNDJjbnJhY3FmM25rc3B6ZmNkZTg5Z2VzYnlhMSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/ehs1cZQCzD3uqgqwX8/giphy.gif",
     "notes": "Rung 3 of Hip Thrust Progression. Shoulders on ottoman.",
     "muscles": [
       {
@@ -4466,7 +4466,7 @@ const EXERCISES = [
     ],
     "m": "Glute Max / Glute Med",
     "region": "lower",
-    "gif": "",
+    "gif": "https://www.puregym.com/media/0d3jgor4/single-leg-hip-thrust.jpg?quality=80",
     "notes": "Rung 4 of Hip Thrust Progression. DB on hips.",
     "muscles": [
       {
@@ -4485,7 +4485,7 @@ const EXERCISES = [
   },
   {
     "id": "SLRDL_R2",
-    "n": "Single-Leg RDL, No Support",
+    "n": "Single-Leg RDL, Bodyweight",
     "p": "Hinge",
     "scheme": "circuit",
     "eq": [
@@ -4493,7 +4493,7 @@ const EXERCISES = [
     ],
     "m": "Hamstrings / Glute Max",
     "region": "lower",
-    "gif": "",
+    "gif": "https://i.pinimg.com/originals/66/13/50/661350e1094df68cb1cc9211919d2f9b.gif",
     "notes": "Rung 2 of Single-Leg RDL Progression.",
     "muscles": [
       {
@@ -4520,7 +4520,7 @@ const EXERCISES = [
     ],
     "m": "Hamstrings / Glute Max",
     "region": "lower",
-    "gif": "",
+    "gif": "https://hips.hearstapps.com/hmg-prod/images/workouts/2016/03/singlearmsinglelegstraightlegdeadlift-1457031381.gif?crop=1xw:0.75xh;center,top&resize=1200:*",
     "notes": "Rung 4 of Single-Leg RDL Progression.",
     "muscles": [
       {
@@ -4548,7 +4548,7 @@ const EXERCISES = [
     ],
     "m": "Abs / Obliques",
     "region": "upper",
-    "gif": "",
+    "gif": "https://fitnessprogramer.com/wp-content/uploads/2021/05/Weighted-Crunch.gif",
     "notes": "Rung 3 of Core Progression. Light plate.",
     "muscles": [
       {
@@ -4571,7 +4571,7 @@ const EXERCISES = [
     ],
     "m": "Calves / Tibialis Anterior",
     "region": "lower",
-    "gif": "",
+    "gif": "https://media.musclewiki.com/media/uploads/videos/branded/male-Kettlebells-kettlebell-goblet-calf-raise-side.mp4",
     "notes": "Isolation Slot A (part 1). Hold DB at side.",
     "muscles": [
       {
@@ -4621,7 +4621,7 @@ const EXERCISES = [
     ],
     "m": "Hip Flexors / Spinal Erectors",
     "region": "upper",
-    "gif": "",
+    "gif": "https://drive.google.com/file/d/1S4AKdbdWkUhqbfeXr_il1mOiDMmFGxcY/view?usp=sharing",
     "notes": "Daily superset for Home Major Lift days.",
     "muscles": [
       {
@@ -4636,7 +4636,7 @@ const EXERCISES = [
   },
   {
     "id": "TERES_MAJOR_BAND_HOLD",
-    "n": "Teres Major Band Hold",
+    "n": "Teres Major Band Hold (Depression Row)",
     "p": "Warm-up / Mobility",
     "scheme": "mobility",
     "eq": [
@@ -4644,7 +4644,7 @@ const EXERCISES = [
     ],
     "m": "Teres Major / Rear Delts",
     "region": "upper",
-    "gif": "",
+    "gif": "https://drive.google.com/file/d/1aQtCwSA4Tkw9ucAnsFesMtUw_G-7kkkJ/view?usp=sharing",
     "notes": "Daily superset for Home Major Lift days.",
     "muscles": [
       {
@@ -4667,7 +4667,7 @@ const EXERCISES = [
     ],
     "m": "Lats / Rhomboids",
     "region": "upper",
-    "gif": "",
+    "gif": "https://i.ytimg.com/vi/63_VT-8TxV8/maxresdefault.jpg",
     "notes": "Rung 4 of Row Progression. Unilateral loading adds real anti-rotation demand.",
     "muscles": [
       {
@@ -4694,7 +4694,7 @@ const EXERCISES = [
     ],
     "m": "Abs / Hip Flexors",
     "region": "upper",
-    "gif": "",
+    "gif": "https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/REV_CRUNCH.gif",
     "notes": "Rung 1 of Core Progression.",
     "muscles": [
       {
@@ -4717,7 +4717,7 @@ const EXERCISES = [
     ],
     "m": "Abs / Lats",
     "region": "upper",
-    "gif": "",
+    "gif": "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgooLZQjho3d2VoggNX8nuuRoRKU-_SxMbbb0CtDn95Mm8rXRIaLJ-Ol06YJN22y1RsS9gSyC9Mten9x6No_u2J8X0aAFE0YhuNVaWJ27Vk5RysO57sRaHWdtybnPCyovvI4qXZifr7lSIo/s1600/ab+wheel.jpg",
     "notes": "Rung 5 of Core Progression. Full-plank rollout \u2014 significantly harder than the kneeling version.",
     "muscles": [
       {
