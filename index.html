@@ -162,6 +162,14 @@
   const EX = EXERCISES;
   const EX_BY_ID = Object.fromEntries(EX.map(x => [x.id, x]));
 
+  // Home Workout Day B uses Romanian Deadlift as the major hinge.
+  // Keep this override here so the home-workout data remains compatible even if
+  // an older home-workouts.js still points at Stiff-Legged Deadlift.
+  if (typeof MAJOR_LIFT_DAYS !== 'undefined' && MAJOR_LIFT_DAYS.B) {
+    const rdl = EX.find(x => /romanian deadlift/i.test(x.n || ''));
+    if (rdl) MAJOR_LIFT_DAYS.B.lift = rdl.id;
+  }
+
   function targetsFor(x, tierState, hypState) {
     const scheme = effectiveScheme(x);
     const rep = REP_OVERRIDE[x.id] || {};
@@ -1043,15 +1051,15 @@
       state.cameFrom = {view:'home'}; state.homeMode = true; state.view = 'detail'; state.activeId = majorDay.lift; state.saveMsg=''; render();
     };
 
-    // Daily superset — each exercise gets its own card with an explicit log button.
+    // Daily superset — same card interaction as the Home Circuit UI, but one
+    // completion control per exercise instead of multiple rounds.
     const dsBlock = root.querySelector('#grr-daily-superset-block');
     majorDay.dailySuperset.forEach(exId => {
       const ex = EX_BY_ID[exId];
       if (!ex) return;
-      const done = CIRCUIT_TICKS[exId] === 2;
+      const tick = CIRCUIT_TICKS[exId] || 0;
       const card = document.createElement('div');
       card.className = 'grr-card circuit';
-      card.style.cursor = 'default';
       card.innerHTML = `
         <div class="grr-card-top">
           <div class="grr-card-name">${ex.n}</div>
@@ -1059,30 +1067,52 @@
         </div>
         <div class="grr-card-meta">${ex.m}</div>
         <div style="display:flex;gap:6px;margin-top:9px;">
-          <button type="button" class="grr-navbtn" data-action="view">View exercise</button>
-          <button type="button" class="grr-save-btn" data-action="done" style="width:auto;margin-top:0;padding:7px 12px;">${done ? '✓ Done' : 'Mark Done'}</button>
+          <button type="button" class="grr-circuit-detail-tick" data-action="tick" title="Tap once for done, twice for max" style="flex:1;height:38px;border-radius:6px;border:none;background:${tick===2?'var(--brand)':tick===1?'var(--steel)':'var(--line)'};color:#fff;font-weight:800;font-size:13px;cursor:pointer;">${tick===2?'✓✓ Max':tick===1?'✓ Done':'Tap to log'}</button>
         </div>
       `;
-      card.querySelector('[data-action="view"]').onclick = () => {
+
+      // Clicking the card opens the same exercise detail/progression view used by
+      // Home Circuit exercises. The tick control is the only exception.
+      card.onclick = () => {
         state.cameFrom = {view:'home'}; state.homeMode = true; state.view = 'detail'; state.activeId = exId; state.saveMsg=''; render();
       };
-      card.querySelector('[data-action="done"]').onclick = () => {
-        const wasDone = CIRCUIT_TICKS[exId] === 2;
-        if (wasDone) {
-          CIRCUIT_TICKS[exId] = 0;
-        } else {
-          CIRCUIT_TICKS[exId] = 2;
-          const entry = {date: todayLocal(), exercise: ex.n, pattern: ex.p, exId: ex.id, logId: newLogId(),
-            sets:[{target:'Done', weight:null, reps:null, success:true}], allSuccess:true, tmAction:'none'};
-          if (!LOGS[ex.id]) LOGS[ex.id] = [];
-          LOGS[ex.id].push(entry);
-          saveLogs();
-        }
+      card.querySelector('[data-action="tick"]').onclick = (e) => {
+        e.stopPropagation();
+        CIRCUIT_TICKS[exId] = ((CIRCUIT_TICKS[exId] || 0) + 1) % 3;
         saveCircuitTicks();
         render();
       };
       dsBlock.appendChild(card);
     });
+    const dsSave = document.createElement('button');
+    dsSave.className = 'grr-save-btn';
+    dsSave.id = 'grr-save-superset';
+    dsSave.textContent = 'Save Superset';
+    dsBlock.parentElement.insertBefore(dsSave, dsBlock.nextSibling);
+    dsSave.onclick = () => {
+      let anySaved = false;
+      majorDay.dailySuperset.forEach(exId => {
+        const ex = EX_BY_ID[exId];
+        const tick = CIRCUIT_TICKS[exId] || 0;
+        if (!ex || !tick) return;
+        const isMax = tick === 2;
+        const entry = {
+          date: todayLocal(), exercise: ex.n, pattern: ex.p, exId: ex.id, logId: newLogId(),
+          sets:[{target:'Daily Superset', weight:null, reps:null, success:true, max:isMax}],
+          allSuccess:isMax, tmAction:'none'
+        };
+        if (!LOGS[ex.id]) LOGS[ex.id] = [];
+        LOGS[ex.id].push(entry);
+        delete CIRCUIT_TICKS[exId];
+        anySaved = true;
+      });
+      saveLogs();
+      saveCircuitTicks();
+      root.querySelector('#grr-home-msg').textContent = anySaved
+        ? 'Superset saved. A ✓ counts as completed; ✓✓ marks the max target.'
+        : 'Nothing ticked yet — tap an exercise once for done or twice for max.';
+      render();
+    };
 
     // Circuit block — one row per station, with a prev-rung button and one tick per round (P.startSets rounds)
     const circBlock = root.querySelector('#grr-circuit-block');
@@ -1139,7 +1169,7 @@
 
     function logCircuitSet(exId, ticks) {
       const ex = EX_BY_ID[exId];
-      const sets = ticks.map((t,i) => ({target: 'Round '+(i+1), weight:null, reps:null, success: t===2}));
+      const sets = ticks.map((t,i) => ({target: 'Round '+(i+1), weight:null, reps:null, success: t>0, max: t===2}));
       const allSuccess = ticks.length === P.startSets && ticks.every(t => t===2);
       const entry = {date: todayLocal(), exercise: ex.n, pattern: ex.p, exId, logId: newLogId(), sets, allSuccess, tmAction:'none'};
       if (!LOGS[exId]) LOGS[exId] = [];
@@ -1172,10 +1202,13 @@
       });
       saveRungState();
       saveLogs();
-      CIRCUIT_TICKS = {};
+      circuitDay.stations.forEach(station => {
+        const exId = station.ladder ? currentRungId(station.ladder) : station.exercises[0];
+        if (exId) delete CIRCUIT_TICKS[exId];
+      });
       saveCircuitTicks();
       root.querySelector('#grr-home-msg').textContent = anySaved
-        ? 'Circuit session saved. Any rung that hit its ceiling on every round, twice in a row, has advanced.'
+        ? 'Circuit session saved. A ✓ counts as completed; ✓✓ counts as max. Any rung that hit max on every round twice in a row has advanced.'
         : 'Nothing ticked yet — tap at least one round before saving.';
       render();
     };
@@ -1186,7 +1219,7 @@
     const ticks = CIRCUIT_TICKS[x.id] || [];
     const hist = (LOGS[x.id] || []).slice(-5).reverse();
     const histHtml = hist.length
-      ? hist.map(l => `<div class="grr-history-row"><span>${friendlyDate(l.date)}</span><span>${l.sets.map(s=>s.success?'✓':'—').join('')}</span></div>`).join('')
+      ? hist.map(l => `<div class="grr-history-row"><span>${friendlyDate(l.date)}</span><span>${l.sets.map(s=>s.max?'✓✓':s.success?'✓':'—').join('')}</span></div>`).join('')
       : `<div style="color:var(--muted);font-size:12px;">No sessions logged yet.</div>`;
 
     let roundsHtml = '';
@@ -1204,7 +1237,7 @@
         <div class="grr-detail-meta">${x.p} · ${x.m} · Home Circuit</div>
         ${gifBlock(x)}
         ${x.notes ? `<div class="grr-notes">${x.notes}</div>` : ''}
-        <div class="grr-section-label" style="padding-left:0;">Circuit — tap each round to log it</div>
+        <div class="grr-section-label" style="padding-left:0;">Circuit — tap once for done, twice for max</div>
         <div style="display:flex;gap:6px;margin-bottom:14px;">${roundsHtml}</div>
         <button class="grr-save-btn" id="grr-hd-save">Save Round(s)</button>
         <div class="grr-save-msg" id="grr-hd-msg"></div>
@@ -1231,7 +1264,7 @@
       }
       const entry = {
         date: todayLocal(), exercise: x.n, pattern: x.p, exId: x.id, logId: newLogId(),
-        sets: arr.map((t,i)=>({target:'Round '+(i+1), weight:null, reps:null, success:t===2})),
+        sets: arr.map((t,i)=>({target:'Round '+(i+1), weight:null, reps:null, success:t>0, max:t===2})),
         allSuccess: arr.length === P.startSets && arr.every(t=>t===2), tmAction:'none'
       };
       if (!LOGS[x.id]) LOGS[x.id] = [];
@@ -1268,8 +1301,13 @@
     }
 
     if (isSuperset) {
+      const tick = CIRCUIT_TICKS[x.id] || 0;
       const hist = (LOGS[x.id] || []).slice(-6).reverse();
-      const histHtml = hist.length ? hist.map(l => `<div class="grr-history-row"><span>${friendlyDate(l.date)}</span><span>✅ Done</span></div>`).join('') : `<div style="color:var(--muted);font-size:12px;">Not logged yet.</div>`;
+      const histHtml = hist.length
+        ? hist.map(l => `<div class="grr-history-row"><span>${friendlyDate(l.date)}</span><span>${l.sets.map(s=>s.max?'✓✓ Max':s.success?'✓ Done':'—').join('')}</span></div>`).join('')
+        : `<div style="color:var(--muted);font-size:12px;">Not logged yet.</div>`;
+      const tickLabel = tick === 2 ? '✓✓ Max' : tick === 1 ? '✓ Done' : 'Tap to log';
+      const tickColor = tick === 2 ? 'var(--brand)' : tick === 1 ? 'var(--steel)' : 'var(--line)';
       root.innerHTML = `
         <div class="grr-detail">
           ${backButtonHtml()}
@@ -1277,19 +1315,31 @@
           <div class="grr-detail-meta">${x.p} · ${x.m} · Daily Superset</div>
           ${gifBlock(x)}
           ${x.notes ? `<div class="grr-notes">${x.notes}</div>` : ''}
-          <button class="grr-save-btn" id="grr-hd-save">Mark Done Today</button>
+          <div class="grr-section-label" style="padding-left:0;">Daily Superset — tap once for done, twice for max</div>
+          <button class="grr-circuit-detail-tick" id="grr-hd-superset-tick" style="width:100%;height:42px;border-radius:6px;border:none;background:${tickColor};color:#fff;font-weight:800;font-size:13px;cursor:pointer;">${tickLabel}</button>
+          <button class="grr-save-btn" id="grr-hd-save">Save Superset</button>
           <div class="grr-save-msg" id="grr-hd-msg"></div>
           <div class="grr-section-label" style="padding-left:0;">Recent history</div>
           <div class="grr-history">${histHtml}</div>
         </div>
       `;
       wireBackButtons();
+      root.querySelector('#grr-hd-superset-tick').onclick = () => {
+        CIRCUIT_TICKS[x.id] = ((CIRCUIT_TICKS[x.id] || 0) + 1) % 3;
+        saveCircuitTicks();
+        renderHomeDetail(x);
+      };
       root.querySelector('#grr-hd-save').onclick = () => {
-        CIRCUIT_TICKS[x.id] = 2; saveCircuitTicks();
-        const entry = {date: todayLocal(), exercise: x.n, pattern: x.p, exId: x.id, logId: newLogId(), sets:[{target:'Done', weight:null, reps:null, success:true}], allSuccess:true, tmAction:'none'};
+        const currentTick = CIRCUIT_TICKS[x.id] || 0;
+        if (!currentTick) { root.querySelector('#grr-hd-msg').textContent = 'Tap once for done or twice for max first.'; return; }
+        const isMax = currentTick === 2;
+        const entry = {date: todayLocal(), exercise: x.n, pattern: x.p, exId: x.id, logId: newLogId(),
+          sets:[{target:'Daily Superset', weight:null, reps:null, success:true, max:isMax}], allSuccess:isMax, tmAction:'none'};
         if (!LOGS[x.id]) LOGS[x.id] = [];
-        LOGS[x.id].push(entry); saveLogs();
-        root.querySelector('#grr-hd-msg').textContent = 'Marked done for today.';
+        LOGS[x.id].push(entry);
+        delete CIRCUIT_TICKS[x.id];
+        saveLogs(); saveCircuitTicks();
+        root.querySelector('#grr-hd-msg').textContent = isMax ? 'Superset saved — max hit.' : 'Superset saved — completed, but max not hit.';
         render();
       };
       return;
