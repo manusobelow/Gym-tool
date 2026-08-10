@@ -433,7 +433,7 @@ const EXERCISES = [
     ],
     "m": "Hamstrings / Glute Max",
     "region": "lower",
-    "gif": "https://legionathletics.com/wp-content/uploads/2024/11/Deficit-Romanian-Deadlift-gif.gif",
+    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2022/01/Romanian-deadlift.gif?resize=600%2C600&ssl=1",
     "notes": "",
     "muscles": [
       {
@@ -1307,10 +1307,33 @@ const EXERCISES = [
     "m": "Triceps / Front Delts",
     "region": "upper",
     "gif": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRzAtRzPVnCRBO0hrxy5rsC3GNvT6SgcElH5WzbKKe_Iw&s=10",
-    "notes": "",
+    "notes": "Isolation Slot C (part 1, alongside Band Lateral Raise).",
     "muscles": [
       {
         "id": "triceps",
+        "w": 3
+      },
+      {
+        "id": "front-delts",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "BAND_LATERAL_RAISE",
+    "n": "Band Lateral Raise",
+    "p": "Isolation",
+    "scheme": "circuit",
+    "eq": [
+      "band"
+    ],
+    "m": "Side Delts",
+    "region": "upper",
+    "gif": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Band-Lateral-Raise.gif",
+    "notes": "Isolation Slot C (part 2, alongside DB Overhead Triceps Extension). Stand on band, raise to shoulder height, controlled reps.",
+    "muscles": [
+      {
+        "id": "side-delts",
         "w": 3
       },
       {
@@ -2812,7 +2835,7 @@ const EXERCISES = [
     "m": "Tibialis Anterior / Calves",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2025/06/tibialis-raises-ezgif.com-optimize.gif?resize=700%2C700&ssl=1",
-    "notes": "Back to wall; lift toes toward shins, heel planted, controlled reps.",
+    "notes": "Isolation Slot A (part 2, alongside Standing Calf Raise DB). Back to wall; lift toes toward shins, heel planted, controlled reps.",
     "muscles": [
       {
         "id": "tibialis-anterior",
@@ -4269,7 +4292,7 @@ const EXERCISES = [
   },
   {
     "id": "SPLITSQ_R4",
-    "n": "Goblet-Loaded Split Squat",
+    "n": "Goblet-Loaded Bulgarian Split Squat",
     "p": "Lunge",
     "scheme": "circuit",
     "eq": [
@@ -4278,7 +4301,7 @@ const EXERCISES = [
     "m": "Quads / Glute Max",
     "region": "lower",
     "gif": "https://liftmanual.com/wp-content/uploads/2023/04/dumbbell-goblet-split-squat.jpg",
-    "notes": "Rung 4 of Split Squat Progression.",
+    "notes": "Rung 4 of Split Squat Progression. Rear foot elevated, same as rung 3, now goblet-loaded.",
     "muscles": [
       {
         "id": "quads",
@@ -4594,7 +4617,7 @@ const EXERCISES = [
     ],
     "m": "Hamstrings / Spinal Erectors",
     "region": "lower",
-    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2022/03/Barbell-Row.gif?resize=600%2C600&ssl=1",
+    "gif": "",
     "notes": "Home Major Lift C. Minimal knee bend, more restrictive ROM than an RDL.",
     "muscles": [
       {

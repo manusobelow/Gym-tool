@@ -45,13 +45,27 @@ const LADDERS = {
 };
 
 // ---------- PROGRESSION PARAMETERS ----------
-// Applies to every circuit-scheme exercise. Major Lifts and Isolation work use the same
-// reps→sets→weight staging, just with different numbers.
+// Major Lifts: 3-stage system — Stage 1 chases last AMRAP toward 3x8, Stage 2 adds a 4th set once
+// 3x8 lands twice in a row, Stage 3 (once 4x8 lands twice in a row) adds the smallest available
+// plate jump and resets to Stage 1 at 3 sets — or, if no plate jump is available, bumps the rep
+// target to 12 instead and still drops back to 3 sets (repTarget defaults to 8; app code switches
+// it to 12 as the fallback path).
+//
+// Circuit — Ladders + Isolation: identical 2-round system. Ladders advance a rung when both rounds
+// hit the ceiling twice in a row; Isolation has no rung to climb, so hitting the ceiling twice in a
+// row instead adds the smallest available plate jump (weight is the only progression axis).
+// Core uses its own wider rep range (14-20) — everything else in this bucket uses 8-12.
 const CIRCUIT_PARAMS = {
   majorLift:  { repFloor: 5,  repCeiling: 8,  startSets: 3, maxSets: 4, hasAMRAP: true  }, // set 3/4 is AMRAP
-  ladder:     { repFloor: 8,  repCeiling: 12, startSets: 2, maxSets: 2, hasAMRAP: false }, // fixed 2 rounds — timed to keep Major Lift and Circuit sides roughly matched (~15 min each)
-  isolation:  { repFloor: 8,  repCeiling: 12, startSets: 3, maxSets: 4, hasAMRAP: false }
+  ladder:     { repFloor: 8,  repCeiling: 12, startSets: 2, maxSets: 2, hasAMRAP: false },
+  ladderCore: { repFloor: 14, repCeiling: 20, startSets: 2, maxSets: 2, hasAMRAP: false }, // Core needs its own rep-range parameters
+  isolation:  { repFloor: 8,  repCeiling: 12, startSets: 2, maxSets: 2, hasAMRAP: false }  // no set-count staging — weight is the only progression axis (item 9)
 };
+// Ladder keys that use the wider Core rep range instead of the standard 8-12.
+const CORE_LADDER_KEYS = ["core"];
+function ladderParamsFor(ladderKey) {
+  return CORE_LADDER_KEYS.includes(ladderKey) ? CIRCUIT_PARAMS.ladderCore : CIRCUIT_PARAMS.ladder;
+}
 
 // ---------- DAY TEMPLATES ----------
 const MAJOR_LIFT_DAYS = {
@@ -92,7 +106,7 @@ const CIRCUIT_DAYS = {
       { pattern: "Lunge",           ladder: "lateralLunge" },
       { pattern: "Hinge",           ladder: "singleLegRDL" },
       { pattern: "Core",            ladder: "core" },
-      { pattern: "Isolation",       exercises: ["DB_TRICEPS_OH_EXT"] }
+      { pattern: "Isolation",       exercises: ["DB_TRICEPS_OH_EXT", "BAND_LATERAL_RAISE"] }
     ]
   }
 };
