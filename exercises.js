@@ -259,7 +259,7 @@ const EXERCISES = [
     ],
     "m": "Quads / Glute Max",
     "region": "lower",
-    "gif": "https://drive.google.com/uc?id=1nMV0WimJr8hvfB09HNxPRkWWQtqmIbOK",
+    "gif": "https://drive.google.com/uc?id=1wzXl3zTgOZo9fzTcIVQYaIU4T291ioVX",
     "notes": "Brace core.",
     "muscles": [
       {
