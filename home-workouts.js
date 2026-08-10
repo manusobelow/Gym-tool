@@ -111,6 +111,14 @@ const CIRCUIT_DAYS = {
   }
 };
 
+// ---------- BAND LEVELS ----------
+// Used wherever a Home Workout exercise's "working weight" field can be toggled to a band instead
+// (bands don't have a numeric weight, just a resistance tier). Order matters — index 0 is lightest,
+// last index is heaviest; plateau-advancement logic (isolation progression) steps forward one index
+// at a time through this array.
+const BAND_LEVELS = ["light", "medium", "heavy", "xheavy"];
+const BAND_LEVEL_LABELS = { light: "Light", medium: "Medium", heavy: "Heavy", xheavy: "Extra-Heavy" };
+
 // ---------- EQUIPMENT ----------
 // Home Workout's equipment picker is separate from the main gym equipment row, since the
 // available set is genuinely different (no machines/cable/kettlebell yet, but rings and

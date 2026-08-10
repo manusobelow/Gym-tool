@@ -198,10 +198,12 @@
   function renderDetail() {
     const x = EX_BY_ID[state.activeId];
     const scheme = effectiveScheme(x);
-    // Circuit-scheme exercises ALWAYS use the Home Workout rendering, no matter how you reached them —
-    // not just when arriving via the Home Workout page's own click handlers. Closes the leak where
-    // Muscle Map / superset suggestions could surface one and render it with the wrong scheme entirely.
-    if (scheme === 'circuit' || (state.homeMode && (findMajorLiftDay(x.id) || isIsolationStationExercise(x.id)))) { renderHomeDetail(x); return; }
+    // Circuit-scheme exercises ALWAYS use the Home Workout rendering, no matter how you reached them.
+    // Some ladder rungs and isolation-station exercises are dual-purpose (kept at their normal gym
+    // scheme, e.g. W_PULLUP is "main", STANDARD_CRUNCH is "hypertrophy") because they're legitimate
+    // standalone gym exercises too — those only route to the Home card when reached via Home context
+    // (state.homeMode), so browsing them from the main gym list still shows their normal card.
+    if (scheme === 'circuit' || (state.homeMode && (findMajorLiftDay(x.id) || isIsolationStationExercise(x.id) || findLadderForExercise(x.id)))) { renderHomeDetail(x); return; }
     if (scheme === 'mobility') { renderMobilityDetail(x); return; }
 
     const tm = TM[x.id] || null;

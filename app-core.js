@@ -43,7 +43,8 @@ if (typeof EXERCISES === 'undefined') {
   let REP_OVERRIDE = {};    // { exId: {mainReps, hypLow, hypHigh} } — overrides hardcoded rep targets
 
   // ---------- HOME WORKOUT STATE ----------
-  let HOME = { majorDay: 'A', circuitDay: 1, equip: HOME_DATA_LOADED ? new Set(HOME_EQUIPMENT) : new Set() };
+  let HOME = { majorDay: 'A', circuitDay: 1, equip: HOME_DATA_LOADED ? new Set(HOME_EQUIPMENT) : new Set(),
+    collapsed: {major:false, superset:false, circuit:false} }; // per-section collapse UI state, persisted so it survives the frequent re-renders every tap triggers
   let PLATE_INVENTORY = HOME_DATA_LOADED ? {...DEFAULT_PLATE_INVENTORY} : {};
   let RUNG_STATE = {};   // { ladderKey: { rungIndex: 0, streak: 0 } }
   let CIRCUIT_TICKS = {}; // { exId: 0|1|2 } — 0=blank, 1=partial (didn't hit ceiling), 2=full success (hit ceiling)
@@ -103,6 +104,8 @@ if (typeof EXERCISES === 'undefined') {
     try { const v = JSON.parse(localStorage.getItem('gym-rung-state')); if (v) RUNG_STATE = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-circuit-ticks')); if (v) CIRCUIT_TICKS = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-major-lift-state')); if (v) MAJOR_LIFT_STATE = v; } catch(e){}
+    try { const v = JSON.parse(localStorage.getItem('gym-isolation-state')); if (v) ISOLATION_STATE = v; } catch(e){}
+    try { const v = JSON.parse(localStorage.getItem('gym-ref-weight')); if (v) REF_WEIGHT = v; } catch(e){}
     Object.keys(HYP).forEach(id => {
       if (HYP[id].tier === '6-8' || HYP[id].tier === 8) HYP[id].tier = 'low';
       else if (HYP[id].tier === '8-10' || HYP[id].tier === 10) HYP[id].tier = 'high';
@@ -147,7 +150,12 @@ if (typeof EXERCISES === 'undefined') {
   function setAllEquip(on) { state.equip = on ? new Set(EQUIP) : new Set(); saveEquip(); render(); }
   function togglePattern(p) { state.pattern.has(p) ? state.pattern.delete(p) : state.pattern.add(p); savePattern(); render(); }
   function setAllPatterns(on) { state.pattern = on ? new Set(PATTERNS) : new Set(); savePattern(); render(); }
-  function activePatterns() { return state.pattern.size ? state.pattern : new Set(PATTERNS); }
+  // NOTE: no fallback-to-ALL-when-empty here. That used to exist and made the "NONE" button a no-op
+  // (clicking NONE cleared state.pattern, then this function silently swapped it back to every
+  // pattern). state.pattern already defaults to the full PATTERNS set on first-ever load (see the
+  // `state` initializer above), so an empty set here always means the person explicitly chose NONE —
+  // respect it, same as state.equip already does for the equipment NONE button.
+  function activePatterns() { return state.pattern; }
   function gifBlock(x) {
     if (!x.gif) return '';
     const driveMatch = x.gif.match(/drive\.google\.com\/file\/d\/([^\/]+)/);
