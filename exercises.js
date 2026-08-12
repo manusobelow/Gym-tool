@@ -9,7 +9,7 @@
 //
 // ---------- ADDING A NEW EXERCISE ----------
 // All 10 fields below are required on every entry (gif/notes may be "" but the key must be present —
-// every one of the 188 current entries has all 10 keys, so keep that invariant):
+// every one of the 198 current entries has all 10 keys, so keep that invariant):
 //   id       — unique, ALL_CAPS_SNAKE_CASE. No enforced prefix scheme — existing ids are generally
 //              EQUIPMENT_MOVEMENT or EQUIPMENT_MOVEMENT_VARIANT (e.g. DB_ROW_1ARM, BB_BENCH_INCLINE).
 //              Ladder/circuit rungs use MOVEMENT_R# (e.g. HSPU_R1..HSPU_R7) — keep that pattern if
@@ -197,7 +197,7 @@ const EXERCISES = [
   },
   {
     "id": "LEG_PRESS",
-    "n": "45\u00b0 Leg Press",
+    "n": "45° Leg Press",
     "p": "Squat",
     "scheme": "hypertrophy",
     "eq": [
@@ -259,7 +259,7 @@ const EXERCISES = [
     ],
     "m": "Quads / Glute Max",
     "region": "lower",
-    "video": "https://raw.githubusercontent.com/manusobelow/Gym-tool/main/zercher.mp4",
+    "gif": "https://drive.google.com/file/d/1nMV0WimJr8hvfB09HNxPRkWWQtqmIbOK/view?usp=sharing",
     "notes": "Brace core.",
     "muscles": [
       {
@@ -287,7 +287,7 @@ const EXERCISES = [
     "m": "Quads / Glute Max",
     "region": "lower",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/10/Box-Squat.gif?resize=600%2C600&ssl=1",
-    "notes": "Squat down to a full seated pause on a box or bench, then drive up without bouncing \u2014 removes stretch-reflex, emphasizes concentric strength out of the bottom.",
+    "notes": "Squat down to a full seated pause on a box or bench, then drive up without bouncing — removes stretch-reflex, emphasizes concentric strength out of the bottom.",
     "muscles": [
       {
         "id": "quads",
@@ -333,7 +333,7 @@ const EXERCISES = [
   // ---------- HINGE (18) ----------
   {
     "id": "BACK_EXT_45",
-    "n": "45\u00b0 Back / Hip Extension",
+    "n": "45° Back / Hip Extension",
     "p": "Hinge",
     "scheme": "hypertrophy",
     "eq": [
@@ -799,7 +799,7 @@ const EXERCISES = [
     ],
     "m": "Hamstrings / Spinal Erectors",
     "region": "lower",
-    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2021/10/stiff-leg-deadlifts.gif?resize=600%2C600&ssl=1",
+    "gif": "",
     "notes": "Home Major Lift C. Minimal knee bend, more restrictive ROM than an RDL.",
     "muscles": [
       {
@@ -1998,7 +1998,7 @@ const EXERCISES = [
     "m": "Teres Major / Upper Back",
     "region": "upper",
     "gif": "",
-    "notes": "Wide grip, elbows flared ~45\u00b0, pull to lower ribs to emphasize teres major over lats/rhomboids.",
+    "notes": "Wide grip, elbows flared ~45°, pull to lower ribs to emphasize teres major over lats/rhomboids.",
     "muscles": [
       {
         "id": "teres-major",
@@ -2043,7 +2043,7 @@ const EXERCISES = [
   },
   {
     "id": "ROW_R2",
-    "n": "Ring Row, 45\u00b0 Body Angle",
+    "n": "Ring Row, 45° Body Angle",
     "p": "Pull Horizontal",
     "scheme": "circuit",
     "eq": [
@@ -2369,7 +2369,7 @@ const EXERCISES = [
   },
   {
     "id": "HSPU_R3",
-    "n": "Wall Handstand Push-Up \u2014 Front to Wall",
+    "n": "Wall Handstand Push-Up — Front to Wall",
     "p": "Push Vertical",
     "scheme": "circuit",
     "eq": [
@@ -2396,7 +2396,7 @@ const EXERCISES = [
   },
   {
     "id": "HSPU_R4",
-    "n": "Wall Handstand Push-Up \u2014 Back to Wall",
+    "n": "Wall Handstand Push-Up — Back to Wall",
     "p": "Push Vertical",
     "scheme": "circuit",
     "eq": [
@@ -2405,7 +2405,7 @@ const EXERCISES = [
     "m": "Front Delts / Triceps",
     "region": "upper",
     "gif": "https://fitnessprogramer.com/wp-content/uploads/2023/07/wall-supported-handstand-push-up.gif",
-    "notes": "Rung 4 of Handstand Progression. Back to the wall \u2014 deeper, more advanced ROM.",
+    "notes": "Rung 4 of Handstand Progression. Back to the wall — deeper, more advanced ROM.",
     "muscles": [
       {
         "id": "front-delts",
@@ -2423,7 +2423,7 @@ const EXERCISES = [
   },
   {
     "id": "HSPU_R5",
-    "n": "Wall HSPU \u2014 Deficit",
+    "n": "Wall HSPU — Deficit",
     "p": "Push Vertical",
     "scheme": "circuit",
     "eq": [
@@ -2459,7 +2459,7 @@ const EXERCISES = [
     "m": "Front Delts / Triceps",
     "region": "upper",
     "gif": "https://fitnessprogramer.com/wp-content/uploads/2021/06/handstand-push-up.gif",
-    "notes": "Rung 6 of Handstand Progression. No wall support \u2014 real balance/core demand.",
+    "notes": "Rung 6 of Handstand Progression. No wall support — real balance/core demand.",
     "muscles": [
       {
         "id": "front-delts",
@@ -2650,7 +2650,7 @@ const EXERCISES = [
     "m": "Forearms / Lats",
     "region": "upper",
     "gif": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQPRNNryimUzCFFJ0q77Vp-qnqIMYRfD9Evuh2Cdw3rBTEQKcqCwNPmRDw&s=10",
-    "notes": "Rung 3 of Pull-up Progression. Working toward 90\u00b0 shoulder position.",
+    "notes": "Rung 3 of Pull-up Progression. Working toward 90° shoulder position.",
     "muscles": [
       {
         "id": "forearms",
@@ -2747,7 +2747,7 @@ const EXERCISES = [
       }
     ]
   },
-  // ---------- CORE / CARRY (15) ----------
+  // ---------- CORE / CARRY (25) ----------
   {
     "id": "AB_WHEEL_KNEE",
     "n": "Ab Wheel Roll-Out (From Knees)",
@@ -3015,7 +3015,7 @@ const EXERCISES = [
     "m": "Abs",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2023/01/Crunch.gif?resize=600%2C600&ssl=1",
-    "notes": "Lying face-up, knees bent, curl shoulder blades off the floor using abs only \u2014 short range of motion, avoid pulling on neck.",
+    "notes": "Lying face-up, knees bent, curl shoulder blades off the floor using abs only — short range of motion, avoid pulling on neck.",
     "muscles": [
       {
         "id": "abs",
@@ -3108,7 +3108,7 @@ const EXERCISES = [
     "m": "Abs / Lats",
     "region": "upper",
     "gif": "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgooLZQjho3d2VoggNX8nuuRoRKU-_SxMbbb0CtDn95Mm8rXRIaLJ-Ol06YJN22y1RsS9gSyC9Mten9x6No_u2J8X0aAFE0YhuNVaWJ27Vk5RysO57sRaHWdtybnPCyovvI4qXZifr7lSIo/s1600/ab+wheel.jpg",
-    "notes": "Rung 5 of Core Progression. Full-plank rollout \u2014 significantly harder than the kneeling version.",
+    "notes": "Rung 5 of Core Progression. Full-plank rollout — significantly harder than the kneeling version.",
     "muscles": [
       {
         "id": "abs",
@@ -3121,6 +3121,237 @@ const EXERCISES = [
       {
         "id": "lats",
         "w": 1
+      }
+    ]
+  },
+  {
+    "id": "SLRAISE_R1",
+    "n": "Bent-Knee (Tabletop) Leg Raise",
+    "p": "Core / Carry",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Abs / Hip Flexors",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 1 of Straight-Leg Raise Progression. Knees bent to ~90°, lower and raise from the hip without losing lumbar contact with the floor.",
+    "muscles": [
+      {
+        "id": "abs",
+        "w": 3
+      },
+      {
+        "id": "hip-flexors",
+        "w": 2
+      }
+    ]
+  },
+  {
+    "id": "SLRAISE_R2",
+    "n": "Bent-Knee Leg Raise, Full Range",
+    "p": "Core / Carry",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Abs / Hip Flexors",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 2 of Straight-Leg Raise Progression. Same bent-knee position, now full range down to just above the floor and back.",
+    "muscles": [
+      {
+        "id": "abs",
+        "w": 3
+      },
+      {
+        "id": "hip-flexors",
+        "w": 2
+      }
+    ]
+  },
+  {
+    "id": "SLRAISE_R3",
+    "n": "Straight-Leg Raise, Bent-Knee Assist",
+    "p": "Core / Carry",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Abs / Hip Flexors",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 3 of Straight-Leg Raise Progression. Legs straighten on the way up; bend the knees slightly on the lower half for assistance.",
+    "muscles": [
+      {
+        "id": "abs",
+        "w": 3
+      },
+      {
+        "id": "hip-flexors",
+        "w": 2
+      }
+    ]
+  },
+  {
+    "id": "SLRAISE_R4",
+    "n": "Lying Straight-Leg Raise",
+    "p": "Core / Carry",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Abs / Hip Flexors",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 4 of Straight-Leg Raise Progression. Full straight-leg raise lying on the floor, no knee bend.",
+    "muscles": [
+      {
+        "id": "abs",
+        "w": 3
+      },
+      {
+        "id": "hip-flexors",
+        "w": 2
+      }
+    ]
+  },
+  {
+    "id": "SLRAISE_R5",
+    "n": "Hanging Straight-Leg Raise",
+    "p": "Core / Carry",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Abs / Hip Flexors",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 5 of Straight-Leg Raise Progression. From a dead hang, raise straight legs to at least parallel with control, no swinging.",
+    "muscles": [
+      {
+        "id": "abs",
+        "w": 3
+      },
+      {
+        "id": "hip-flexors",
+        "w": 2
+      }
+    ]
+  },
+  {
+    "id": "SLRAISE_R6",
+    "n": "Weighted Straight-Leg Raise",
+    "p": "Core / Carry",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight",
+      "dumbbell"
+    ],
+    "m": "Abs / Hip Flexors",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 6 of Straight-Leg Raise Progression. Hanging straight-leg raise with a dumbbell held between the feet/ankles.",
+    "muscles": [
+      {
+        "id": "abs",
+        "w": 3
+      },
+      {
+        "id": "hip-flexors",
+        "w": 2
+      }
+    ]
+  },
+  {
+    "id": "SIDEBEND_R1",
+    "n": "Dumbbell Side Bend with Hip Shift",
+    "p": "Core / Carry",
+    "scheme": "circuit",
+    "eq": [
+      "dumbbell"
+    ],
+    "m": "Obliques / Quadratus Lumborum",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 1 of Lateral Flexion Progression. DB in one hand, shift the hip away from the load and bend laterally toward the DB side, then return.",
+    "muscles": [
+      {
+        "id": "obliques",
+        "w": 3
+      },
+      {
+        "id": "quadratus-lumborum",
+        "w": 2
+      }
+    ]
+  },
+  {
+    "id": "SIDEBEND_R2",
+    "n": "Side Bend on Bench",
+    "p": "Core / Carry",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Obliques / Quadratus Lumborum",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 2 of Lateral Flexion Progression. Hips anchored at the edge of a bench, torso hangs off the side, bend laterally against gravity.",
+    "muscles": [
+      {
+        "id": "obliques",
+        "w": 3
+      },
+      {
+        "id": "quadratus-lumborum",
+        "w": 2
+      }
+    ]
+  },
+  {
+    "id": "SIDEBEND_R3",
+    "n": "Hanging Side Bend",
+    "p": "Core / Carry",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Obliques / Quadratus Lumborum",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 3 of Lateral Flexion Progression. From a dead hang, draw the legs/hips laterally to one side under control, no swinging.",
+    "muscles": [
+      {
+        "id": "obliques",
+        "w": 3
+      },
+      {
+        "id": "quadratus-lumborum",
+        "w": 2
+      }
+    ]
+  },
+  {
+    "id": "SIDEBEND_R4",
+    "n": "Half-Kneeling Side Bend",
+    "p": "Core / Carry",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Obliques / Quadratus Lumborum",
+    "region": "upper",
+    "gif": "",
+    "notes": "Rung 4 of Lateral Flexion Progression. Half-kneeling stance, bend laterally away from the tall-kneeling side and return without rotating.",
+    "muscles": [
+      {
+        "id": "obliques",
+        "w": 3
+      },
+      {
+        "id": "quadratus-lumborum",
+        "w": 2
       }
     ]
   },
@@ -4091,7 +4322,7 @@ const EXERCISES = [
     "m": "Hamstrings",
     "region": "lower",
     "gif": "",
-    "notes": "Unilateral version of lying/seated leg curl \u2014 helps address side-to-side imbalance.",
+    "notes": "Unilateral version of lying/seated leg curl — helps address side-to-side imbalance.",
     "muscles": [
       {
         "id": "hamstrings",
@@ -4114,7 +4345,7 @@ const EXERCISES = [
     "m": "Side Delts",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/04/lateral-raise-machine.gif?resize=600%2C600&ssl=1",
-    "notes": "Fixed path keeps tension on side delt without needing to control momentum \u2014 good option for drop sets.",
+    "notes": "Fixed path keeps tension on side delt without needing to control momentum — good option for drop sets.",
     "muscles": [
       {
         "id": "side-delts",
@@ -4291,7 +4522,7 @@ const EXERCISES = [
   },
   {
     "id": "BREATH_360",
-    "n": "360\u00b0 Breathing (standing or hook-lying)",
+    "n": "360° Breathing (standing or hook-lying)",
     "p": "Warm-up / Mobility",
     "scheme": "mobility",
     "eq": [

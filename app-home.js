@@ -2,7 +2,8 @@
 // This is the file under constant revision for the home program — kept isolated from the main
 // gym list/detail code on purpose. Depends on app-core.js (root, state, EX_BY_ID, effectiveScheme,
 // gifBlock, backButtonHtml/wireBackButtons, save*(), totalPlateWeight, smallestPlateJump, etc)
-// and on home-workouts.js data (LADDERS, CIRCUIT_PARAMS, MAJOR_LIFT_DAYS, CIRCUIT_DAYS, ladderParamsFor, etc).
+// and on home-workouts.js data (LADDERS, CIRCUIT_PARAMS, MAJOR_LIFT_DAYS, CIRCUIT_DAYS, ISOLATION_FAMILIES,
+// CORE_LADDER_KEYS, ladderParamsFor, etc).
 
   function findMajorLiftDay(exId) {
     for (const k of Object.keys(MAJOR_LIFT_DAYS)) if (MAJOR_LIFT_DAYS[k].lift === exId) return k;
@@ -15,89 +16,148 @@
     }
     return null;
   }
+  // True for any exercise that belongs to ANY isolation family, regardless of whether that family
+  // is the one currently picked for either circuit day — matches the original semantics (this drives
+  // the dual-purpose routing gate in app-gym.js's renderDetail(), gated behind state.homeMode).
   function isIsolationStationExercise(exId) {
-    return Object.values(CIRCUIT_DAYS).some(d => d.stations.some(s => !s.ladder && s.exercises.includes(exId)));
+    return Object.values(ISOLATION_FAMILIES).some(f => f.exercises.includes(exId));
   }
-  // Isolation exercises use weight (or a band level) as their only progression axis (item 9) —
-  // ceilingStreak here DOES drive advancement (adds a plate jump, or steps up a band level, once it
-  // hits 2).
-  let ISOLATION_STATE = {}; // { exId: {mode:'weight'|'band', weight, bandLevel, lastCeilingValue, ceilingStreak} }
+  // Isolation exercises use weight as their only progression axis (item 9) — ceilingStreak here
+  // DOES drive advancement (adds a plate jump once it hits 2).
+  let ISOLATION_STATE = {}; // { exId: {weight, lastCeilingWeight, ceilingStreak} }
   function saveIsolationState() { try { localStorage.setItem('gym-isolation-state', JSON.stringify(ISOLATION_STATE)); } catch(e){} }
-  // Ladder rungs with a loaded/weighted (or band-resisted) variation get a pure REFERENCE value note
-  // (item 8) — this never affects round success/failure or rung-advancement logic. It only exists to
-  // make a plateau (ceiling hit twice at the same weight/band) impossible to miss.
-  let REF_WEIGHT = {}; // { exId: {mode:'weight'|'band', weight, bandLevel, lastCeilingValue, ceilingStreak} }
+  // Ladder rungs with a loaded/weighted variation get a pure REFERENCE weight note (item 8) — this
+  // never affects round success/failure or rung-advancement logic. It only exists to make a plateau
+  // (ceiling hit twice at the same weight) impossible to miss, so you know to bump the weight.
+  let REF_WEIGHT = {}; // { exId: {weight, lastCeilingWeight, ceilingStreak} }
   function saveRefWeight() { try { localStorage.setItem('gym-ref-weight', JSON.stringify(REF_WEIGHT)); } catch(e){} }
-  // Shared by: the ladder reference-weight prompt (item 8, informational only) and isolation's
-  // weight-only progression (item 9, actually drives advancement). Tracks whether the ceiling has now
-  // been hit twice in a row at the SAME value — generic over "value" so it works identically whether
-  // that value is a numeric weight (lb) or a band-level string ('light'/'medium'/'heavy'/'xheavy').
-  // Resets the streak whenever the value changes or the ceiling isn't hit — a plateau only counts if
-  // it's genuinely the same value both times.
-  function trackCeilingStreak(store, exId, value, hitCeiling) {
-    const s = store[exId] || {lastCeilingValue: null, ceilingStreak: 0};
-    if (hitCeiling && value != null) {
-      s.ceilingStreak = (s.lastCeilingValue === value) ? (s.ceilingStreak||0) + 1 : 1;
-      s.lastCeilingValue = value;
+  // Shared by both the reference-weight prompt (item 8) and isolation's weight-only progression
+  // (item 9): tracks whether the ceiling has now been hit twice in a row at the SAME weight.
+  // Resets the streak whenever the weight changes or the ceiling isn't hit — a plateau only counts
+  // if it's genuinely the same weight both times.
+  function trackWeightCeilingStreak(store, exId, weight, hitCeiling) {
+    const s = store[exId] || {weight: null, lastCeilingWeight: null, ceilingStreak: 0};
+    s.weight = weight;
+    if (hitCeiling && weight != null) {
+      s.ceilingStreak = (s.lastCeilingWeight === weight) ? (s.ceilingStreak||0) + 1 : 1;
+      s.lastCeilingWeight = weight;
     } else {
       s.ceilingStreak = 0;
     }
     store[exId] = s;
     return s;
   }
-  // Weight/Band toggle — shared UI for any Home Workout "working weight" field that might instead be
-  // a resistance band on a given day (equipment substitution is common at home). `st` is expected to
-  // carry {mode:'weight'|'band', weight, bandLevel}; weight and bandLevel are kept independently so
-  // switching modes back and forth doesn't lose whichever value isn't currently active.
-  function defaultWeightOrBandMode(x) {
-    const eq = x.eq || [];
-    const hasLoadable = eq.some(e => ['dumbbell','barbell','kettlebell','trapbar','landmine','cable','machine'].includes(e));
-    const hasBand = eq.includes('band');
-    return (hasBand && !hasLoadable) ? 'band' : 'weight';
-  }
-  function formatWeightOrBand(mode, value) {
-    if (value == null) return '';
-    return mode === 'band' ? `${BAND_LEVEL_LABELS[value]} band` : `${value} lb`;
-  }
-  function buildWeightOrBandHtml(idPrefix, st, label) {
-    const mode = st.mode;
-    const modeToggle = `
-      <div style="display:flex;gap:6px;margin-bottom:8px;">
-        <div class="grr-chip${mode==='weight'?' active':''}" id="${idPrefix}-mode-weight" style="cursor:pointer;">Weight</div>
-        <div class="grr-chip${mode==='band'?' active':''}" id="${idPrefix}-mode-band" style="cursor:pointer;">Band</div>
-      </div>`;
-    const valueHtml = mode === 'band' ? `
-      <div class="grr-section-label" style="padding-left:0;">${label} — band level</div>
-      <div class="grr-equip-row" id="${idPrefix}-band-row" style="padding:0 0 10px;">
-        ${BAND_LEVELS.map(l => `<div class="grr-chip${st.bandLevel===l?' active':''}" data-level="${l}">${BAND_LEVEL_LABELS[l]}</div>`).join('')}
-      </div>` : `
-      <div class="grr-tm-box"><div><label>${label} (lb)</label></div><input type="number" id="${idPrefix}-weight" value="${st.weight||''}" placeholder="e.g. 20"/></div>`;
-    return modeToggle + valueHtml;
-  }
-  function wireWeightOrBandInputs(idPrefix, st, onChange) {
-    const wBtn = root.querySelector(`#${idPrefix}-mode-weight`);
-    const bBtn = root.querySelector(`#${idPrefix}-mode-band`);
-    if (wBtn) wBtn.onclick = () => { if (st.mode !== 'weight') { st.mode = 'weight'; onChange(st, true); } };
-    if (bBtn) bBtn.onclick = () => { if (st.mode !== 'band') { st.mode = 'band'; onChange(st, true); } };
-    const wInput = root.querySelector(`#${idPrefix}-weight`);
-    if (wInput) wInput.onchange = (e) => { st.weight = parseFloat(e.target.value)||null; onChange(st, false); };
-    root.querySelectorAll(`#${idPrefix}-band-row .grr-chip`).forEach(chip => {
-      chip.onclick = () => { st.bandLevel = chip.dataset.level; onChange(st, false); };
-    });
-  }
   function currentRungId(ladderKey) {
     const ladder = LADDERS[ladderKey];
     const st = RUNG_STATE[ladderKey] || {rungIndex:0, streak:0};
     return ladder.rungs[Math.min(st.rungIndex, ladder.rungs.length-1)];
   }
+
+  // ---------- STATION SWAP (Core ladder / Isolation family, per circuit day) ----------
+  // { "<circuitDay>:<pattern>": ladderKeyOrFamilyKey } — manual, freely changeable at any time.
+  // Keyed by day+pattern rather than a station index so it survives CIRCUIT_DAYS reordering.
+  let STATION_PICK = {};
+  function saveStationPick() { try { localStorage.setItem('gym-station-pick', JSON.stringify(STATION_PICK)); } catch(e){} }
+  function stationPickKey(dayKey, pattern) { return dayKey + ':' + pattern; }
+  // Only the "Core" pattern's ladder is swappable (among CORE_LADDER_KEYS) — other ladder patterns
+  // (Vertical Push, Hinge, etc.) already get variety from having a different ladder per circuit day
+  // and aren't part of this ask. Falls back to the station's own default ladder key.
+  function resolvedLadderKey(dayKey, station) {
+    if (!station.ladder) return null;
+    if (station.pattern !== 'Core') return station.ladder;
+    const pick = STATION_PICK[stationPickKey(dayKey, station.pattern)];
+    return (pick && LADDERS[pick]) ? pick : station.ladder;
+  }
+  // Every Isolation station is swappable among ISOLATION_FAMILIES. Falls back to the station's own
+  // default family key.
+  function resolvedIsolationFamily(dayKey, station) {
+    if (station.ladder) return null;
+    const pick = STATION_PICK[stationPickKey(dayKey, station.pattern)];
+    return (pick && ISOLATION_FAMILIES[pick]) ? pick : station.family;
+  }
+
+  // ---------- REP RANGE OVERRIDE (Major Lift / ladder / isolation — any card) ----------
+  // { "<scope>:<key>": {floor, ceiling} } — scope is "ladder" (key = ladder key, shared by every
+  // rung on that ladder), "iso" (key = exercise id, one isolation exercise at a time), or "major"
+  // (key = major lift day — though Major Lift stores its own floor/ceiling directly on
+  // MAJOR_LIFT_STATE since it already had a mutable repTarget field; see renderMajorLiftLogger).
+  // Floor is informational everywhere; ceiling is what advancement logic checks reps against, so
+  // editing it genuinely changes when a ladder/isolation exercise advances.
+  let REP_RANGE_OVERRIDE = {};
+  function saveRepRangeOverride() { try { localStorage.setItem('gym-rep-range-override', JSON.stringify(REP_RANGE_OVERRIDE)); } catch(e){} }
+  function getRepRange(scope, key, defFloor, defCeiling) {
+    const ov = REP_RANGE_OVERRIDE[scope + ':' + key];
+    return {
+      floor: (ov && ov.floor != null && !isNaN(ov.floor)) ? ov.floor : defFloor,
+      ceiling: (ov && ov.ceiling != null && !isNaN(ov.ceiling)) ? ov.ceiling : defCeiling
+    };
+  }
+  function setRepRange(scope, key, floor, ceiling) {
+    REP_RANGE_OVERRIDE[scope + ':' + key] = { floor, ceiling };
+    saveRepRangeOverride();
+  }
+
+  // ---------- MOBILITY / REHAB TICKS (formerly "Daily Superset" Mark Done) ----------
+  // { exId: {date, rounds} } — rounds is 0-3, click cycles 1→2→3→back to 0. Scoped to "today" so
+  // reopening the app on a new day shows a fresh 0 instead of yesterday's stale round count (the
+  // old binary "done" flag had no such reset and could sit showing done indefinitely). Kept in its
+  // own store rather than reusing CIRCUIT_TICKS — CIRCUIT_TICKS is wiped to {} on every "Save
+  // Circuit Session" click, which used to also silently wipe today's mobility/rehab marks since
+  // they shared the same object.
+  let MOBILITY_TICKS = {};
+  function saveMobilityTicks() { try { localStorage.setItem('gym-mobility-ticks', JSON.stringify(MOBILITY_TICKS)); } catch(e){} }
+  function mobilityRoundsToday(exId) {
+    const t = MOBILITY_TICKS[exId];
+    return (t && t.date === todayLocal()) ? (t.rounds || 0) : 0;
+  }
+  // Writes/replaces today's log entry to match the new round count (idempotent per day, same
+  // pattern the old binary version used) and removes it entirely when cycling back to 0.
+  function setMobilityRounds(exId, ex, rounds) {
+    const today = todayLocal();
+    MOBILITY_TICKS[exId] = { date: today, rounds };
+    saveMobilityTicks();
+    if (LOGS[exId]) LOGS[exId] = LOGS[exId].filter(e => !(e.date === today && e.tmAction === 'dailySuperset'));
+    if (rounds > 0) {
+      const sets = [];
+      for (let i = 1; i <= rounds; i++) sets.push({target: 'Round '+i, weight: null, reps: null, success: true});
+      const entry = {date: today, exercise: ex.n, pattern: ex.p, exId, logId: newLogId(), sets, allSuccess: true, tmAction: 'dailySuperset'};
+      if (!LOGS[exId]) LOGS[exId] = [];
+      LOGS[exId].push(entry);
+    }
+    saveLogs();
+  }
+
+  // ---------- MOBILITY / REHAB SLOT SWAP (formerly fixed "Daily Superset" exercises) ----------
+  // { dayKey: [exId, exId, exId, exId] } — sparse-by-day, full 4-slot array once customized. Falls
+  // back to MAJOR_LIFT_DAYS[dayKey].dailySuperset when a day hasn't been touched.
+  let DAILY_SUPERSET_OVERRIDE = {};
+  function saveDailySupersetOverride() { try { localStorage.setItem('gym-daily-superset-override', JSON.stringify(DAILY_SUPERSET_OVERRIDE)); } catch(e){} }
+  function getDailySuperset(dayKey) {
+    const ov = DAILY_SUPERSET_OVERRIDE[dayKey];
+    return (ov && ov.length === 4) ? ov : MAJOR_LIFT_DAYS[dayKey].dailySuperset;
+  }
+  function setDailySupersetSlot(dayKey, slotIdx, exId) {
+    const current = [...getDailySuperset(dayKey)];
+    current[slotIdx] = exId;
+    DAILY_SUPERSET_OVERRIDE[dayKey] = current;
+    saveDailySupersetOverride();
+  }
+  // Swap pool for Mobility/Rehab slots: every exercise currently in the mobility scheme (respecting
+  // any per-exercise scheme override, same as every other routing decision in this app).
+  function mobilityPoolExercises() {
+    return EX.filter(x => effectiveScheme(x) === 'mobility').sort((a,b) => a.n.localeCompare(b.n));
+  }
+
   function renderMajorLiftLogger(container, dayKey, msgElId) {
     const majorDay = MAJOR_LIFT_DAYS[dayKey];
     const ex = EX_BY_ID[majorDay.lift];
     const P = CIRCUIT_PARAMS.majorLift;
     const mlState = MAJOR_LIFT_STATE[dayKey] || {sets: P.startSets, weight: null, streak: 0, lastAmrap: null, repTarget: P.repCeiling};
     if (!mlState.repTarget) mlState.repTarget = P.repCeiling; // back-compat for state saved before this field existed
+    if (!mlState.repFloor) mlState.repFloor = P.repFloor; // back-compat for state saved before this field existed
     const ceiling = mlState.repTarget;
-    let html = `<div class="grr-tm-box" style="margin-bottom:10px;"><div><label>Weight (lb, total incl. 20lb bar)</label><div style="font-size:11px;color:var(--muted);margin-top:2px;">Stage: ${mlState.sets} sets · target ${ceiling}, floor ${P.repFloor}</div></div><input type="number" id="grr-ml-weight" value="${mlState.weight||''}" placeholder="e.g. 70"/></div>`;
+    let html = `<div class="grr-tm-box" style="margin-bottom:10px;"><div><label>Weight (lb, total incl. 20lb bar)</label><div style="font-size:11px;color:var(--muted);margin-top:2px;">Stage: ${mlState.sets} sets</div></div><input type="number" id="grr-ml-weight" value="${mlState.weight||''}" placeholder="e.g. 70"/></div>`;
+    html += `<div class="grr-tm-box" style="margin-bottom:10px;"><div><label>Rep range</label><div style="font-size:11px;color:var(--muted);margin-top:2px;">Floor is informational; ceiling drives stage advancement.</div></div><div style="display:flex;gap:6px;align-items:center;"><input type="number" id="grr-ml-floor" value="${mlState.repFloor}" style="width:52px;"/><span style="color:var(--muted);font-size:11px;">–</span><input type="number" id="grr-ml-ceiling" value="${ceiling}" style="width:52px;"/></div></div>`;
     for (let i=1;i<=mlState.sets;i++) {
       const isAmrap = i===mlState.sets;
       html += `<div class="grr-set-row"><div class="grr-set-row-top"><span>Set ${i}${isAmrap?' (AMRAP)':''}</span><span>${isAmrap?`beat last: ${mlState.lastAmrap??'—'}`:`target ${ceiling}`}</span></div><div class="grr-set-inputs"><input type="number" class="grr-ml-reps" data-i="${i}" placeholder="reps" style="width:70px;"/><span class="grr-unit">reps</span></div></div>`;
@@ -105,6 +165,8 @@
     html += `<button class="grr-save-btn" id="grr-save-major">Save Major Lift</button><div class="grr-save-msg" id="${msgElId}"></div>`;
     container.innerHTML = html;
     container.querySelector('#grr-ml-weight').onchange = (e) => { mlState.weight = parseFloat(e.target.value)||null; MAJOR_LIFT_STATE[dayKey]=mlState; saveMajorLiftState(); };
+    container.querySelector('#grr-ml-floor').onchange = (e) => { mlState.repFloor = parseInt(e.target.value,10) || P.repFloor; MAJOR_LIFT_STATE[dayKey]=mlState; saveMajorLiftState(); render(); };
+    container.querySelector('#grr-ml-ceiling').onchange = (e) => { mlState.repTarget = parseInt(e.target.value,10) || P.repCeiling; MAJOR_LIFT_STATE[dayKey]=mlState; saveMajorLiftState(); render(); };
     container.querySelector('#grr-save-major').onclick = () => {
       const reps = [...container.querySelectorAll('.grr-ml-reps')].map(inp => parseInt(inp.value,10)||0);
       const msgEl = container.querySelector('#'+msgElId);
@@ -174,42 +236,21 @@
           <div class="grr-collapse-body" id="grr-plate-body" style="padding:0 0 12px;"></div>
         </div>
 
-        <div class="grr-collapse${HOME.collapsed.major ? '' : ' open'}" id="grr-major-collapse" style="margin:10px 0 14px;">
-          <div class="grr-collapse-head">
-            <span>${majorDay.label}: ${EX_BY_ID[majorDay.lift] ? EX_BY_ID[majorDay.lift].n : majorDay.lift} ▾</span>
-            <span id="grr-major-view-link" data-no-collapse="1" style="color:var(--steel);font-size:11px;font-weight:700;text-transform:none;letter-spacing:normal;cursor:pointer;">view exercise →</span>
-          </div>
-          <div class="grr-collapse-body" style="padding:0 0 12px;"><div id="grr-major-lift-block"></div></div>
-        </div>
+        <div class="grr-section-label" style="padding-left:0;" id="grr-major-lift-header">${majorDay.label}: ${EX_BY_ID[majorDay.lift] ? EX_BY_ID[majorDay.lift].n : majorDay.lift} <span style="color:var(--steel);font-size:11px;cursor:pointer;">(view exercise →)</span></div>
+        <div id="grr-major-lift-block"></div>
 
-        <div class="grr-collapse${HOME.collapsed.superset ? '' : ' open'}" id="grr-superset-collapse-home" style="margin:10px 0 14px;">
-          <div class="grr-collapse-head">Daily Superset ▾</div>
-          <div class="grr-collapse-body" style="padding:0 0 12px;"><div id="grr-daily-superset-block"></div></div>
-        </div>
+        <div class="grr-section-label" style="padding-left:0;">Mobility / Rehab</div>
+        <div style="font-size:11px;color:var(--muted);margin:-4px 0 8px;line-height:1.5;">Done during rest between Major Lift sets. Tap to cycle rounds — 1 → 2 → 3 → back to none. Swap any slot for a different mobility exercise with the dropdown.</div>
+        <div id="grr-daily-superset-block" style="margin-bottom:14px;"></div>
 
-        <div class="grr-collapse${HOME.collapsed.circuit ? '' : ' open'}" id="grr-circuit-collapse" style="margin:10px 0 14px;">
-          <div class="grr-collapse-head">${circuitDay.label} ▾</div>
-          <div class="grr-collapse-body" style="padding:0 0 12px;">
-            <div style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.5;">${P.startSets} rounds each, tap to log each round as you go. Tap a round once you finish it: <b style="color:var(--steel);">Done</b> = completed the round but didn't hit the rep ceiling — still logs, doesn't count toward advancement. <b style="color:var(--brand);">Max!</b> = hit the rep ceiling — logs AND counts toward the "twice in a row" advancement streak.</div>
-            <div id="grr-circuit-block"></div>
-            <button class="grr-save-btn" id="grr-save-circuit">Save Circuit Session</button>
-            <div class="grr-save-msg" id="grr-home-msg">${state.homeMsg||''}</div>
-          </div>
-        </div>
+        <div class="grr-section-label" style="padding-left:0;">${circuitDay.label} — ${P.startSets} rounds each, tap to log each round as you go</div>
+        <div style="font-size:11px;color:var(--muted);margin:-4px 0 10px;line-height:1.5;">Tap a round once you finish it: <b style="color:var(--steel);">Done</b> = completed the round but didn't hit the rep ceiling — still logs, doesn't count toward advancement. <b style="color:var(--brand);">Max!</b> = hit the rep ceiling — logs AND counts toward the "twice in a row" advancement streak. Core and Isolation stations can be swapped to a different progression/family at any time with the chips above each one.</div>
+        <div id="grr-circuit-block"></div>
+        <button class="grr-save-btn" id="grr-save-circuit">Save Circuit Session</button>
+        <div class="grr-save-msg" id="grr-home-msg">${state.homeMsg||''}</div>
       </div>
     `;
     root.querySelector('#grr-back').onclick = () => { state.homeMsg = ''; state.view = 'list'; render(); };
-
-    // Collapsible section wiring — click anywhere on a head toggles it, EXCEPT the Major Lift
-    // section's nested "view exercise" link (marked data-no-collapse), which navigates instead.
-    [['grr-major-collapse','major'], ['grr-superset-collapse-home','superset'], ['grr-circuit-collapse','circuit']].forEach(([id, key]) => {
-      root.querySelector('#' + id + ' .grr-collapse-head').onclick = (e) => {
-        if (e.target.closest('[data-no-collapse]')) return;
-        HOME.collapsed[key] = !HOME.collapsed[key];
-        saveHome();
-        render();
-      };
-    });
 
     const majorRow = root.querySelector('#grr-major-day-row');
     ['A','B','C'].forEach(d => {
@@ -247,60 +288,89 @@
     });
     root.querySelector('#grr-plate-collapse .grr-collapse-head').onclick = () => root.querySelector('#grr-plate-collapse').classList.toggle('open');
 
-    // Major Lift — shared logger + clickable link to view the full exercise page
+    // Major Lift — shared logger + clickable header to view the full exercise page
     renderMajorLiftLogger(root.querySelector('#grr-major-lift-block'), HOME.majorDay, 'grr-major-msg-inline');
-    root.querySelector('#grr-major-view-link').onclick = (e) => {
-      e.stopPropagation();
+    root.querySelector('#grr-major-lift-header').onclick = () => {
       state.cameFrom = {view:'home'}; state.homeMode = true; state.view = 'detail'; state.activeId = majorDay.lift; state.saveMsg=''; render();
     };
 
-    // Daily superset — name area opens the exercise's own page (gif/notes/history); a separate
-    // "Done" button ticks completion AND writes a real log entry for today (idempotent — toggling
-    // back off removes today's entry rather than piling up duplicates).
+    // Mobility / Rehab — name area opens the exercise's own page (gif/notes/history); a round-cycle
+    // button logs how many rounds you got through today (1/2/3, 4th tap resets to none); a dropdown
+    // per slot swaps in a different scheme:"mobility" exercise for that slot.
     const dsBlock = root.querySelector('#grr-daily-superset-block');
-    majorDay.dailySuperset.forEach(exId => {
+    const supersetIds = getDailySuperset(HOME.majorDay);
+    const mobilityPool = mobilityPoolExercises();
+    supersetIds.forEach((exId, slotIdx) => {
       const ex = EX_BY_ID[exId];
       if (!ex) return;
-      const done = CIRCUIT_TICKS[exId] === 2;
+      const rounds = mobilityRoundsToday(exId);
       const row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:6px;';
+      row.style.cssText = 'margin-bottom:8px;padding:8px 10px;border-radius:6px;background:var(--surface);border:1px solid var(--line);';
+      const topRow = document.createElement('div');
+      topRow.style.cssText = 'display:flex;align-items:center;gap:8px;';
       const nameSpan = document.createElement('div');
       nameSpan.style.cssText = 'flex:1;cursor:pointer;font-size:13px;font-weight:700;';
       nameSpan.textContent = ex.n;
       nameSpan.onclick = () => { state.cameFrom = {view:'home'}; state.view = 'detail'; state.activeId = exId; state.saveMsg = ''; render(); };
-      const doneBtn = document.createElement('button');
-      doneBtn.type = 'button';
-      doneBtn.textContent = done ? '✓ Done' : 'Mark Done';
-      doneBtn.style.cssText = `flex-shrink:0;border:none;border-radius:6px;padding:7px 12px;font-size:11.5px;font-weight:800;cursor:pointer;background:${done ? 'var(--green)' : 'var(--surface-2)'};color:${done ? '#111' : 'var(--chalk)'};`;
-      doneBtn.onclick = () => {
-        const today = todayLocal();
-        if (done) {
-          CIRCUIT_TICKS[exId] = 0;
-          if (LOGS[exId]) LOGS[exId] = LOGS[exId].filter(e => !(e.date === today && e.tmAction === 'dailySuperset'));
-        } else {
-          CIRCUIT_TICKS[exId] = 2;
-          const alreadyLoggedToday = (LOGS[exId] || []).some(e => e.date === today && e.tmAction === 'dailySuperset');
-          if (!alreadyLoggedToday) {
-            const entry = {date: today, exercise: ex.n, pattern: ex.p, exId, logId: newLogId(), sets:[{target:'Done', weight:null, reps:null, success:true}], allSuccess:true, tmAction:'dailySuperset'};
-            if (!LOGS[exId]) LOGS[exId] = [];
-            LOGS[exId].push(entry);
-          }
-        }
-        saveCircuitTicks(); saveLogs(); render();
-      };
-      row.appendChild(nameSpan); row.appendChild(doneBtn);
+      const roundBtn = document.createElement('button');
+      roundBtn.type = 'button';
+      roundBtn.textContent = rounds > 0 ? `✓ ${rounds} round${rounds>1?'s':''}` : 'Mark Done';
+      roundBtn.style.cssText = `flex-shrink:0;border:none;border-radius:6px;padding:7px 12px;font-size:11.5px;font-weight:800;cursor:pointer;background:${rounds>0 ? 'var(--green)' : 'var(--surface-2)'};color:${rounds>0 ? '#111' : 'var(--chalk)'};`;
+      roundBtn.onclick = () => { setMobilityRounds(exId, ex, (rounds+1) % 4); render(); };
+      topRow.appendChild(nameSpan); topRow.appendChild(roundBtn);
+      row.appendChild(topRow);
+      const swapSelect = document.createElement('select');
+      swapSelect.style.cssText = 'margin-top:6px;width:100%;background:var(--bg);border:1px solid var(--line);color:var(--chalk);padding:5px;border-radius:4px;font-size:11px;';
+      mobilityPool.forEach(px => {
+        const opt = document.createElement('option');
+        opt.value = px.id; opt.textContent = px.n;
+        if (px.id === exId) opt.selected = true;
+        swapSelect.appendChild(opt);
+      });
+      swapSelect.onchange = () => { setDailySupersetSlot(HOME.majorDay, slotIdx, swapSelect.value); render(); };
+      row.appendChild(swapSelect);
       dsBlock.appendChild(row);
     });
 
-    // Circuit block — one row per station, with a prev-rung button and one tick per round (P.startSets rounds)
+    // Circuit block — one row per station (Core/Isolation get a swap-picker chip row above them),
+    // with a prev-rung button and one tick per round (P.startSets rounds).
     const circBlock = root.querySelector('#grr-circuit-block');
     circuitDay.stations.forEach(station => {
       const isLadder = !!station.ladder;
-      const exIds = isLadder ? [currentRungId(station.ladder)] : station.exercises;
+      const ladderKey = isLadder ? resolvedLadderKey(HOME.circuitDay, station) : null;
+      const famKey = isLadder ? null : resolvedIsolationFamily(HOME.circuitDay, station);
+      const fam = isLadder ? null : ISOLATION_FAMILIES[famKey];
+      const exIds = isLadder ? [currentRungId(ladderKey)] : (fam ? fam.exercises : []);
+
+      const showLadderSwap = isLadder && station.pattern === 'Core';
+      const showFamilySwap = !isLadder;
+      if (showLadderSwap || showFamilySwap) {
+        const pickerWrap = document.createElement('div');
+        pickerWrap.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;';
+        const options = showLadderSwap
+          ? CORE_LADDER_KEYS.map(k => ({key:k, label: LADDERS[k].label}))
+          : Object.keys(ISOLATION_FAMILIES).map(k => ({key:k, label: ISOLATION_FAMILIES[k].label}));
+        const activeKey = showLadderSwap ? ladderKey : famKey;
+        options.forEach(opt => {
+          const chip = document.createElement('div');
+          chip.className = 'grr-chip' + (opt.key === activeKey ? ' active' : '');
+          chip.style.cssText = 'font-size:10.5px;padding:5px 9px;';
+          chip.textContent = opt.label;
+          chip.onclick = () => {
+            STATION_PICK[stationPickKey(HOME.circuitDay, station.pattern)] = opt.key;
+            saveStationPick(); render();
+          };
+          pickerWrap.appendChild(chip);
+        });
+        circBlock.appendChild(pickerWrap);
+      }
+
       exIds.forEach(exId => {
         const ex = EX_BY_ID[exId];
         if (!ex) return;
-        const stationP = isLadder ? ladderParamsFor(station.ladder) : CIRCUIT_PARAMS.isolation;
+        const baseP = isLadder ? ladderParamsFor(ladderKey) : CIRCUIT_PARAMS.isolation;
+        const rr = isLadder ? getRepRange('ladder', ladderKey, baseP.repFloor, baseP.repCeiling) : getRepRange('iso', exId, baseP.repFloor, baseP.repCeiling);
+        const stationP = {...baseP, repFloor: rr.floor, repCeiling: rr.ceiling};
         const ticks = CIRCUIT_TICKS[exId] || [];
         const row = document.createElement('div');
         row.style.cssText = 'padding:10px;margin-bottom:6px;border-radius:6px;background:var(--surface);border:1px solid var(--line);';
@@ -308,17 +378,17 @@
         topRow.style.cssText = 'display:flex;align-items:center;gap:8px;';
         const nameSpan = document.createElement('div');
         nameSpan.style.cssText = 'flex:1;cursor:pointer;';
-        const rungLabel = isLadder ? ` · rung ${LADDERS[station.ladder].rungs.indexOf(exId)+1}/${LADDERS[station.ladder].rungs.length}` : '';
+        const rungLabel = isLadder ? ` · rung ${LADDERS[ladderKey].rungs.indexOf(exId)+1}/${LADDERS[ladderKey].rungs.length}` : '';
         nameSpan.innerHTML = `<div style="font-weight:700;font-size:13px;">${station.pattern}</div><div style="font-size:11.5px;color:var(--muted);">${ex.n}${rungLabel} · target ${stationP.repCeiling}, floor ${stationP.repFloor}</div>`;
         nameSpan.onclick = () => { state.cameFrom = {view:'home'}; state.homeMode = true; state.view = 'detail'; state.activeId = exId; state.saveMsg=''; render(); };
         topRow.appendChild(nameSpan);
         if (isLadder) {
-          const st = RUNG_STATE[station.ladder] || {rungIndex:0, streak:0};
+          const st = RUNG_STATE[ladderKey] || {rungIndex:0, streak:0};
           if (st.rungIndex > 0) {
             const prevBtn = document.createElement('button');
             prevBtn.type = 'button'; prevBtn.textContent = '◀ prev rung';
             prevBtn.style.cssText = 'background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:10px;font-weight:700;padding:5px 8px;border-radius:4px;cursor:pointer;flex-shrink:0;';
-            prevBtn.onclick = () => { st.rungIndex -= 1; st.streak = 0; RUNG_STATE[station.ladder] = st; saveRungState(); render(); };
+            prevBtn.onclick = () => { st.rungIndex -= 1; st.streak = 0; RUNG_STATE[ladderKey] = st; saveRungState(); render(); };
             topRow.appendChild(prevBtn);
           }
         }
@@ -361,19 +431,24 @@
       let topOfLadderNotes = [];
       circuitDay.stations.forEach(station => {
         if (!station.ladder) {
-          const exId = station.exercises[0];
-          const ticks = CIRCUIT_TICKS[exId] || [];
-          if (ticks.some(t => t > 0) && EX_BY_ID[exId]) { logCircuitSet(exId, ticks, CIRCUIT_PARAMS.isolation.startSets); anySaved = true; }
+          const famKey = resolvedIsolationFamily(HOME.circuitDay, station);
+          const fam = ISOLATION_FAMILIES[famKey];
+          if (!fam) return;
+          fam.exercises.forEach(exId => {
+            const ticks = CIRCUIT_TICKS[exId] || [];
+            if (ticks.some(t => t > 0) && EX_BY_ID[exId]) { logCircuitSet(exId, ticks, CIRCUIT_PARAMS.isolation.startSets); anySaved = true; }
+          });
           return;
         }
-        const exId = currentRungId(station.ladder);
+        const ladderKey = resolvedLadderKey(HOME.circuitDay, station);
+        const exId = currentRungId(ladderKey);
         const ticks = CIRCUIT_TICKS[exId] || [];
         if (!ticks.some(t => t > 0)) return;
-        const stationP = ladderParamsFor(station.ladder);
+        const stationP = ladderParamsFor(ladderKey);
         const allSuccess = logCircuitSet(exId, ticks, stationP.startSets);
         anySaved = true;
-        const st = RUNG_STATE[station.ladder] || {rungIndex:0, streak:0};
-        const ladder = LADDERS[station.ladder];
+        const st = RUNG_STATE[ladderKey] || {rungIndex:0, streak:0};
+        const ladder = LADDERS[ladderKey];
         if (allSuccess) {
           st.streak = (st.streak||0) + 1;
           if (st.streak >= 2) {
@@ -383,7 +458,7 @@
         } else {
           st.streak = 0;
         }
-        RUNG_STATE[station.ladder] = st;
+        RUNG_STATE[ladderKey] = st;
       });
       saveRungState();
       saveLogs();
@@ -421,7 +496,9 @@
     if (ladderInfo) {
       const ladder = LADDERS[ladderInfo.key];
       const st = RUNG_STATE[ladderInfo.key] || {rungIndex:0, streak:0};
-      const P = ladderParamsFor(ladderInfo.key);
+      const base = ladderParamsFor(ladderInfo.key);
+      const rr = getRepRange('ladder', ladderInfo.key, base.repFloor, base.repCeiling);
+      const P = {...base, repFloor: rr.floor, repCeiling: rr.ceiling};
       const rungListHtml = ladder.rungs.map((rId, i) => {
         const rEx = EX_BY_ID[rId];
         const isCurrent = i === st.rungIndex;
@@ -433,16 +510,14 @@
       for (let i=1; i<=P.startSets; i++) {
         setsHtml += `<div class="grr-set-row"><div class="grr-set-row-top"><span>Round ${i}</span><span>target ${P.repCeiling}, floor ${P.repFloor}</span></div><div class="grr-set-inputs"><input type="number" class="grr-hd-reps" data-i="${i}" placeholder="reps" style="width:70px;"/><span class="grr-unit">reps</span></div></div>`;
       }
-      // Reference weight/band (item 8) — only shown for rungs with a loaded or band-resisted
-      // variation. Purely informational: never affects round success/failure or rung-advancement,
-      // just flags a plateau.
-      const showRef = !isBodyweightOnly(x);
-      const refState = REF_WEIGHT[x.id] || {mode: defaultWeightOrBandMode(x), weight: null, bandLevel: null, lastCeilingValue: null, ceilingStreak: 0};
-      const refCurrentValue = refState.mode === 'band' ? refState.bandLevel : refState.weight;
-      const refWeightHtml = showRef ? `
-        ${buildWeightOrBandHtml('grr-hd-ref', refState, 'Working weight (reference only)')}
-        <div style="font-size:11px;color:var(--muted);margin:-6px 0 10px;">Doesn't affect success or rung advancement — just here so a plateau is easy to spot.</div>
-        ${refState.ceilingStreak >= 2 ? `<div style="background:var(--surface);border:1px solid var(--brand);border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:12.5px;color:var(--brand);font-weight:700;">Hit the ceiling twice at ${formatWeightOrBand(refState.mode, refState.lastCeilingValue)} — consider ${refState.mode==='band'?'moving up a band level':'increasing the weight'}.</div>` : ''}
+      const repRangeEditorHtml = `<div class="grr-tm-box"><div><label>Rep range</label><div style="font-size:11px;color:var(--muted);margin-top:2px;">Shared by every rung on ${ladder.label}. Floor is informational; ceiling drives rung advancement.</div></div><div style="display:flex;gap:6px;align-items:center;"><input type="number" id="grr-hd-rep-floor" value="${P.repFloor}" style="width:52px;"/><span style="color:var(--muted);font-size:11px;">–</span><input type="number" id="grr-hd-rep-ceiling" value="${P.repCeiling}" style="width:52px;"/></div></div>`;
+      // Reference weight (item 8) — only shown for rungs with a loaded/weighted variation. Purely
+      // informational: never affects round success/failure or rung-advancement, just flags a plateau.
+      const showRefWeight = !isBodyweightOnly(x);
+      const refState = REF_WEIGHT[x.id] || {weight: null, lastCeilingWeight: null, ceilingStreak: 0};
+      const refWeightHtml = showRefWeight ? `
+        <div class="grr-tm-box"><div><label>Weight (lb, reference only)</label><div style="font-size:11px;color:var(--muted);margin-top:2px;">Doesn't affect success or rung advancement — just here so a plateau is easy to spot.</div></div><input type="number" id="grr-hd-ref-weight" value="${refState.weight||''}" placeholder="e.g. 20"/></div>
+        ${refState.ceilingStreak >= 2 ? `<div style="background:var(--surface);border:1px solid var(--brand);border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:12.5px;color:var(--brand);font-weight:700;">Hit the ceiling twice at ${refState.lastCeilingWeight} lb — consider increasing the weight.</div>` : ''}
       ` : '';
       root.innerHTML = `
         <div class="grr-detail">
@@ -453,6 +528,7 @@
           ${x.notes ? `<div class="grr-notes">${x.notes}</div>` : ''}
           <div class="grr-section-label" style="padding-left:0;">${ladder.label} — tap any rung to jump there (forward or back)</div>
           <div id="grr-rung-list" style="margin-bottom:14px;">${rungListHtml}</div>
+          ${repRangeEditorHtml}
           ${refWeightHtml}
           <div id="grr-hd-sets">${setsHtml}</div>
           <button class="grr-save-btn" id="grr-hd-save">Save Round(s)</button>
@@ -471,13 +547,14 @@
           render();
         };
       });
-      if (showRef) {
-        wireWeightOrBandInputs('grr-hd-ref', refState, (updatedState, modeSwitched) => {
-          if (modeSwitched) { updatedState.ceilingStreak = 0; updatedState.lastCeilingValue = null; }
-          REF_WEIGHT[x.id] = updatedState;
+      root.querySelector('#grr-hd-rep-floor').onchange = (e) => { setRepRange('ladder', ladderInfo.key, parseInt(e.target.value,10) || base.repFloor, P.repCeiling); render(); };
+      root.querySelector('#grr-hd-rep-ceiling').onchange = (e) => { setRepRange('ladder', ladderInfo.key, P.repFloor, parseInt(e.target.value,10) || base.repCeiling); render(); };
+      if (showRefWeight) {
+        root.querySelector('#grr-hd-ref-weight').onchange = (e) => {
+          refState.weight = parseFloat(e.target.value)||null;
+          REF_WEIGHT[x.id] = refState;
           saveRefWeight();
-          if (modeSwitched) render(); // mode switch changes which input renders — full re-render needed
-        });
+        };
       }
       root.querySelector('#grr-hd-save').onclick = () => {
         const reps = [...root.querySelectorAll('.grr-hd-reps')].map(inp => parseInt(inp.value,10)||0);
@@ -506,12 +583,10 @@
           msg = 'Saved — not every round hit the ceiling, no rung change.';
         }
         RUNG_STATE[ladderInfo.key] = st; saveRungState();
-        if (showRef) {
-          const updatedRef = trackCeilingStreak(REF_WEIGHT, x.id, refCurrentValue, allHit);
-          updatedRef.mode = refState.mode; updatedRef.weight = refState.weight; updatedRef.bandLevel = refState.bandLevel;
-          REF_WEIGHT[x.id] = updatedRef;
+        if (showRefWeight) {
+          const updatedRef = trackWeightCeilingStreak(REF_WEIGHT, x.id, refState.weight, allHit);
           saveRefWeight();
-          if (updatedRef.ceilingStreak >= 2) msg += ` Also: hit the ceiling twice at ${formatWeightOrBand(refState.mode, updatedRef.lastCeilingValue)} — consider ${refState.mode==='band'?'moving up a band level':'increasing the weight'}.`;
+          if (updatedRef.ceilingStreak >= 2) msg += ` Also: hit the ceiling twice at ${updatedRef.lastCeilingWeight} lb — consider increasing the weight.`;
         }
         root.querySelector('#grr-hd-msg').textContent = msg;
         render();
@@ -520,27 +595,27 @@
     }
 
     if (isIsolation) {
-      const P = CIRCUIT_PARAMS.isolation;
-      const iState = ISOLATION_STATE[x.id] || {mode: defaultWeightOrBandMode(x), weight: null, bandLevel: null, lastCeilingValue: null, ceilingStreak: 0};
-      const iCurrentValue = iState.mode === 'band' ? iState.bandLevel : iState.weight;
+      const base = CIRCUIT_PARAMS.isolation;
+      const rr = getRepRange('iso', x.id, base.repFloor, base.repCeiling);
+      const P = {...base, repFloor: rr.floor, repCeiling: rr.ceiling};
+      const iState = ISOLATION_STATE[x.id] || {weight: null, lastCeilingWeight: null, ceilingStreak: 0};
       const hist = (LOGS[x.id] || []).slice(-5).reverse();
       const histHtml = hist.length ? hist.map(l => `<div class="grr-history-row"><span>${friendlyDate(l.date)}</span><span>${l.sets.map(s=>s.success?'✅':'❌').join('')}</span></div>`).join('') : `<div style="color:var(--muted);font-size:12px;">No sessions logged yet.</div>`;
       let setsHtml = '';
       for (let i=1; i<=P.startSets; i++) {
         setsHtml += `<div class="grr-set-row"><div class="grr-set-row-top"><span>Round ${i}</span><span>target ${P.repCeiling}, floor ${P.repFloor}</span></div><div class="grr-set-inputs"><input type="number" class="grr-hd-reps" data-i="${i}" placeholder="reps" style="width:70px;"/><span class="grr-unit">reps</span></div></div>`;
       }
-      const plateauMsg = iState.mode === 'band'
-        ? `Hit the ceiling twice at ${BAND_LEVEL_LABELS[iState.lastCeilingValue]} band — band level will step up on next save (or you'll be prompted to switch to real weight once you're already at Extra-Heavy).`
-        : `Hit the ceiling twice at ${iState.lastCeilingValue} lb — weight will bump on next save (or the rep target rises if no plates are available).`;
+      const repRangeEditorHtml = `<div class="grr-tm-box"><div><label>Rep range</label><div style="font-size:11px;color:var(--muted);margin-top:2px;">Floor is informational; ceiling drives the weight-bump progression.</div></div><div style="display:flex;gap:6px;align-items:center;"><input type="number" id="grr-hd-rep-floor" value="${P.repFloor}" style="width:52px;"/><span style="color:var(--muted);font-size:11px;">–</span><input type="number" id="grr-hd-rep-ceiling" value="${P.repCeiling}" style="width:52px;"/></div></div>`;
       root.innerHTML = `
         <div class="grr-detail">
           ${backButtonHtml()}
           <div class="grr-detail-name">${x.n}</div>
-          <div class="grr-detail-meta">${x.p} · ${x.m} · Isolation — ${P.startSets} rounds, weight/band is the only progression axis</div>
+          <div class="grr-detail-meta">${x.p} · ${x.m} · Isolation — ${P.startSets} rounds, weight is the only progression axis</div>
           ${gifBlock(x)}
           ${x.notes ? `<div class="grr-notes">${x.notes}</div>` : ''}
-          ${buildWeightOrBandHtml('grr-hd-iso', iState, 'Working weight')}
-          ${iState.ceilingStreak >= 2 ? `<div style="background:var(--surface);border:1px solid var(--brand);border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:12.5px;color:var(--brand);font-weight:700;">${plateauMsg}</div>` : ''}
+          <div class="grr-tm-box"><div><label>Weight (lb)</label></div><input type="number" id="grr-hd-iso-weight" value="${iState.weight||''}" placeholder="e.g. 20"/></div>
+          ${repRangeEditorHtml}
+          ${iState.ceilingStreak >= 2 ? `<div style="background:var(--surface);border:1px solid var(--brand);border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:12.5px;color:var(--brand);font-weight:700;">Hit the ceiling twice at ${iState.lastCeilingWeight} lb — weight will bump on next save (or the rep target rises if no plates are available).</div>` : ''}
           <div id="grr-hd-sets">${setsHtml}</div>
           <button class="grr-save-btn" id="grr-hd-save">Save</button>
           <div class="grr-save-msg" id="grr-hd-msg"></div>
@@ -549,52 +624,34 @@
         </div>
       `;
       wireBackButtons();
-      wireWeightOrBandInputs('grr-hd-iso', iState, (updatedState, modeSwitched) => {
-        if (modeSwitched) { updatedState.ceilingStreak = 0; updatedState.lastCeilingValue = null; }
-        ISOLATION_STATE[x.id] = updatedState;
-        saveIsolationState();
-        if (modeSwitched) render();
-      });
+      root.querySelector('#grr-hd-iso-weight').onchange = (e) => { iState.weight = parseFloat(e.target.value)||null; ISOLATION_STATE[x.id]=iState; saveIsolationState(); };
+      root.querySelector('#grr-hd-rep-floor').onchange = (e) => { setRepRange('iso', x.id, parseInt(e.target.value,10) || base.repFloor, P.repCeiling); render(); };
+      root.querySelector('#grr-hd-rep-ceiling').onchange = (e) => { setRepRange('iso', x.id, P.repFloor, parseInt(e.target.value,10) || base.repCeiling); render(); };
       root.querySelector('#grr-hd-save').onclick = () => {
         const reps = [...root.querySelectorAll('.grr-hd-reps')].map(inp => parseInt(inp.value,10)||0);
         if (reps.some(r=>r<=0)) { root.querySelector('#grr-hd-msg').textContent = 'Enter reps for every round first.'; return; }
         const allHit = reps.every(r => r >= P.repCeiling);
-        const updated = trackCeilingStreak(ISOLATION_STATE, x.id, iCurrentValue, allHit);
-        updated.mode = iState.mode; updated.weight = iState.weight; updated.bandLevel = iState.bandLevel;
+        const updated = trackWeightCeilingStreak(ISOLATION_STATE, x.id, iState.weight, allHit);
         let msg;
-        let bumped = false;
         if (allHit) {
           if (updated.ceilingStreak >= 2) {
-            if (updated.mode === 'band') {
-              const idx = BAND_LEVELS.indexOf(updated.bandLevel);
-              if (idx >= 0 && idx < BAND_LEVELS.length - 1) {
-                updated.bandLevel = BAND_LEVELS[idx + 1];
-                updated.ceilingStreak = 0; updated.lastCeilingValue = null;
-                bumped = true;
-                msg = `Hit ${P.repCeiling} on every round, twice in a row at the same band — stepped up to ${BAND_LEVEL_LABELS[updated.bandLevel]}.`;
-              } else {
-                msg = `Hit ${P.repCeiling} on every round, twice in a row at Extra-Heavy band — that's the top of the band scale, consider switching to actual weight.`;
-              }
+            const jump = smallestPlateJump();
+            if (jump > 0) {
+              updated.weight = (updated.weight||0) + jump;
+              updated.ceilingStreak = 0; updated.lastCeilingWeight = null;
+              msg = `Hit ${P.repCeiling} on every round, twice in a row at the same weight — bumped to ${updated.weight} lb.`;
             } else {
-              const jump = smallestPlateJump();
-              if (jump > 0) {
-                updated.weight = (updated.weight||0) + jump;
-                updated.ceilingStreak = 0; updated.lastCeilingValue = null;
-                bumped = true;
-                msg = `Hit ${P.repCeiling} on every round, twice in a row at the same weight — bumped to ${updated.weight} lb.`;
-              } else {
-                msg = `Hit ${P.repCeiling} on every round, twice in a row at ${updated.lastCeilingValue} lb — no plates available to add, so bump it manually next chance you get.`;
-              }
+              msg = `Hit ${P.repCeiling} on every round, twice in a row at ${updated.lastCeilingWeight} lb — no plates available to add, so bump it manually next chance you get.`;
             }
           } else {
-            msg = `All rounds hit ${P.repCeiling} — one more session at this same ${updated.mode === 'band' ? 'band' : 'weight'} and it'll bump.`;
+            msg = `All rounds hit ${P.repCeiling} — one more session at this same weight and it'll bump.`;
           }
         } else {
-          msg = 'Saved — not every round hit the ceiling, no change.';
+          msg = 'Saved — not every round hit the ceiling, no weight change.';
         }
         ISOLATION_STATE[x.id] = updated; saveIsolationState();
         const entry = {date: todayLocal(), exercise: x.n, pattern: x.p, exId: x.id, logId: newLogId(),
-          sets: reps.map((r,i)=>({target:'Round '+(i+1), weight: iState.mode==='band'?null:iState.weight, reps:r, success: r>=P.repCeiling})), allSuccess: allHit, tmAction: bumped?'increase':'none'};
+          sets: reps.map((r,i)=>({target:'Round '+(i+1), weight: iState.weight, reps:r, success: r>=P.repCeiling})), allSuccess: allHit, tmAction: msg.includes('bumped')?'increase':'none'};
         if (!LOGS[x.id]) LOGS[x.id] = [];
         LOGS[x.id].push(entry); saveLogs();
         root.querySelector('#grr-hd-msg').textContent = msg;
@@ -604,6 +661,6 @@
     }
 
     // Fallback — shouldn't normally hit this, but keeps the app from breaking on an unrecognized circuit exercise
-    root.innerHTML = `<div class="grr-detail">${backButtonHtml()}<div class="grr-detail-name">${x.n}</div><div class="grr-empty">This exercise isn't linked into a Home Workout day yet.</div></div>`;
+    root.innerHTML = `<div class="grr-detail">${backButtonHtml()}<div class="grr-detail-name">${x.n}</div><div class="grr-empty">This exercise isn't linked into a Home Workout page yet.</div></div>`;
     wireBackButtons();
   }

@@ -39,8 +39,42 @@ const LADDERS = {
     rungs: ["SLRDL_R2","SL_RDL_DB","SLRDL_R4"]
   },
   core: {
-    label: "Core Progression",
+    label: "Core Progression (Flexion / Anti-Extension)",
     rungs: ["REVERSE_CRUNCH","STANDARD_CRUNCH","CORE_R3","AB_WHEEL_KNEE","AB_WHEEL_TOES"]
+  },
+  core2: {
+    label: "Straight-Leg Raise Progression",
+    rungs: ["SLRAISE_R1","SLRAISE_R2","SLRAISE_R3","SLRAISE_R4","SLRAISE_R5","SLRAISE_R6"]
+  },
+  core3: {
+    label: "Lateral Flexion Progression",
+    rungs: ["SIDEBEND_R1","SIDEBEND_R2","SIDEBEND_R3","SIDEBEND_R4"]
+  }
+};
+
+// ---------- ISOLATION FAMILIES ----------
+// Interchangeable pairs of isolation exercises a circuit day's "Isolation" station can run.
+// Each station in CIRCUIT_DAYS points at a family key by default; the Home page lets you swap
+// which family is active per day at will (app-home.js STATION_PICK), same mechanism as swapping
+// which ladder a "Core" station runs. Each exercise inside a family keeps its own independent
+// ISOLATION_STATE (weight/streak) regardless of which family is currently selected, so switching
+// back and forth never loses progress.
+const ISOLATION_FAMILIES = {
+  calfTib: {
+    label: "Calves / Tibialis",
+    exercises: ["CALF_RAISE_DB","TIB_RAISE"]
+  },
+  armCurls: {
+    label: "Forearm / Biceps",
+    exercises: ["HAMMER_CURL","DB_CURL"]
+  },
+  tricepsLat: {
+    label: "Triceps / Lateral Delts",
+    exercises: ["DB_TRICEPS_OH_EXT","BAND_LATERAL_RAISE"]
+  },
+  rearDelt: {
+    label: "Rear Delts / External Rotators",
+    exercises: ["BAND_FP","DB_REAR_DELT_FLY"]
   }
 };
 
@@ -55,14 +89,21 @@ const LADDERS = {
 // hit the ceiling twice in a row; Isolation has no rung to climb, so hitting the ceiling twice in a
 // row instead adds the smallest available plate jump (weight is the only progression axis).
 // Core uses its own wider rep range (14-20) — everything else in this bucket uses 8-12.
+//
+// These are DEFAULTS only. Every card (Major Lift, ladder rung, isolation exercise) lets you edit
+// its own floor/ceiling directly — app-home.js's REP_RANGE_OVERRIDE stores the per-exercise/per-day
+// overrides and falls back to these constants when nothing's been customized.
 const CIRCUIT_PARAMS = {
   majorLift:  { repFloor: 5,  repCeiling: 8,  startSets: 3, maxSets: 4, hasAMRAP: true  }, // set 3/4 is AMRAP
   ladder:     { repFloor: 8,  repCeiling: 12, startSets: 2, maxSets: 2, hasAMRAP: false },
   ladderCore: { repFloor: 14, repCeiling: 20, startSets: 2, maxSets: 2, hasAMRAP: false }, // Core needs its own rep-range parameters
   isolation:  { repFloor: 8,  repCeiling: 12, startSets: 2, maxSets: 2, hasAMRAP: false }  // no set-count staging — weight is the only progression axis (item 9)
 };
-// Ladder keys that use the wider Core rep range instead of the standard 8-12.
-const CORE_LADDER_KEYS = ["core"];
+// Ladder keys that use the wider Core rep range by default instead of the standard 8-12. Also
+// doubles as the registry of ladders that are Core-family alternatives to each other — this is the
+// list the Home page's Core station swap-picker offers. Add a key here for any future core-style
+// ladder that should both default to the wide rep range AND be selectable as a Core station.
+const CORE_LADDER_KEYS = ["core","core2","core3"];
 function ladderParamsFor(ladderKey) {
   return CORE_LADDER_KEYS.includes(ladderKey) ? CIRCUIT_PARAMS.ladderCore : CIRCUIT_PARAMS.ladder;
 }
@@ -85,6 +126,10 @@ const MAJOR_LIFT_DAYS = {
     dailySuperset: ["WORLDS_GREATEST_STRETCH","BAND_FP","LU_RAISE","TERES_MAJOR_BAND_HOLD"]
   }
 };
+// The dailySuperset arrays above are just the DEFAULT 4 slots per day — the Home page's
+// "Mobility / Rehab" block lets you swap any slot for a different scheme:"mobility" exercise at
+// will; app-home.js's DAILY_SUPERSET_OVERRIDE stores the per-day customization and falls back to
+// these defaults when nothing's been swapped.
 
 const CIRCUIT_DAYS = {
   1: {
@@ -95,7 +140,7 @@ const CIRCUIT_DAYS = {
       { pattern: "Lunge",           ladder: "splitSquat" },
       { pattern: "Hinge",           ladder: "hipThrust" },
       { pattern: "Core",            ladder: "core" },
-      { pattern: "Isolation",       exercises: ["CALF_RAISE_DB","TIB_RAISE"] }
+      { pattern: "Isolation",       family: "calfTib" }
     ]
   },
   2: {
@@ -106,18 +151,15 @@ const CIRCUIT_DAYS = {
       { pattern: "Lunge",           ladder: "lateralLunge" },
       { pattern: "Hinge",           ladder: "singleLegRDL" },
       { pattern: "Core",            ladder: "core" },
-      { pattern: "Isolation",       exercises: ["DB_TRICEPS_OH_EXT", "BAND_LATERAL_RAISE"] }
+      { pattern: "Isolation",       family: "tricepsLat" }
     ]
   }
 };
-
-// ---------- BAND LEVELS ----------
-// Used wherever a Home Workout exercise's "working weight" field can be toggled to a band instead
-// (bands don't have a numeric weight, just a resistance tier). Order matters — index 0 is lightest,
-// last index is heaviest; plateau-advancement logic (isolation progression) steps forward one index
-// at a time through this array.
-const BAND_LEVELS = ["light", "medium", "heavy", "xheavy"];
-const BAND_LEVEL_LABELS = { light: "Light", medium: "Medium", heavy: "Heavy", xheavy: "Extra-Heavy" };
+// Core and Isolation stations above are just the DEFAULT pick per day — the Home page lets you
+// swap either one to any other ladder in CORE_LADDER_KEYS / family in ISOLATION_FAMILIES at will,
+// independently per circuit day. app-home.js's STATION_PICK stores that override, keyed by
+// "<circuitDay>:<pattern>", and falls back to the station's own `ladder`/`family` field here when
+// nothing's been picked.
 
 // ---------- EQUIPMENT ----------
 // Home Workout's equipment picker is separate from the main gym equipment row, since the
