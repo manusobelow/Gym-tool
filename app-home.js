@@ -24,17 +24,18 @@
   }
   // Isolation exercises use weight as their only progression axis (item 9) — ceilingStreak here
   // DOES drive advancement (adds a plate jump once it hits 2).
-  let ISOLATION_STATE = {}; // { exId: {weight, lastCeilingWeight, ceilingStreak} }
+  let ISOLATION_STATE = {}; // { exId: {weight, lastCeilingWeight, ceilingStreak, type} }
   function saveIsolationState() { try { localStorage.setItem('gym-isolation-state', JSON.stringify(ISOLATION_STATE)); } catch(e){} }
   // Ladder rungs with a loaded/weighted variation get a pure REFERENCE weight note (item 8) — this
   // never affects round success/failure or rung-advancement logic. It only exists to make a plateau
   // (ceiling hit twice at the same weight) impossible to miss, so you know to bump the weight.
-  let REF_WEIGHT = {}; // { exId: {weight, lastCeilingWeight, ceilingStreak} }
+  let REF_WEIGHT = {}; // { exId: {weight, lastCeilingWeight, ceilingStreak, type} }
   function saveRefWeight() { try { localStorage.setItem('gym-ref-weight', JSON.stringify(REF_WEIGHT)); } catch(e){} }
   // Shared by both the reference-weight prompt (item 8) and isolation's weight-only progression
   // (item 9): tracks whether the ceiling has now been hit twice in a row at the SAME weight.
   // Resets the streak whenever the weight changes or the ceiling isn't hit — a plateau only counts
-  // if it's genuinely the same weight both times.
+  // if it's genuinely the same weight (or same band level) both times. Works for both numeric plate
+  // weights and string band-level keys — it only ever compares with ===, never does arithmetic.
   function trackWeightCeilingStreak(store, exId, weight, hitCeiling) {
     const s = store[exId] || {weight: null, lastCeilingWeight: null, ceilingStreak: 0};
     s.weight = weight;
@@ -52,6 +53,69 @@
     const st = RUNG_STATE[ladderKey] || {rungIndex:0, streak:0};
     return ladder.rungs[Math.min(st.rungIndex, ladder.rungs.length-1)];
   }
+
+  // ---------- WEIGHT TYPE: PLATES (lb) or BAND (Light/Medium/Heavy/X-Heavy) ----------
+  // Any card that tracks a weight (Isolation exercises, ladder Reference Weight) can be switched
+  // from a numeric lb value to a discrete band-strength level instead — useful since band exercises
+  // (BAND_FP, BAND_LATERAL_RAISE, TERES_MAJOR_BAND_HOLD, etc.) don't have a meaningful lb number.
+  // Defaults to "band" for exercises whose equipment is a band, "plate" (numeric) otherwise, but is
+  // manually switchable either way per exercise via a small chip toggle. The chosen type is stored
+  // alongside weight/lastCeilingWeight/ceilingStreak on the same ISOLATION_STATE / REF_WEIGHT entry
+  // as a `type` field — when type is "band", `weight` and `lastCeilingWeight` hold a band level key
+  // (e.g. "medium") instead of a number. trackWeightCeilingStreak() above needs no changes for this —
+  // it only ever compares weight with ===, so it works identically for numbers and band-level strings.
+  const BAND_LEVELS = [
+    {key:'light',  label:'Light'},
+    {key:'medium', label:'Medium'},
+    {key:'heavy',  label:'Heavy'},
+    {key:'xheavy', label:'X-Heavy'}
+  ];
+  function bandLabel(key) { const b = BAND_LEVELS.find(b => b.key === key); return b ? b.label : key; }
+  function nextBandLevel(key) {
+    const idx = BAND_LEVELS.findIndex(b => b.key === key);
+    return (idx >= 0 && idx < BAND_LEVELS.length - 1) ? BAND_LEVELS[idx + 1].key : null;
+  }
+  function defaultWeightType(x) { return x.eq.includes('band') ? 'band' : 'plate'; }
+  function formatWeightValue(type, value) {
+    if (value == null) return '—';
+    return type === 'band' ? (bandLabel(value) + ' band') : (value + ' lb');
+  }
+  function weightTypeToggleHtml(idPrefix, type) {
+    return `
+      <div class="grr-equip-row" id="${idPrefix}-type-row" style="padding:0 0 8px;">
+        <div class="grr-chip${type==='plate'?' active':''}" data-type="plate">Plates (lb)</div>
+        <div class="grr-chip${type==='band'?' active':''}" data-type="band">Band</div>
+      </div>`;
+  }
+  function bandPickerHtml(idPrefix, level) {
+    return `
+      <div class="grr-equip-row" id="${idPrefix}-band-row" style="padding:0 0 10px;">
+        ${BAND_LEVELS.map(b => `<div class="grr-chip${level===b.key?' active':''}" data-band="${b.key}">${b.label}</div>`).join('')}
+      </div>`;
+  }
+
+  // ---------- HOME PAGE SECTION COLLAPSE ----------
+  // Plain in-memory UI state (not persisted — same convention as state.homeMsg) tracking which of
+  // the Home page's collapsible sections are expanded. Kept as its own top-level var, driven from
+  // the render itself (the .open class is computed from this on every render()) rather than relying
+  // on a raw DOM classList.toggle() — the latter would silently re-collapse Major Lift/Mobility/
+  // Circuit on every single tap inside them, since render() rebuilds root.innerHTML from scratch on
+  // nearly every interaction in this app (see PROJECT-SCHEMA.md §3 Gotcha #2).
+  let HOME_COLLAPSE = { plate: false, major: true, mobility: true, circuit: true };
+  // Confirmation message shown under the Mobility / Rehab "Save" button — same non-persisted
+  // convention as state.homeMsg, just scoped to this section so the two messages don't clobber
+  // each other when both live on the page at once.
+  let HOME_MOBILITY_MSG = '';
+  // Result message for renderHomeDetail's ladder/isolation Save button. Pre-existing bug, fixed
+  // alongside the collapse work: the ladder and isolation save handlers used to write the message
+  // straight onto the #grr-hd-msg DOM node and then call render() in the same breath — but render()
+  // rebuilds the whole detail page from scratch (PROJECT-SCHEMA.md §3 Gotcha #2), so the message was
+  // wiped the instant it was set and never actually visible. Routing it through this field (read by
+  // the template, same pattern as state.homeMsg/HOME_MOBILITY_MSG) fixes that. HOME_DETAIL_LAST_ID
+  // tracks which exercise it belongs to, so navigating to a different exercise's detail page clears
+  // any stale leftover message instead of it bleeding into the new exercise's card.
+  let HOME_DETAIL_MSG = '';
+  let HOME_DETAIL_LAST_ID = null;
 
   // ---------- STATION SWAP (Core ladder / Isolation family, per circuit day) ----------
   // { "<circuitDay>:<pattern>": ladderKeyOrFamilyKey } — manual, freely changeable at any time.
@@ -231,33 +295,62 @@
         <div class="grr-section-label" style="padding-left:0;">Circuit day</div>
         <div class="grr-equip-row" id="grr-circuit-day-row"></div>
 
-        <div class="grr-collapse" id="grr-plate-collapse" style="margin:10px 0 14px;">
-          <div class="grr-collapse-head">Plate Inventory & Pool ▾</div>
+        <div class="grr-collapse${HOME_COLLAPSE.plate?' open':''}" id="grr-plate-collapse" style="margin:10px 0 14px;">
+          <div class="grr-collapse-head" id="grr-plate-header">Plate Inventory & Pool ▾</div>
           <div class="grr-collapse-body" id="grr-plate-body" style="padding:0 0 12px;"></div>
         </div>
 
-        <div class="grr-section-label" style="padding-left:0;" id="grr-major-lift-header">${majorDay.label}: ${EX_BY_ID[majorDay.lift] ? EX_BY_ID[majorDay.lift].n : majorDay.lift} <span style="color:var(--steel);font-size:11px;cursor:pointer;">(view exercise →)</span></div>
-        <div id="grr-major-lift-block"></div>
+        <div class="grr-collapse${HOME_COLLAPSE.major?' open':''}" id="grr-major-collapse" style="margin:10px 0 14px;">
+          <div class="grr-collapse-head" id="grr-major-lift-header">
+            <span id="grr-major-toggle-label">${majorDay.label}: ${EX_BY_ID[majorDay.lift] ? EX_BY_ID[majorDay.lift].n : majorDay.lift} ▾</span>
+            <span id="grr-major-view-link" style="color:var(--steel);font-size:11px;cursor:pointer;">(view exercise →)</span>
+          </div>
+          <div class="grr-collapse-body" id="grr-major-lift-block" style="padding:0 0 12px;"></div>
+        </div>
 
-        <div class="grr-section-label" style="padding-left:0;">Mobility / Rehab</div>
-        <div style="font-size:11px;color:var(--muted);margin:-4px 0 8px;line-height:1.5;">Done during rest between Major Lift sets. Tap to cycle rounds — 1 → 2 → 3 → back to none. Swap any slot for a different mobility exercise with the dropdown.</div>
-        <div id="grr-daily-superset-block" style="margin-bottom:14px;"></div>
+        <div class="grr-collapse${HOME_COLLAPSE.mobility?' open':''}" id="grr-mobility-collapse" style="margin:10px 0 14px;">
+          <div class="grr-collapse-head" id="grr-mobility-header">Mobility / Rehab ▾</div>
+          <div class="grr-collapse-body" id="grr-mobility-wrap" style="padding:0 0 12px;">
+            <div style="font-size:11px;color:var(--muted);margin:0 0 8px;line-height:1.5;">Done during rest between Major Lift sets. Tap to cycle rounds — 1 → 2 → 3 → back to none. Swap any slot for a different mobility exercise with the dropdown.</div>
+            <div id="grr-daily-superset-block" style="margin-bottom:10px;"></div>
+            <button class="grr-save-btn" id="grr-save-mobility">Save Mobility / Rehab</button>
+            <div class="grr-save-msg" id="grr-mobility-msg">${HOME_MOBILITY_MSG||''}</div>
+          </div>
+        </div>
 
-        <div class="grr-section-label" style="padding-left:0;">${circuitDay.label} — ${P.startSets} rounds each, tap to log each round as you go</div>
-        <div style="font-size:11px;color:var(--muted);margin:-4px 0 10px;line-height:1.5;">Tap a round once you finish it: <b style="color:var(--steel);">Done</b> = completed the round but didn't hit the rep ceiling — still logs, doesn't count toward advancement. <b style="color:var(--brand);">Max!</b> = hit the rep ceiling — logs AND counts toward the "twice in a row" advancement streak. Core and Isolation stations can be swapped to a different progression/family at any time with the chips above each one.</div>
-        <div id="grr-circuit-block"></div>
-        <button class="grr-save-btn" id="grr-save-circuit">Save Circuit Session</button>
-        <div class="grr-save-msg" id="grr-home-msg">${state.homeMsg||''}</div>
+        <div class="grr-collapse${HOME_COLLAPSE.circuit?' open':''}" id="grr-circuit-collapse" style="margin:10px 0 14px;">
+          <div class="grr-collapse-head" id="grr-circuit-header">${circuitDay.label} — ${P.startSets} rounds each, tap to log each round as you go ▾</div>
+          <div class="grr-collapse-body" id="grr-circuit-wrap" style="padding:0 0 12px;">
+            <div style="font-size:11px;color:var(--muted);margin:0 0 10px;line-height:1.5;">Tap a round once you finish it: <b style="color:var(--steel);">Done</b> = completed the round but didn't hit the rep ceiling — still logs, doesn't count toward advancement. <b style="color:var(--brand);">Max!</b> = hit the rep ceiling — logs AND counts toward the "twice in a row" advancement streak. Core and Isolation stations can be swapped to a different progression/family at any time with the chips above each one.</div>
+            <div id="grr-circuit-block"></div>
+            <button class="grr-save-btn" id="grr-save-circuit">Save Circuit Session</button>
+            <div class="grr-save-msg" id="grr-home-msg">${state.homeMsg||''}</div>
+          </div>
+        </div>
       </div>
     `;
-    root.querySelector('#grr-back').onclick = () => { state.homeMsg = ''; state.view = 'list'; render(); };
+    root.querySelector('#grr-back').onclick = () => { state.homeMsg = ''; HOME_MOBILITY_MSG = ''; state.view = 'list'; render(); };
+
+    // ---- Section collapse toggles — click the header to expand/collapse; state persists across
+    // render() calls via HOME_COLLAPSE so ticking a round or editing a rep range doesn't snap the
+    // section shut again. ----
+    root.querySelector('#grr-plate-header').onclick = () => { HOME_COLLAPSE.plate = !HOME_COLLAPSE.plate; render(); };
+    root.querySelector('#grr-major-lift-header').onclick = () => { HOME_COLLAPSE.major = !HOME_COLLAPSE.major; render(); };
+    root.querySelector('#grr-mobility-header').onclick = () => { HOME_COLLAPSE.mobility = !HOME_COLLAPSE.mobility; render(); };
+    root.querySelector('#grr-circuit-header').onclick = () => { HOME_COLLAPSE.circuit = !HOME_COLLAPSE.circuit; render(); };
+    // "(view exercise →)" sits inside the Major Lift header — stop the click from also toggling
+    // the collapse it's nested in.
+    root.querySelector('#grr-major-view-link').onclick = (e) => {
+      e.stopPropagation();
+      state.cameFrom = {view:'home'}; state.homeMode = true; state.view = 'detail'; state.activeId = majorDay.lift; state.saveMsg=''; render();
+    };
 
     const majorRow = root.querySelector('#grr-major-day-row');
     ['A','B','C'].forEach(d => {
       const chip = document.createElement('div');
       chip.className = 'grr-chip' + (HOME.majorDay === d ? ' active' : '');
       chip.textContent = 'Day ' + d;
-      chip.onclick = () => { HOME.majorDay = d; state.homeMsg = ''; saveHome(); render(); };
+      chip.onclick = () => { HOME.majorDay = d; state.homeMsg = ''; HOME_MOBILITY_MSG = ''; saveHome(); render(); };
       majorRow.appendChild(chip);
     });
     const circuitRow = root.querySelector('#grr-circuit-day-row');
@@ -286,17 +379,15 @@
     plateBody.querySelectorAll('.grr-plate-input').forEach(inp => {
       inp.onchange = () => { PLATE_INVENTORY[inp.dataset.size] = parseInt(inp.value,10) || 0; savePlateInventory(); render(); };
     });
-    root.querySelector('#grr-plate-collapse .grr-collapse-head').onclick = () => root.querySelector('#grr-plate-collapse').classList.toggle('open');
 
-    // Major Lift — shared logger + clickable header to view the full exercise page
+    // Major Lift — shared logger, filling the collapse body set up above
     renderMajorLiftLogger(root.querySelector('#grr-major-lift-block'), HOME.majorDay, 'grr-major-msg-inline');
-    root.querySelector('#grr-major-lift-header').onclick = () => {
-      state.cameFrom = {view:'home'}; state.homeMode = true; state.view = 'detail'; state.activeId = majorDay.lift; state.saveMsg=''; render();
-    };
 
     // Mobility / Rehab — name area opens the exercise's own page (gif/notes/history); a round-cycle
     // button logs how many rounds you got through today (1/2/3, 4th tap resets to none); a dropdown
-    // per slot swaps in a different scheme:"mobility" exercise for that slot.
+    // per slot swaps in a different scheme:"mobility" exercise for that slot. The Save button below
+    // doesn't do any additional persistence work (every tap/swap already saves itself immediately)
+    // — it exists to give the same explicit confirmation the Major Lift and Circuit sections give.
     const dsBlock = root.querySelector('#grr-daily-superset-block');
     const supersetIds = getDailySuperset(HOME.majorDay);
     const mobilityPool = mobilityPoolExercises();
@@ -331,6 +422,13 @@
       row.appendChild(swapSelect);
       dsBlock.appendChild(row);
     });
+    root.querySelector('#grr-save-mobility').onclick = () => {
+      const marked = supersetIds.filter(exId => mobilityRoundsToday(exId) > 0).length;
+      HOME_MOBILITY_MSG = marked > 0
+        ? `Mobility / Rehab saved — ${marked} of ${supersetIds.length} slot${supersetIds.length===1?'':'s'} marked for today.`
+        : 'Nothing marked yet — tap a slot at least once before saving.';
+      render();
+    };
 
     // Circuit block — one row per station (Core/Isolation get a swap-picker chip row above them),
     // with a prev-rung button and one tick per round (P.startSets rounds).
@@ -473,6 +571,7 @@
     };
   }
   function renderHomeDetail(x) {
+    if (HOME_DETAIL_LAST_ID !== x.id) { HOME_DETAIL_MSG = ''; HOME_DETAIL_LAST_ID = x.id; }
     const majorKey = findMajorLiftDay(x.id);
     const ladderInfo = findLadderForExercise(x.id);
     const isIsolation = isIsolationStationExercise(x.id);
@@ -513,11 +612,17 @@
       const repRangeEditorHtml = `<div class="grr-tm-box"><div><label>Rep range</label><div style="font-size:11px;color:var(--muted);margin-top:2px;">Shared by every rung on ${ladder.label}. Floor is informational; ceiling drives rung advancement.</div></div><div style="display:flex;gap:6px;align-items:center;"><input type="number" id="grr-hd-rep-floor" value="${P.repFloor}" style="width:52px;"/><span style="color:var(--muted);font-size:11px;">–</span><input type="number" id="grr-hd-rep-ceiling" value="${P.repCeiling}" style="width:52px;"/></div></div>`;
       // Reference weight (item 8) — only shown for rungs with a loaded/weighted variation. Purely
       // informational: never affects round success/failure or rung-advancement, just flags a plateau.
+      // Can be tracked as either a numeric plate weight or a band strength level — see the WEIGHT
+      // TYPE section above.
       const showRefWeight = !isBodyweightOnly(x);
-      const refState = REF_WEIGHT[x.id] || {weight: null, lastCeilingWeight: null, ceilingStreak: 0};
+      const refState = REF_WEIGHT[x.id] || {weight: null, lastCeilingWeight: null, ceilingStreak: 0, type: defaultWeightType(x)};
+      if (!refState.type) refState.type = defaultWeightType(x); // back-compat for state saved before this field existed
       const refWeightHtml = showRefWeight ? `
-        <div class="grr-tm-box"><div><label>Weight (lb, reference only)</label><div style="font-size:11px;color:var(--muted);margin-top:2px;">Doesn't affect success or rung advancement — just here so a plateau is easy to spot.</div></div><input type="number" id="grr-hd-ref-weight" value="${refState.weight||''}" placeholder="e.g. 20"/></div>
-        ${refState.ceilingStreak >= 2 ? `<div style="background:var(--surface);border:1px solid var(--brand);border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:12.5px;color:var(--brand);font-weight:700;">Hit the ceiling twice at ${refState.lastCeilingWeight} lb — consider increasing the weight.</div>` : ''}
+        ${weightTypeToggleHtml('grr-hd-ref', refState.type)}
+        ${refState.type === 'band'
+          ? `<div style="font-size:11px;color:var(--muted);margin:-2px 0 6px;">Reference band level only — doesn't affect success or rung advancement.</div>${bandPickerHtml('grr-hd-ref', refState.weight || 'light')}`
+          : `<div class="grr-tm-box"><div><label>Weight (lb, reference only)</label><div style="font-size:11px;color:var(--muted);margin-top:2px;">Doesn't affect success or rung advancement — just here so a plateau is easy to spot.</div></div><input type="number" id="grr-hd-ref-weight" value="${refState.weight||''}" placeholder="e.g. 20"/></div>`}
+        ${refState.ceilingStreak >= 2 ? `<div style="background:var(--surface);border:1px solid var(--brand);border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:12.5px;color:var(--brand);font-weight:700;">Hit the ceiling twice at ${formatWeightValue(refState.type, refState.lastCeilingWeight)} — consider increasing it.</div>` : ''}
       ` : '';
       root.innerHTML = `
         <div class="grr-detail">
@@ -532,7 +637,7 @@
           ${refWeightHtml}
           <div id="grr-hd-sets">${setsHtml}</div>
           <button class="grr-save-btn" id="grr-hd-save">Save Round(s)</button>
-          <div class="grr-save-msg" id="grr-hd-msg"></div>
+          <div class="grr-save-msg" id="grr-hd-msg">${HOME_DETAIL_MSG||''}</div>
           <div class="grr-section-label" style="padding-left:0;">Recent history</div>
           <div class="grr-history">${histHtml}</div>
         </div>
@@ -550,11 +655,29 @@
       root.querySelector('#grr-hd-rep-floor').onchange = (e) => { setRepRange('ladder', ladderInfo.key, parseInt(e.target.value,10) || base.repFloor, P.repCeiling); render(); };
       root.querySelector('#grr-hd-rep-ceiling').onchange = (e) => { setRepRange('ladder', ladderInfo.key, P.repFloor, parseInt(e.target.value,10) || base.repCeiling); render(); };
       if (showRefWeight) {
-        root.querySelector('#grr-hd-ref-weight').onchange = (e) => {
-          refState.weight = parseFloat(e.target.value)||null;
-          REF_WEIGHT[x.id] = refState;
-          saveRefWeight();
-        };
+        root.querySelectorAll('#grr-hd-ref-type-row .grr-chip').forEach(chip => {
+          chip.onclick = () => {
+            const t = chip.dataset.type;
+            if (t !== refState.type) {
+              refState.type = t;
+              refState.weight = t === 'band' ? 'light' : null;
+              refState.lastCeilingWeight = null; refState.ceilingStreak = 0;
+              REF_WEIGHT[x.id] = refState; saveRefWeight();
+              render();
+            }
+          };
+        });
+        if (refState.type === 'band') {
+          root.querySelectorAll('#grr-hd-ref-band-row .grr-chip').forEach(chip => {
+            chip.onclick = () => { refState.weight = chip.dataset.band; REF_WEIGHT[x.id] = refState; saveRefWeight(); render(); };
+          });
+        } else {
+          root.querySelector('#grr-hd-ref-weight').onchange = (e) => {
+            refState.weight = parseFloat(e.target.value)||null;
+            REF_WEIGHT[x.id] = refState;
+            saveRefWeight();
+          };
+        }
       }
       root.querySelector('#grr-hd-save').onclick = () => {
         const reps = [...root.querySelectorAll('.grr-hd-reps')].map(inp => parseInt(inp.value,10)||0);
@@ -585,10 +708,11 @@
         RUNG_STATE[ladderInfo.key] = st; saveRungState();
         if (showRefWeight) {
           const updatedRef = trackWeightCeilingStreak(REF_WEIGHT, x.id, refState.weight, allHit);
+          updatedRef.type = refState.type;
           saveRefWeight();
-          if (updatedRef.ceilingStreak >= 2) msg += ` Also: hit the ceiling twice at ${updatedRef.lastCeilingWeight} lb — consider increasing the weight.`;
+          if (updatedRef.ceilingStreak >= 2) msg += ` Also: hit the ceiling twice at ${formatWeightValue(updatedRef.type, updatedRef.lastCeilingWeight)} — consider increasing it.`;
         }
-        root.querySelector('#grr-hd-msg').textContent = msg;
+        HOME_DETAIL_MSG = msg;
         render();
       };
       return;
@@ -598,7 +722,11 @@
       const base = CIRCUIT_PARAMS.isolation;
       const rr = getRepRange('iso', x.id, base.repFloor, base.repCeiling);
       const P = {...base, repFloor: rr.floor, repCeiling: rr.ceiling};
-      const iState = ISOLATION_STATE[x.id] || {weight: null, lastCeilingWeight: null, ceilingStreak: 0};
+      // Weight tracked as either a numeric plate weight or a band strength level — see the WEIGHT
+      // TYPE section above. Defaults to band for band-equipped exercises (BAND_FP, BAND_LATERAL_RAISE)
+      // but is manually switchable either way.
+      const iState = ISOLATION_STATE[x.id] || {weight: null, lastCeilingWeight: null, ceilingStreak: 0, type: defaultWeightType(x)};
+      if (!iState.type) iState.type = defaultWeightType(x); // back-compat for state saved before this field existed
       const hist = (LOGS[x.id] || []).slice(-5).reverse();
       const histHtml = hist.length ? hist.map(l => `<div class="grr-history-row"><span>${friendlyDate(l.date)}</span><span>${l.sets.map(s=>s.success?'✅':'❌').join('')}</span></div>`).join('') : `<div style="color:var(--muted);font-size:12px;">No sessions logged yet.</div>`;
       let setsHtml = '';
@@ -606,6 +734,9 @@
         setsHtml += `<div class="grr-set-row"><div class="grr-set-row-top"><span>Round ${i}</span><span>target ${P.repCeiling}, floor ${P.repFloor}</span></div><div class="grr-set-inputs"><input type="number" class="grr-hd-reps" data-i="${i}" placeholder="reps" style="width:70px;"/><span class="grr-unit">reps</span></div></div>`;
       }
       const repRangeEditorHtml = `<div class="grr-tm-box"><div><label>Rep range</label><div style="font-size:11px;color:var(--muted);margin-top:2px;">Floor is informational; ceiling drives the weight-bump progression.</div></div><div style="display:flex;gap:6px;align-items:center;"><input type="number" id="grr-hd-rep-floor" value="${P.repFloor}" style="width:52px;"/><span style="color:var(--muted);font-size:11px;">–</span><input type="number" id="grr-hd-rep-ceiling" value="${P.repCeiling}" style="width:52px;"/></div></div>`;
+      const weightBlockHtml = iState.type === 'band'
+        ? `${weightTypeToggleHtml('grr-hd-iso', iState.type)}${bandPickerHtml('grr-hd-iso', iState.weight || 'light')}`
+        : `${weightTypeToggleHtml('grr-hd-iso', iState.type)}<div class="grr-tm-box"><div><label>Weight (lb)</label></div><input type="number" id="grr-hd-iso-weight" value="${iState.weight||''}" placeholder="e.g. 20"/></div>`;
       root.innerHTML = `
         <div class="grr-detail">
           ${backButtonHtml()}
@@ -613,18 +744,36 @@
           <div class="grr-detail-meta">${x.p} · ${x.m} · Isolation — ${P.startSets} rounds, weight is the only progression axis</div>
           ${gifBlock(x)}
           ${x.notes ? `<div class="grr-notes">${x.notes}</div>` : ''}
-          <div class="grr-tm-box"><div><label>Weight (lb)</label></div><input type="number" id="grr-hd-iso-weight" value="${iState.weight||''}" placeholder="e.g. 20"/></div>
+          ${weightBlockHtml}
           ${repRangeEditorHtml}
-          ${iState.ceilingStreak >= 2 ? `<div style="background:var(--surface);border:1px solid var(--brand);border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:12.5px;color:var(--brand);font-weight:700;">Hit the ceiling twice at ${iState.lastCeilingWeight} lb — weight will bump on next save (or the rep target rises if no plates are available).</div>` : ''}
+          ${iState.ceilingStreak >= 2 ? `<div style="background:var(--surface);border:1px solid var(--brand);border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:12.5px;color:var(--brand);font-weight:700;">Hit the ceiling twice at ${formatWeightValue(iState.type, iState.lastCeilingWeight)} — ${iState.type==='band' ? 'the band will bump on next save (unless already at X-Heavy).' : 'weight will bump on next save (or the rep target rises if no plates are available).'}</div>` : ''}
           <div id="grr-hd-sets">${setsHtml}</div>
           <button class="grr-save-btn" id="grr-hd-save">Save</button>
-          <div class="grr-save-msg" id="grr-hd-msg"></div>
+          <div class="grr-save-msg" id="grr-hd-msg">${HOME_DETAIL_MSG||''}</div>
           <div class="grr-section-label" style="padding-left:0;">Recent history</div>
           <div class="grr-history">${histHtml}</div>
         </div>
       `;
       wireBackButtons();
-      root.querySelector('#grr-hd-iso-weight').onchange = (e) => { iState.weight = parseFloat(e.target.value)||null; ISOLATION_STATE[x.id]=iState; saveIsolationState(); };
+      root.querySelectorAll('#grr-hd-iso-type-row .grr-chip').forEach(chip => {
+        chip.onclick = () => {
+          const t = chip.dataset.type;
+          if (t !== iState.type) {
+            iState.type = t;
+            iState.weight = t === 'band' ? 'light' : null;
+            iState.lastCeilingWeight = null; iState.ceilingStreak = 0;
+            ISOLATION_STATE[x.id] = iState; saveIsolationState();
+            render();
+          }
+        };
+      });
+      if (iState.type === 'band') {
+        root.querySelectorAll('#grr-hd-iso-band-row .grr-chip').forEach(chip => {
+          chip.onclick = () => { iState.weight = chip.dataset.band; ISOLATION_STATE[x.id] = iState; saveIsolationState(); render(); };
+        });
+      } else {
+        root.querySelector('#grr-hd-iso-weight').onchange = (e) => { iState.weight = parseFloat(e.target.value)||null; ISOLATION_STATE[x.id]=iState; saveIsolationState(); };
+      }
       root.querySelector('#grr-hd-rep-floor').onchange = (e) => { setRepRange('iso', x.id, parseInt(e.target.value,10) || base.repFloor, P.repCeiling); render(); };
       root.querySelector('#grr-hd-rep-ceiling').onchange = (e) => { setRepRange('iso', x.id, P.repFloor, parseInt(e.target.value,10) || base.repCeiling); render(); };
       root.querySelector('#grr-hd-save').onclick = () => {
@@ -632,19 +781,30 @@
         if (reps.some(r=>r<=0)) { root.querySelector('#grr-hd-msg').textContent = 'Enter reps for every round first.'; return; }
         const allHit = reps.every(r => r >= P.repCeiling);
         const updated = trackWeightCeilingStreak(ISOLATION_STATE, x.id, iState.weight, allHit);
+        updated.type = iState.type;
         let msg;
         if (allHit) {
           if (updated.ceilingStreak >= 2) {
-            const jump = smallestPlateJump();
-            if (jump > 0) {
-              updated.weight = (updated.weight||0) + jump;
-              updated.ceilingStreak = 0; updated.lastCeilingWeight = null;
-              msg = `Hit ${P.repCeiling} on every round, twice in a row at the same weight — bumped to ${updated.weight} lb.`;
+            if (updated.type === 'band') {
+              const next = nextBandLevel(updated.weight);
+              if (next) {
+                updated.weight = next; updated.ceilingStreak = 0; updated.lastCeilingWeight = null;
+                msg = `Hit ${P.repCeiling} on every round, twice in a row at the same band — bumped to ${bandLabel(next)}.`;
+              } else {
+                msg = `Hit ${P.repCeiling} on every round, twice in a row at X-Heavy band — already the heaviest level, so bump it manually (e.g. double up bands or switch to plates).`;
+              }
             } else {
-              msg = `Hit ${P.repCeiling} on every round, twice in a row at ${updated.lastCeilingWeight} lb — no plates available to add, so bump it manually next chance you get.`;
+              const jump = smallestPlateJump();
+              if (jump > 0) {
+                updated.weight = (updated.weight||0) + jump;
+                updated.ceilingStreak = 0; updated.lastCeilingWeight = null;
+                msg = `Hit ${P.repCeiling} on every round, twice in a row at the same weight — bumped to ${updated.weight} lb.`;
+              } else {
+                msg = `Hit ${P.repCeiling} on every round, twice in a row at ${updated.lastCeilingWeight} lb — no plates available to add, so bump it manually next chance you get.`;
+              }
             }
           } else {
-            msg = `All rounds hit ${P.repCeiling} — one more session at this same weight and it'll bump.`;
+            msg = `All rounds hit ${P.repCeiling} — one more session at this same ${updated.type==='band'?'band':'weight'} and it'll bump.`;
           }
         } else {
           msg = 'Saved — not every round hit the ceiling, no weight change.';
@@ -654,7 +814,7 @@
           sets: reps.map((r,i)=>({target:'Round '+(i+1), weight: iState.weight, reps:r, success: r>=P.repCeiling})), allSuccess: allHit, tmAction: msg.includes('bumped')?'increase':'none'};
         if (!LOGS[x.id]) LOGS[x.id] = [];
         LOGS[x.id].push(entry); saveLogs();
-        root.querySelector('#grr-hd-msg').textContent = msg;
+        HOME_DETAIL_MSG = msg;
         render();
       };
       return;
