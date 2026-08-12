@@ -92,6 +92,14 @@ if (typeof EXERCISES === 'undefined') {
   let DRAFTS = {}; // in-progress, unsaved set inputs per exercise id — survives navigating away and back
   let CONDITIONING_DEFAULTS = {}; // { exId: { lapLength, targetDistance } } — remembered defaults for the conditioning/interval tracker
   function saveConditioningDefaults() { try { localStorage.setItem('gym-conditioning-defaults', JSON.stringify(CONDITIONING_DEFAULTS)); } catch(e){} }
+  // { exId: {weight, type} } — optional Plates-vs-Band weight tracking for Mobility/Rehab exercises,
+  // same mechanism as ISOLATION_STATE/REF_WEIGHT (see app-home.js WEIGHT TYPE section), but purely
+  // informational: Mobility/Rehab isn't progression-tracked, so there's no ceiling-streak/auto-bump
+  // logic here — just a value that gets remembered and included in the logged entry. Lives here
+  // (rather than app-home.js) because it's set from the exercise's own detail card
+  // (renderMobilityDetail, app-gym.js), not from the Home Workout page.
+  let MOBILITY_WEIGHT = {};
+  function saveMobilityWeight() { try { localStorage.setItem('gym-mobility-weight', JSON.stringify(MOBILITY_WEIGHT)); } catch(e){} }
   function loadAll() {
     try { const a = JSON.parse(localStorage.getItem('gym-ref-equip')); if (a && a.length) state.equip = new Set(a); } catch(e){}
     try { const a = JSON.parse(localStorage.getItem('gym-ref-pattern')); if (a) state.pattern = new Set(a); } catch(e){}

@@ -171,6 +171,16 @@
     const histHtml = hist.length ? hist.map(l => `<div class="grr-history-row"><span>${friendlyDate(l.date)}</span><span>✅ Done</span></div>`).join('')
       : `<div style="color:var(--muted);font-size:12px;">Not logged yet.</div>`;
 
+    // Optional weight/band tracking — same Plates-vs-Band mechanism as Isolation (see app-home.js
+    // WEIGHT TYPE section), but purely informational: Mobility/Rehab isn't progression-tracked, so
+    // there's no ceiling-streak/auto-bump logic here, just a value that's remembered and included in
+    // the logged entry. Lives on the exercise's own card (here) rather than on the Home Workout page.
+    const mState = MOBILITY_WEIGHT[x.id] || {weight: null, type: defaultWeightType(x)};
+    if (!mState.type) mState.type = defaultWeightType(x);
+    const weightBlockHtml = mState.type === 'band'
+      ? `${weightTypeToggleHtml('grr-md-w', mState.type)}${bandPickerHtml('grr-md-w', mState.weight || 'light')}`
+      : `${weightTypeToggleHtml('grr-md-w', mState.type)}<div class="grr-tm-box"><div><label>Weight (lb)</label></div><input type="number" id="grr-md-w-input" value="${mState.weight||''}" placeholder="e.g. 20"/></div>`;
+
     root.innerHTML = `
       <div class="grr-detail">
         ${backButtonHtml()}
@@ -179,6 +189,7 @@
         ${gifBlock(x)}
         ${x.notes ? `<div class="grr-notes">${x.notes}</div>` : ''}
         ${buildSchemePickerHtml(x, 'mobility')}
+        ${weightBlockHtml}
         <button class="grr-save-btn" id="grr-save">Mark Done Today</button>
         <div class="grr-save-msg">${state.saveMsg}</div>
         <div class="grr-section-label" style="padding-left:0;">Recent history</div>
@@ -187,8 +198,28 @@
     `;
     wireBackButtons();
     wireSchemePicker(x);
+    root.querySelectorAll('#grr-md-w-type-row .grr-chip').forEach(chip => {
+      chip.onclick = () => {
+        const t = chip.dataset.type;
+        if (t !== mState.type) {
+          mState.type = t;
+          mState.weight = t === 'band' ? 'light' : null;
+          MOBILITY_WEIGHT[x.id] = mState; saveMobilityWeight();
+          render();
+        }
+      };
+    });
+    if (mState.type === 'band') {
+      root.querySelectorAll('#grr-md-w-band-row .grr-chip').forEach(chip => {
+        chip.onclick = () => { mState.weight = chip.dataset.band; MOBILITY_WEIGHT[x.id] = mState; saveMobilityWeight(); render(); };
+      });
+    } else {
+      const winput = root.querySelector('#grr-md-w-input');
+      if (winput) winput.onchange = (e) => { mState.weight = parseFloat(e.target.value)||null; MOBILITY_WEIGHT[x.id] = mState; saveMobilityWeight(); };
+    }
     root.querySelector('#grr-save').onclick = () => {
-      const entry = {date: todayLocal(), exercise: x.n, pattern: x.p, exId: x.id, logId: newLogId(), sets:[{target:'Done', weight:null, reps:null, success:true}], allSuccess:true, tmAction:'none'};
+      const weightVal = mState.weight != null ? mState.weight : null;
+      const entry = {date: todayLocal(), exercise: x.n, pattern: x.p, exId: x.id, logId: newLogId(), sets:[{target:'Done', weight:weightVal, reps:null, success:true}], allSuccess:true, tmAction:'none'};
       if (!LOGS[x.id]) LOGS[x.id] = [];
       LOGS[x.id].push(entry);
       saveLogs();

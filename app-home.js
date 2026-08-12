@@ -170,12 +170,6 @@
   // they shared the same object.
   let MOBILITY_TICKS = {};
   function saveMobilityTicks() { try { localStorage.setItem('gym-mobility-ticks', JSON.stringify(MOBILITY_TICKS)); } catch(e){} }
-  // { exId: {weight, type} } — optional weight/band tracking for Mobility/Rehab slots, same
-  // Plates-vs-Band mechanism as Isolation (see WEIGHT TYPE section above), but purely informational:
-  // Mobility/Rehab isn't progression-tracked, so there's no ceiling-streak/auto-bump logic here —
-  // just a value that gets remembered and included in the logged entry.
-  let MOBILITY_WEIGHT = {};
-  function saveMobilityWeight() { try { localStorage.setItem('gym-mobility-weight', JSON.stringify(MOBILITY_WEIGHT)); } catch(e){} }
   function mobilityRoundsToday(exId) {
     const t = MOBILITY_TICKS[exId];
     return (t && t.date === todayLocal()) ? (t.rounds || 0) : 0;
@@ -214,10 +208,18 @@
     DAILY_SUPERSET_OVERRIDE[dayKey] = current;
     saveDailySupersetOverride();
   }
-  // Swap pool for Mobility/Rehab slots: every exercise currently in the mobility scheme (respecting
-  // any per-exercise scheme override, same as every other routing decision in this app).
+  // Swap pool for Mobility/Rehab slots: every exercise that's ELIGIBLE for the mobility scheme —
+  // i.e. `schemeChoicesFor(x)` includes `'mobility'` (its default scheme is mobility, and/or it's
+  // bodyweight-only) — rather than only exercises whose *current* effectiveScheme happens to be
+  // mobility right now. This is deliberately more permissive than a raw effectiveScheme filter: if
+  // someone switches an exercise like World's Greatest Stretch over to Hypertrophy on its own card,
+  // it should NOT vanish from this pool — it's still a legitimate mobility exercise, just currently
+  // filed under a different scheme for browsing purposes. `schemeChoicesFor()` already encodes "is
+  // this exercise legitimately mobility-eligible" (bodyweight-only, or mobility is its original
+  // default scheme) — reusing it here means this pool and the scheme-picker's own "mobility" option
+  // agree with each other by construction, instead of drifting out of sync.
   function mobilityPoolExercises() {
-    return EX.filter(x => effectiveScheme(x) === 'mobility').sort((a,b) => a.n.localeCompare(b.n));
+    return EX.filter(x => schemeChoicesFor(x).includes('mobility')).sort((a,b) => a.n.localeCompare(b.n));
   }
 
   function renderMajorLiftLogger(container, dayKey, msgElId) {
@@ -435,39 +437,6 @@
       });
       swapSelect.onchange = () => { setDailySupersetSlot(HOME.majorDay, slotIdx, swapSelect.value); render(); };
       row.appendChild(swapSelect);
-
-      // Optional weight/band tracking — Plates vs. Band toggle, same mechanism as Isolation.
-      // Purely informational for Mobility/Rehab (no progression logic), just remembered and
-      // included in the logged entry when a round is marked.
-      const mState = MOBILITY_WEIGHT[exId] || {weight: null, type: defaultWeightType(ex)};
-      if (!mState.type) mState.type = defaultWeightType(ex);
-      const wIdPrefix = 'grr-mob-' + exId;
-      const weightWrap = document.createElement('div');
-      weightWrap.style.cssText = 'margin-top:6px;';
-      weightWrap.innerHTML = mState.type === 'band'
-        ? `${weightTypeToggleHtml(wIdPrefix, mState.type)}${bandPickerHtml(wIdPrefix, mState.weight || 'light')}`
-        : `${weightTypeToggleHtml(wIdPrefix, mState.type)}<div class="grr-tm-box" style="margin-bottom:0;"><div><label style="font-size:11px;">Weight (lb)</label></div><input type="number" id="${wIdPrefix}-weight" value="${mState.weight||''}" placeholder="e.g. 20" style="width:70px;"/></div>`;
-      row.appendChild(weightWrap);
-      weightWrap.querySelectorAll(`#${wIdPrefix}-type-row .grr-chip`).forEach(chip => {
-        chip.onclick = () => {
-          const t = chip.dataset.type;
-          if (t !== mState.type) {
-            mState.type = t;
-            mState.weight = t === 'band' ? 'light' : null;
-            MOBILITY_WEIGHT[exId] = mState; saveMobilityWeight();
-            render();
-          }
-        };
-      });
-      if (mState.type === 'band') {
-        weightWrap.querySelectorAll(`#${wIdPrefix}-band-row .grr-chip`).forEach(chip => {
-          chip.onclick = () => { mState.weight = chip.dataset.band; MOBILITY_WEIGHT[exId] = mState; saveMobilityWeight(); render(); };
-        });
-      } else {
-        const winput = weightWrap.querySelector(`#${wIdPrefix}-weight`);
-        if (winput) winput.onchange = (e) => { mState.weight = parseFloat(e.target.value)||null; MOBILITY_WEIGHT[exId] = mState; saveMobilityWeight(); };
-      }
-
       dsBlock.appendChild(row);
     });
     root.querySelector('#grr-save-mobility').onclick = () => {
