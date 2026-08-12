@@ -259,7 +259,7 @@ const EXERCISES = [
     ],
     "m": "Quads / Glute Max",
     "region": "lower",
-    "gif": "https://drive.google.com/uc?id=1wzXl3zTgOZo9fzTcIVQYaIU4T291ioVX",
+    "gif": "https://drive.google.com/uc?export=view&id=1wzXl3zTgOZo9fzTcIVQYaIU4T291ioVX",
     "notes": "Brace core.",
     "muscles": [
       {
@@ -799,7 +799,7 @@ const EXERCISES = [
     ],
     "m": "Hamstrings / Spinal Erectors",
     "region": "lower",
-    "gif": "",
+    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2021/10/stiff-leg-deadlifts.gif?resize=600%2C600&ssl=1",
     "notes": "Home Major Lift C. Minimal knee bend, more restrictive ROM than an RDL.",
     "muscles": [
       {
