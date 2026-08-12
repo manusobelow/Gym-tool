@@ -4452,6 +4452,28 @@ const EXERCISES = [
   },
   // ---------- WARM-UP / MOBILITY (24) ----------
   {
+    "id": "WORLDS_GREATEST_STRETCH",
+    "n": "World's Greatest Stretch",
+    "p": "Warm-up / Mobility",
+    "scheme": "mobility",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Hip Flexors / Spinal Erectors",
+    "region": "upper",
+    "gif": "https://drive.google.com/file/d/1S4AKdbdWkUhqbfeXr_il1mOiDMmFGxcY/view?usp=sharing",
+    "notes": "Daily superset for Home Major Lift days.",
+    "muscles": [
+      {
+        "id": "hip-flexors",
+        "w": 2
+      },
+      {
+        "id": "spinal-erectors",
+        "w": 1
+      }
+    ]
+  },{
     "id": "ATG_SPLIT_SQUAT_MOB",
     "n": "ATG Split Squat (Mobility)",
     "p": "Warm-up / Mobility",
