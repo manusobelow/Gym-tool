@@ -259,7 +259,7 @@ const EXERCISES = [
     ],
     "m": "Quads / Glute Max",
     "region": "lower",
-    "gif": "https://drive.google.com/uc?export=view&id=1wzXl3zTgOZo9fzTcIVQYaIU4T291ioVX",
+    "video": "https://raw.githubusercontent.com/manusobelow/Gym-tool/main/zercher.mp4",
     "notes": "Brace core.",
     "muscles": [
       {
