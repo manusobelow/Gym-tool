@@ -4451,7 +4451,7 @@ const EXERCISES = [
     ]
   },
   // ---------- WARM-UP / MOBILITY (24) ----------
- {
+  {
     "id": "ATG_SPLIT_SQUAT_MOB",
     "n": "ATG Split Squat (Mobility)",
     "p": "Warm-up / Mobility",
@@ -5003,7 +5003,7 @@ const EXERCISES = [
       }
     ]
   },
-  // ---------- CONDITIONING (1) ----------
+  // ---------- CONDITIONING (2) ----------
   {
     "id": "HIIT_BIKE",
     "n": "HIIT Bike Intervals",
@@ -5023,6 +5023,33 @@ const EXERCISES = [
       },
       {
         "id": "glute-max",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "TRACK_RUNNING",
+    "n": "Track Running (Intervals)",
+    "p": "Conditioning",
+    "scheme": "conditioning",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Quads / Glutes / Calves",
+    "region": "lower",
+    "gif": "",
+    "notes": "Set a lap length and target distance — the app tells you how many laps that is. Log your time after each run to track pace (min/km) and distance progress over time.",
+    "muscles": [
+      {
+        "id": "quads",
+        "w": 2
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "calves",
         "w": 1
       }
     ]

@@ -170,6 +170,12 @@
   // they shared the same object.
   let MOBILITY_TICKS = {};
   function saveMobilityTicks() { try { localStorage.setItem('gym-mobility-ticks', JSON.stringify(MOBILITY_TICKS)); } catch(e){} }
+  // { exId: {weight, type} } — optional weight/band tracking for Mobility/Rehab slots, same
+  // Plates-vs-Band mechanism as Isolation (see WEIGHT TYPE section above), but purely informational:
+  // Mobility/Rehab isn't progression-tracked, so there's no ceiling-streak/auto-bump logic here —
+  // just a value that gets remembered and included in the logged entry.
+  let MOBILITY_WEIGHT = {};
+  function saveMobilityWeight() { try { localStorage.setItem('gym-mobility-weight', JSON.stringify(MOBILITY_WEIGHT)); } catch(e){} }
   function mobilityRoundsToday(exId) {
     const t = MOBILITY_TICKS[exId];
     return (t && t.date === todayLocal()) ? (t.rounds || 0) : 0;
@@ -182,8 +188,10 @@
     saveMobilityTicks();
     if (LOGS[exId]) LOGS[exId] = LOGS[exId].filter(e => !(e.date === today && e.tmAction === 'dailySuperset'));
     if (rounds > 0) {
+      const mState = MOBILITY_WEIGHT[exId];
+      const weightVal = (mState && mState.weight != null) ? mState.weight : null;
       const sets = [];
-      for (let i = 1; i <= rounds; i++) sets.push({target: 'Round '+i, weight: null, reps: null, success: true});
+      for (let i = 1; i <= rounds; i++) sets.push({target: 'Round '+i, weight: weightVal, reps: null, success: true});
       const entry = {date: today, exercise: ex.n, pattern: ex.p, exId, logId: newLogId(), sets, allSuccess: true, tmAction: 'dailySuperset'};
       if (!LOGS[exId]) LOGS[exId] = [];
       LOGS[exId].push(entry);
@@ -321,7 +329,7 @@
         <div class="grr-collapse${HOME_COLLAPSE.circuit?' open':''}" id="grr-circuit-collapse" style="margin:10px 0 14px;">
           <div class="grr-collapse-head" id="grr-circuit-header">${circuitDay.label} — ${P.startSets} rounds each, tap to log each round as you go ▾</div>
           <div class="grr-collapse-body" id="grr-circuit-wrap" style="padding:0 0 12px;">
-            <div style="font-size:11px;color:var(--muted);margin:0 0 10px;line-height:1.5;">Tap a round once you finish it: <b style="color:var(--steel);">Done</b> = completed the round but didn't hit the rep ceiling — still logs, doesn't count toward advancement. <b style="color:var(--brand);">Max!</b> = hit the rep ceiling — logs AND counts toward the "twice in a row" advancement streak. Core and Isolation stations can be swapped to a different progression/family at any time with the chips above each one.</div>
+            <div style="font-size:11px;color:var(--muted);margin:0 0 10px;line-height:1.5;"><b style="color:var(--steel);">Done</b> = completed the round, did not hit ceiling. <b style="color:var(--brand);">Max!</b> = Completes and hit max ceiling. Core and Isolation stations can be swapped with the chips above each one.</div>
             <div id="grr-circuit-block"></div>
             <button class="grr-save-btn" id="grr-save-circuit">Save Circuit Session</button>
             <div class="grr-save-msg" id="grr-home-msg">${state.homeMsg||''}</div>
@@ -412,7 +420,14 @@
       row.appendChild(topRow);
       const swapSelect = document.createElement('select');
       swapSelect.style.cssText = 'margin-top:6px;width:100%;background:var(--bg);border:1px solid var(--line);color:var(--chalk);padding:5px;border-radius:4px;font-size:11px;';
-      mobilityPool.forEach(px => {
+      // Safety: if this slot's currently-assigned exercise had its scheme changed away from
+      // "mobility" on its own exercise card, it would otherwise fall out of mobilityPool and
+      // vanish from this dropdown entirely (while still being the active assignment for this
+      // slot) — always keep it selectable so the dropdown never shows a blank/mismatched slot.
+      const poolForThisSlot = mobilityPool.some(px => px.id === exId)
+        ? mobilityPool
+        : [...mobilityPool, ex].sort((a,b) => a.n.localeCompare(b.n));
+      poolForThisSlot.forEach(px => {
         const opt = document.createElement('option');
         opt.value = px.id; opt.textContent = px.n;
         if (px.id === exId) opt.selected = true;
@@ -420,6 +435,39 @@
       });
       swapSelect.onchange = () => { setDailySupersetSlot(HOME.majorDay, slotIdx, swapSelect.value); render(); };
       row.appendChild(swapSelect);
+
+      // Optional weight/band tracking — Plates vs. Band toggle, same mechanism as Isolation.
+      // Purely informational for Mobility/Rehab (no progression logic), just remembered and
+      // included in the logged entry when a round is marked.
+      const mState = MOBILITY_WEIGHT[exId] || {weight: null, type: defaultWeightType(ex)};
+      if (!mState.type) mState.type = defaultWeightType(ex);
+      const wIdPrefix = 'grr-mob-' + exId;
+      const weightWrap = document.createElement('div');
+      weightWrap.style.cssText = 'margin-top:6px;';
+      weightWrap.innerHTML = mState.type === 'band'
+        ? `${weightTypeToggleHtml(wIdPrefix, mState.type)}${bandPickerHtml(wIdPrefix, mState.weight || 'light')}`
+        : `${weightTypeToggleHtml(wIdPrefix, mState.type)}<div class="grr-tm-box" style="margin-bottom:0;"><div><label style="font-size:11px;">Weight (lb)</label></div><input type="number" id="${wIdPrefix}-weight" value="${mState.weight||''}" placeholder="e.g. 20" style="width:70px;"/></div>`;
+      row.appendChild(weightWrap);
+      weightWrap.querySelectorAll(`#${wIdPrefix}-type-row .grr-chip`).forEach(chip => {
+        chip.onclick = () => {
+          const t = chip.dataset.type;
+          if (t !== mState.type) {
+            mState.type = t;
+            mState.weight = t === 'band' ? 'light' : null;
+            MOBILITY_WEIGHT[exId] = mState; saveMobilityWeight();
+            render();
+          }
+        };
+      });
+      if (mState.type === 'band') {
+        weightWrap.querySelectorAll(`#${wIdPrefix}-band-row .grr-chip`).forEach(chip => {
+          chip.onclick = () => { mState.weight = chip.dataset.band; MOBILITY_WEIGHT[exId] = mState; saveMobilityWeight(); render(); };
+        });
+      } else {
+        const winput = weightWrap.querySelector(`#${wIdPrefix}-weight`);
+        if (winput) winput.onchange = (e) => { mState.weight = parseFloat(e.target.value)||null; MOBILITY_WEIGHT[exId] = mState; saveMobilityWeight(); };
+      }
+
       dsBlock.appendChild(row);
     });
     root.querySelector('#grr-save-mobility').onclick = () => {

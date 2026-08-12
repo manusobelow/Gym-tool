@@ -51,9 +51,9 @@
     const card = document.createElement('div');
     const scheme = effectiveScheme(x);
     card.className = 'grr-card ' + scheme;
-    const schemeLabel = {main:'Major Lift', strength:'Strength', hypertrophy:'Hypertrophy', mobility:'Mobility', circuit:'Home Circuit'}[scheme];
+    const schemeLabel = {main:'Major Lift', strength:'Strength', hypertrophy:'Hypertrophy', mobility:'Mobility', circuit:'Home Circuit', conditioning:'Conditioning'}[scheme];
     const badgeClass = scheme === 'main' ? 'main' : scheme === 'mobility' ? 'mobility' : '';
-    const tmLine = (scheme !== 'hypertrophy' && scheme !== 'mobility' && TM[x.id]) ? `<div class="grr-card-tm">1RM: ${TM[x.id]} lb</div>` : '';
+    const tmLine = (scheme !== 'hypertrophy' && scheme !== 'mobility' && scheme !== 'conditioning' && TM[x.id]) ? `<div class="grr-card-tm">1RM: ${TM[x.id]} lb</div>` : '';
     card.innerHTML = `
       <div class="grr-card-top">
         <div class="grr-card-name">${x.n}</div>
@@ -113,7 +113,8 @@
           <b>Strength — 2–3 min rest.</b> Warm-up 5@50%, Set 1 6@85%, Set 2 6@85%. Major lifts add a 3rd (test) set: starts at 80%, moves to 85% next session once hit. Hit the test set at 85% → your 1RM goes up (+5 lb lower body, +2.5 lb upper body), test set resets to 80%.<br/><br/>
           <b>Major lifts:</b> Squat, Deadlift, BB Bench Press / JM Press, BB Overhead Press, Weighted Pull-up, Barbell Row, Hip Thrust, Lunge Carries.<br/><br/>
           <b>Hypertrophy — 1 min rest, drop set.</b> Sets 1–2 to failure, target starts at 8 reps. Set 3 drops the weight, targets 10 reps to failure. Hit sets 1–2 at 8 → next session the target becomes 10 at the same weight. Hit 10 → add weight, target resets to 8.<br/><br/>
-          <b>Mobility/Warm-up.</b> No weight tracked — just marked done for the day.
+          <b>Mobility/Warm-up.</b> No weight tracked — just marked done for the day.<br/><br/>
+          <b>Conditioning.</b> Distance/interval based — enter a lap length and target distance, the app tells you how many laps that is, log your time and it tracks pace over time.
         </div>
       </div>
     `;
@@ -195,16 +196,108 @@
       render();
     };
   }
+  // ---------- CONDITIONING (distance / interval tracking — Track Running etc.) ----------
+  // Lap length + target distance are remembered per exercise (CONDITIONING_DEFAULTS, app-core.js)
+  // but freely editable each session. Laps needed = ceil(targetDistance / lapLength), recomputed
+  // live as either field changes. Time is entered as minutes + seconds; pace is derived from
+  // time / (targetDistance/1000) and shown as min:sec per km, both on save and in recent history —
+  // same "log a session, see history" shape every other exercise page already uses, just with
+  // distance/pace columns instead of weight/reps.
+  function formatMinSec(totalSec) {
+    if (totalSec == null || isNaN(totalSec)) return '—';
+    const m = Math.floor(totalSec / 60);
+    const s = Math.round(totalSec % 60);
+    return `${m}:${String(s).padStart(2,'0')}`;
+  }
+  function renderConditioningDetail(x) {
+    const defaults = CONDITIONING_DEFAULTS[x.id] || {lapLength: 400, targetDistance: 3000};
+    const hist = (LOGS[x.id] || []).slice(-8).reverse();
+    const histHtml = hist.length ? hist.map(l => {
+      const s = l.sets[0] || {};
+      const pace = s.paceSecPerKm ? formatMinSec(s.paceSecPerKm) + '/km' : '—';
+      return `<div class="grr-history-row"><span>${friendlyDate(l.date)}</span><span>${s.targetDistance||'—'}m (${s.laps||'—'} laps) · ${formatMinSec(s.timeSec)} · ${pace}</span></div>`;
+    }).join('') : `<div style="color:var(--muted);font-size:12px;">No sessions logged yet.</div>`;
+
+    root.innerHTML = `
+      <div class="grr-detail">
+        ${backButtonHtml()}
+        <div class="grr-detail-name">${x.n}</div>
+        <div class="grr-detail-meta">${x.p} · ${x.m} · distance/interval tracking</div>
+        ${gifBlock(x)}
+        ${x.notes ? `<div class="grr-notes">${x.notes}</div>` : ''}
+        ${buildSchemePickerHtml(x, 'conditioning')}
+        <div class="grr-tm-box"><div><label>Lap length (m)</label><div style="font-size:11px;color:var(--muted);margin-top:2px;">Remembered as your default, editable any time.</div></div><input type="number" id="grr-cond-lap" value="${defaults.lapLength}" placeholder="e.g. 400"/></div>
+        <div class="grr-tm-box"><div><label>Target distance (m)</label></div><input type="number" id="grr-cond-target" value="${defaults.targetDistance}" placeholder="e.g. 3000"/></div>
+        <div style="background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin-bottom:14px;font-size:13px;" id="grr-cond-laps-readout"></div>
+        <div class="grr-tm-box"><div><label>Time</label></div><div style="display:flex;gap:6px;align-items:center;"><input type="number" id="grr-cond-min" placeholder="min" style="width:60px;"/><span style="color:var(--muted);">:</span><input type="number" id="grr-cond-sec" placeholder="sec" style="width:60px;"/></div></div>
+        <button class="grr-save-btn" id="grr-cond-save">Save Run</button>
+        <div class="grr-save-msg" id="grr-cond-msg"></div>
+        <div class="grr-section-label" style="padding-left:0;">Recent history</div>
+        <div class="grr-history">${histHtml}</div>
+      </div>
+    `;
+    wireBackButtons();
+    wireSchemePicker(x);
+
+    function currentLaps() {
+      const lap = parseFloat(document.getElementById('grr-cond-lap').value) || 0;
+      const target = parseFloat(document.getElementById('grr-cond-target').value) || 0;
+      return (lap > 0 && target > 0) ? Math.ceil(target / lap) : null;
+    }
+    function refreshLapsReadout() {
+      const laps = currentLaps();
+      const readout = root.querySelector('#grr-cond-laps-readout');
+      readout.innerHTML = laps
+        ? `That's <b style="color:var(--brand);">${laps} lap${laps===1?'':'s'}</b> to hit your target distance.`
+        : `Enter a lap length and target distance to see how many laps that is.`;
+    }
+    refreshLapsReadout();
+
+    root.querySelector('#grr-cond-lap').onchange = (e) => {
+      const v = parseFloat(e.target.value) || defaults.lapLength;
+      const current = CONDITIONING_DEFAULTS[x.id] || defaults;
+      CONDITIONING_DEFAULTS[x.id] = {...current, lapLength: v};
+      saveConditioningDefaults();
+      refreshLapsReadout();
+    };
+    root.querySelector('#grr-cond-target').onchange = (e) => {
+      const v = parseFloat(e.target.value) || defaults.targetDistance;
+      const current = CONDITIONING_DEFAULTS[x.id] || defaults;
+      CONDITIONING_DEFAULTS[x.id] = {...current, targetDistance: v};
+      saveConditioningDefaults();
+      refreshLapsReadout();
+    };
+
+    root.querySelector('#grr-cond-save').onclick = () => {
+      const lapLength = parseFloat(document.getElementById('grr-cond-lap').value) || 0;
+      const targetDistance = parseFloat(document.getElementById('grr-cond-target').value) || 0;
+      const min = parseFloat(document.getElementById('grr-cond-min').value) || 0;
+      const sec = parseFloat(document.getElementById('grr-cond-sec').value) || 0;
+      const timeSec = min * 60 + sec;
+      const msgEl = root.querySelector('#grr-cond-msg');
+      if (!(lapLength > 0) || !(targetDistance > 0)) { msgEl.textContent = 'Enter a lap length and target distance first.'; return; }
+      if (!(timeSec > 0)) { msgEl.textContent = 'Enter the time it took you.'; return; }
+      const laps = Math.ceil(targetDistance / lapLength);
+      const paceSecPerKm = timeSec / (targetDistance / 1000);
+      const entry = {date: todayLocal(), exercise: x.n, pattern: x.p, exId: x.id, logId: newLogId(),
+        sets: [{target:'Run', lapLength, targetDistance, laps, timeSec, paceSecPerKm, success:true}],
+        allSuccess: true, tmAction: 'none'};
+      if (!LOGS[x.id]) LOGS[x.id] = [];
+      LOGS[x.id].push(entry); saveLogs();
+      CONDITIONING_DEFAULTS[x.id] = {lapLength, targetDistance}; saveConditioningDefaults();
+      msgEl.textContent = `Saved — ${targetDistance}m in ${formatMinSec(timeSec)} (${formatMinSec(paceSecPerKm)}/km pace).`;
+      render();
+    };
+  }
   function renderDetail() {
     const x = EX_BY_ID[state.activeId];
     const scheme = effectiveScheme(x);
-    // Circuit-scheme exercises ALWAYS use the Home Workout rendering, no matter how you reached them.
-    // Some ladder rungs and isolation-station exercises are dual-purpose (kept at their normal gym
-    // scheme, e.g. W_PULLUP is "main", STANDARD_CRUNCH is "hypertrophy") because they're legitimate
-    // standalone gym exercises too — those only route to the Home card when reached via Home context
-    // (state.homeMode), so browsing them from the main gym list still shows their normal card.
-    if (scheme === 'circuit' || (state.homeMode && (findMajorLiftDay(x.id) || isIsolationStationExercise(x.id) || findLadderForExercise(x.id)))) { renderHomeDetail(x); return; }
+    // Circuit-scheme exercises ALWAYS use the Home Workout rendering, no matter how you reached them —
+    // not just when arriving via the Home Workout page's own click handlers. Closes the leak where
+    // Muscle Map / superset suggestions could surface one and render it with the wrong scheme entirely.
+    if (scheme === 'circuit' || (state.homeMode && (findMajorLiftDay(x.id) || isIsolationStationExercise(x.id)))) { renderHomeDetail(x); return; }
     if (scheme === 'mobility') { renderMobilityDetail(x); return; }
+    if (scheme === 'conditioning') { renderConditioningDetail(x); return; }
 
     const tm = TM[x.id] || null;
     const tierState = TIER[x.id] || '80';
@@ -251,7 +344,7 @@
       <div class="grr-history-row"><span>${friendlyDate(l.date)}</span><span>${l.sets.map(s=>s.success?'✅':'❌').join('')} ${l.tmAction==='increase'?'⬆️':''}</span></div>
     `).join('') : `<div style="color:var(--muted);font-size:12px;">No sessions logged yet.</div>`;
 
-    const schemeLabels = {main:'Major Lift', strength:'Strength', hypertrophy:'Hypertrophy', mobility:'Mobility', circuit:'Home Circuit'};
+    const schemeLabels = {main:'Major Lift', strength:'Strength', hypertrophy:'Hypertrophy', mobility:'Mobility', circuit:'Home Circuit', conditioning:'Conditioning'};
     const schemePickerHtml = buildSchemePickerHtml(x, scheme);
 
     const repOverrideHtml = scheme === 'hypertrophy' ? `
@@ -446,6 +539,15 @@
       const exObj = EX.find(x => x.n === entry.exercise);
       const isBodyweightOnly = exObj && exObj.eq.length === 1 && exObj.eq[0] === 'bodyweight';
       const isMobility = exObj && effectiveScheme(exObj) === 'mobility';
+      const isConditioning = exObj && effectiveScheme(exObj) === 'conditioning';
+      if (isConditioning) {
+        entry.sets.forEach(s => {
+          const distanceLabel = s.targetDistance ? `${s.targetDistance}m (${s.laps} laps)` : '';
+          const timeLabel = s.timeSec ? formatMinSec(s.timeSec) : '';
+          rows.push([entry.date, entry.exercise, distanceLabel, timeLabel]);
+        });
+        return;
+      }
       entry.sets.forEach(s => {
         let weight, reps;
         if (isMobility) {

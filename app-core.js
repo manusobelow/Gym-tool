@@ -71,7 +71,7 @@ if (typeof EXERCISES === 'undefined') {
     choices.add(x.scheme); // always keep the original default reachable, even if it wouldn't otherwise qualify
     return [...choices];
   }
-  const SCHEME_LABELS = {main:'Major Lift', strength:'Strength', hypertrophy:'Hypertrophy', mobility:'Mobility', circuit:'Home Circuit'};
+  const SCHEME_LABELS = {main:'Major Lift', strength:'Strength', hypertrophy:'Hypertrophy', mobility:'Mobility', circuit:'Home Circuit', conditioning:'Conditioning'};
   function buildSchemePickerHtml(x, scheme) {
     return `
       <div class="grr-section-label" style="padding-left:0;">Scheme</div>
@@ -90,6 +90,8 @@ if (typeof EXERCISES === 'undefined') {
   }
   let LOGS = {};
   let DRAFTS = {}; // in-progress, unsaved set inputs per exercise id — survives navigating away and back
+  let CONDITIONING_DEFAULTS = {}; // { exId: { lapLength, targetDistance } } — remembered defaults for the conditioning/interval tracker
+  function saveConditioningDefaults() { try { localStorage.setItem('gym-conditioning-defaults', JSON.stringify(CONDITIONING_DEFAULTS)); } catch(e){} }
   function loadAll() {
     try { const a = JSON.parse(localStorage.getItem('gym-ref-equip')); if (a && a.length) state.equip = new Set(a); } catch(e){}
     try { const a = JSON.parse(localStorage.getItem('gym-ref-pattern')); if (a) state.pattern = new Set(a); } catch(e){}
@@ -109,6 +111,8 @@ if (typeof EXERCISES === 'undefined') {
     try { const v = JSON.parse(localStorage.getItem('gym-rep-range-override')); if (v) REP_RANGE_OVERRIDE = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-mobility-ticks')); if (v) MOBILITY_TICKS = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-daily-superset-override')); if (v) DAILY_SUPERSET_OVERRIDE = v; } catch(e){}
+    try { const v = JSON.parse(localStorage.getItem('gym-conditioning-defaults')); if (v) CONDITIONING_DEFAULTS = v; } catch(e){}
+    try { const v = JSON.parse(localStorage.getItem('gym-mobility-weight')); if (v) MOBILITY_WEIGHT = v; } catch(e){}
     Object.keys(HYP).forEach(id => {
       if (HYP[id].tier === '6-8' || HYP[id].tier === 8) HYP[id].tier = 'low';
       else if (HYP[id].tier === '8-10' || HYP[id].tier === 10) HYP[id].tier = 'high';
