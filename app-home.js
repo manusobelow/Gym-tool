@@ -208,18 +208,20 @@
     DAILY_SUPERSET_OVERRIDE[dayKey] = current;
     saveDailySupersetOverride();
   }
-  // Swap pool for Mobility/Rehab slots: every exercise that's ELIGIBLE for the mobility scheme —
-  // i.e. `schemeChoicesFor(x)` includes `'mobility'` (its default scheme is mobility, and/or it's
-  // bodyweight-only) — rather than only exercises whose *current* effectiveScheme happens to be
-  // mobility right now. This is deliberately more permissive than a raw effectiveScheme filter: if
-  // someone switches an exercise like World's Greatest Stretch over to Hypertrophy on its own card,
-  // it should NOT vanish from this pool — it's still a legitimate mobility exercise, just currently
-  // filed under a different scheme for browsing purposes. `schemeChoicesFor()` already encodes "is
-  // this exercise legitimately mobility-eligible" (bodyweight-only, or mobility is its original
-  // default scheme) — reusing it here means this pool and the scheme-picker's own "mobility" option
-  // agree with each other by construction, instead of drifting out of sync.
+  // Swap pool for Mobility/Rehab slots: every exercise whose ORIGINAL default scheme (`x.scheme`,
+  // straight from exercises.js — NOT `effectiveScheme(x)`, which reflects any in-app override) is
+  // `'mobility'`. Deliberately does NOT use `schemeChoicesFor(x).includes('mobility')` — that helper
+  // also grants 'mobility' eligibility to any `eq: ["bodyweight"]` exercise (it's meant for deciding
+  // which scheme chips to *offer* on an exercise's own card), and equipment tag isn't purpose: things
+  // like Weighted Pull-Up, Nordic Curl, L-Sit Hold, and most circuit-ladder rungs are bodyweight too,
+  // but they're strength/skill work, not mobility/rehab filler. An earlier version of this filter used
+  // `schemeChoicesFor` and pulled ~58 unrelated exercises into the pool as a result.
+  // Using the original `x.scheme` (rather than `effectiveScheme`) still means an exercise like World's
+  // Greatest Stretch stays in this pool even after its *current* scheme is switched to Hypertrophy on
+  // its own card — its default classification, which is what actually determines "is this a mobility
+  // exercise," never changes, only its current browsing/routing scheme does.
   function mobilityPoolExercises() {
-    return EX.filter(x => schemeChoicesFor(x).includes('mobility')).sort((a,b) => a.n.localeCompare(b.n));
+    return EX.filter(x => x.scheme === 'mobility').sort((a,b) => a.n.localeCompare(b.n));
   }
 
   function renderMajorLiftLogger(container, dayKey, msgElId) {
