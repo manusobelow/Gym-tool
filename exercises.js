@@ -1250,7 +1250,7 @@ const EXERCISES = [
     ],
     "m": "Quads / Glute Max",
     "region": "lower",
-    "gif": "",
+    "gif": "deficitstepup.MOV",
     "notes": "Rung 3 of Step-Up Progression. Same DB load as rung 2, standing on a small deficit/plate to increase the range of motion.",
     "muscles": [
       {
@@ -2149,7 +2149,7 @@ const EXERCISES = [
     ],
     "m": "Teres Major / Upper Back",
     "region": "upper",
-    "gif": "",
+    "gif": "teresmajor.GIF",
     "notes": "Wide grip, elbows flared ~45°, pull to lower ribs to emphasize teres major over lats/rhomboids.",
     "muscles": [
       {
@@ -5215,7 +5215,7 @@ const EXERCISES = [
     ],
     "m": "Hip Flexors / Spinal Erectors",
     "region": "upper",
-    "gif": "https://drive.google.com/file/d/1S4AKdbdWkUhqbfeXr_il1mOiDMmFGxcY/view?usp=sharing",
+    "gif": "https://i.makeagif.com/media/9-22-2024/X91JCx.gif",
     "notes": "Daily superset for Home Major Lift days.",
     "muscles": [
       {
