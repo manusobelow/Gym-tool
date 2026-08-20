@@ -12,7 +12,9 @@ const LADDERS = {
   },
   pullup: {
     label: "Pull-Up Progression",
-    rungs: ["PULLUP_R1","PULLUP_R2","PULLUP_R3","PULLUP_R4","PULLUP_R5","PULLUP_R6","W_PULLUP"]
+    // PULLUP_R2 ("Arch Hang, Supported") deliberately dropped from the progression per updated
+    // programming — straight from Scapular Pulls to Arch Hang, Free.
+    rungs: ["PULLUP_R1","PULLUP_R3","PULLUP_R4","PULLUP_R5","PULLUP_R6","W_PULLUP"]
   },
   row: {
     label: "Row Progression",
@@ -24,7 +26,9 @@ const LADDERS = {
   },
   splitSquat: {
     label: "Split Squat Progression",
-    rungs: ["SPLITSQ_R1","SPLITSQ_R2","SPLITSQ_R3","SPLITSQ_R4"]
+    // SPLITSQ_R1 ("BW Split Squat, Hand-Assisted") deliberately dropped from the progression per
+    // updated programming — starts straight at the unassisted bodyweight split squat.
+    rungs: ["SPLITSQ_R2","SPLITSQ_R3","SPLITSQ_R4"]
   },
   lateralLunge: {
     label: "Lateral Lunge / Cossack Progression",
@@ -44,7 +48,13 @@ const LADDERS = {
   },
   core2: {
     label: "Straight-Leg Raise Progression",
-    rungs: ["SLRAISE_R1","SLRAISE_R2","SLRAISE_R3","SLRAISE_R4","SLRAISE_R5","SLRAISE_R6"]
+    // Full replacement per updated programming: SLRAISE_R1 ("Bent-Knee Tabletop Leg Raise"),
+    // SLRAISE_R3 ("Straight-Leg Raise, Bent-Knee Assist"), SLRAISE_R5 ("Hanging Straight-Leg
+    // Raise"), and SLRAISE_R6 ("Weighted Straight-Leg Raise") were deliberately dropped from the
+    // progression (still exist in exercises.js, just no longer ladder members). SLRAISE_R7-R10 are
+    // new — a hanging bent-knee -> hanging bent-knee-side -> hanging straight-leg -> hanging
+    // straight-leg-full-range sequence.
+    rungs: ["SLRAISE_R2","SLRAISE_R4","SLRAISE_R7","SLRAISE_R8","SLRAISE_R9","SLRAISE_R10"]
   },
   core3: {
     label: "Lateral Flexion Progression",

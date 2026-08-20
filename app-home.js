@@ -101,7 +101,7 @@
   // on a raw DOM classList.toggle() — the latter would silently re-collapse Major Lift/Mobility/
   // Circuit on every single tap inside them, since render() rebuilds root.innerHTML from scratch on
   // nearly every interaction in this app (see PROJECT-SCHEMA.md §3 Gotcha #2).
-  let HOME_COLLAPSE = { plate: false, major: true, mobility: true, circuit: true };
+  let HOME_COLLAPSE = { plate: false, major: true, mobility: false, circuit: true };
   // Confirmation message shown under the Mobility / Rehab "Save" button — same non-persisted
   // convention as state.homeMsg, just scoped to this section so the two messages don't clobber
   // each other when both live on the page at once.

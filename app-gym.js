@@ -326,7 +326,16 @@
     // Circuit-scheme exercises ALWAYS use the Home Workout rendering, no matter how you reached them —
     // not just when arriving via the Home Workout page's own click handlers. Closes the leak where
     // Muscle Map / superset suggestions could surface one and render it with the wrong scheme entirely.
-    if (scheme === 'circuit' || (state.homeMode && (findMajorLiftDay(x.id) || isIsolationStationExercise(x.id)))) { renderHomeDetail(x); return; }
+    // `findLadderForExercise(x.id)` covers dual-purpose ladder TOP rungs — a few ladders (pull-up,
+    // lateral lunge, single-leg RDL, core) deliberately end on a "real" gym exercise (Weighted Pull-Up,
+    // Cossack Squat, Single-Leg RDL DB, Crunch/Ab Wheel) that keeps its normal scheme (main/strength/
+    // hypertrophy, not "circuit") rather than being cloned into a circuit-only entry. Without this
+    // check, tapping one of those from the Circuit block (which correctly sets state.homeMode = true)
+    // still fell through to the generic gym exercise-card view instead of the rung-progression view,
+    // since the gate only ever checked findMajorLiftDay/isIsolationStationExercise for the homeMode
+    // case — a real gap, same class of bug isIsolationStationExercise/findMajorLiftDay were already
+    // guarding against for their own dual-purpose exercises.
+    if (scheme === 'circuit' || (state.homeMode && (findMajorLiftDay(x.id) || findLadderForExercise(x.id) || isIsolationStationExercise(x.id)))) { renderHomeDetail(x); return; }
     if (scheme === 'mobility') { renderMobilityDetail(x); return; }
     if (scheme === 'conditioning') { renderConditioningDetail(x); return; }
 

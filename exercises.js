@@ -2747,7 +2747,7 @@ const EXERCISES = [
       }
     ]
   },
-  // ---------- CORE / CARRY (25) ----------
+  // ---------- CORE / CARRY (29) ----------
   {
     "id": "AB_WHEEL_KNEE",
     "n": "Ab Wheel Roll-Out (From Knees)",
@@ -3157,8 +3157,8 @@ const EXERCISES = [
     ],
     "m": "Abs / Hip Flexors",
     "region": "upper",
-    "gif": "",
-    "notes": "Rung 2 of Straight-Leg Raise Progression. Same bent-knee position, now full range down to just above the floor and back.",
+    "gif": "https://media.giphy.com/media/ozXC1vUkj9x5CDkSI8/giphy.gif",
+    "notes": "Rung 1 of Straight-Leg Raise Progression. Same bent-knee position, now full range down to just above the floor and back.",
     "muscles": [
       {
         "id": "abs",
@@ -3203,8 +3203,8 @@ const EXERCISES = [
     ],
     "m": "Abs / Hip Flexors",
     "region": "upper",
-    "gif": "",
-    "notes": "Rung 4 of Straight-Leg Raise Progression. Full straight-leg raise lying on the floor, no knee bend.",
+    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/10/lying-leg-raises.gif?fit=600%2C600&ssl=1",
+    "notes": "Rung 2 of Straight-Leg Raise Progression. Full straight-leg raise lying on the floor, no knee bend.",
     "muscles": [
       {
         "id": "abs",
@@ -3264,6 +3264,102 @@ const EXERCISES = [
     ]
   },
   {
+    "id": "SLRAISE_R7",
+    "n": "Hanging Bent-Knee Leg Raise",
+    "p": "Core / Carry",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Abs / Hip Flexors",
+    "region": "upper",
+    "gif": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Hanging-Knee-Raises.gif",
+    "notes": "Rung 3 of Straight-Leg Raise Progression. From a dead hang, raise bent knees toward the chest with control, no swinging.",
+    "muscles": [
+      {
+        "id": "abs",
+        "w": 3
+      },
+      {
+        "id": "hip-flexors",
+        "w": 2
+      }
+    ]
+  },
+  {
+    "id": "SLRAISE_R8",
+    "n": "Hanging Bent-Knee Side Leg Raise",
+    "p": "Core / Carry",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Abs / Obliques / Hip Flexors",
+    "region": "upper",
+    "gif": "https://api.smartworkout.app/asset/image/7054811d-9bb9-4d68-a8cc-8f7a5af83449",
+    "notes": "Rung 4 of Straight-Leg Raise Progression. From a dead hang, raise bent knees up and across to one side, alternating sides, adding an oblique/rotational component.",
+    "muscles": [
+      {
+        "id": "abs",
+        "w": 2
+      },
+      {
+        "id": "obliques",
+        "w": 3
+      },
+      {
+        "id": "hip-flexors",
+        "w": 2
+      }
+    ]
+  },
+  {
+    "id": "SLRAISE_R9",
+    "n": "Straight-Leg Raise",
+    "p": "Core / Carry",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Abs / Hip Flexors",
+    "region": "upper",
+    "gif": "https://media1.giphy.com/media/v1.Y2lkPTZjMDliOTUyZDhlcmE3Z2hqbTQ1c25pdzd5ZXhmcng5em56YmZlejBybGh5NXlvciZlcD12MV9naWZzX3NlYXJjaCZjdD1n/1FsjYEOIEXQTosCu9T/giphy.gif",
+    "notes": "Rung 5 of Straight-Leg Raise Progression. From a dead hang, raise straight legs to at least parallel with control, no swinging.",
+    "muscles": [
+      {
+        "id": "abs",
+        "w": 3
+      },
+      {
+        "id": "hip-flexors",
+        "w": 2
+      }
+    ]
+  },
+  {
+    "id": "SLRAISE_R10",
+    "n": "Straight-Leg Raise Full Range",
+    "p": "Core / Carry",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Abs / Hip Flexors",
+    "region": "upper",
+    "gif": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdfTmwWTmmHoMx9HpRx1f7sH3goLQItmJDQXeNSvwUhM2pEgUEq7La7wg&s=10",
+    "notes": "Rung 6 of Straight-Leg Raise Progression. Hanging straight-leg raise taken to full range — legs to the bar/beyond parallel, controlled descent.",
+    "muscles": [
+      {
+        "id": "abs",
+        "w": 3
+      },
+      {
+        "id": "hip-flexors",
+        "w": 2
+      }
+    ]
+  },
+  {
     "id": "SIDEBEND_R1",
     "n": "Dumbbell Side Bend with Hip Shift",
     "p": "Core / Carry",
@@ -3273,7 +3369,7 @@ const EXERCISES = [
     ],
     "m": "Obliques / Quadratus Lumborum",
     "region": "upper",
-    "gif": "",
+    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2025/06/side-bend.gif?fit=800%2C800&ssl=1",
     "notes": "Rung 1 of Lateral Flexion Progression. DB in one hand, shift the hip away from the load and bend laterally toward the DB side, then return.",
     "muscles": [
       {
@@ -3296,7 +3392,7 @@ const EXERCISES = [
     ],
     "m": "Obliques / Quadratus Lumborum",
     "region": "upper",
-    "gif": "",
+    "gif": "https://i.ytimg.com/vi/tk71h2Q87DQ/maxresdefault.jpg",
     "notes": "Rung 2 of Lateral Flexion Progression. Hips anchored at the edge of a bench, torso hangs off the side, bend laterally against gravity.",
     "muscles": [
       {
@@ -3319,7 +3415,7 @@ const EXERCISES = [
     ],
     "m": "Obliques / Quadratus Lumborum",
     "region": "upper",
-    "gif": "",
+    "gif": "https://i.ytimg.com/vi/VeplPxKX9tI/maxresdefault.jpg",
     "notes": "Rung 3 of Lateral Flexion Progression. From a dead hang, draw the legs/hips laterally to one side under control, no swinging.",
     "muscles": [
       {
@@ -3342,7 +3438,7 @@ const EXERCISES = [
     ],
     "m": "Obliques / Quadratus Lumborum",
     "region": "upper",
-    "gif": "",
+    "gif": "https://www.markowtrainingsystems.com/wp-content/uploads/2023/07/side-bend-variation-half-kneeling-1.jpg",
     "notes": "Rung 4 of Lateral Flexion Progression. Half-kneeling stance, bend laterally away from the tall-kneeling side and return without rotating.",
     "muscles": [
       {
