@@ -547,7 +547,7 @@ const EXERCISES = [
   },
   {
     "id": "RDL",
-    "n": "RDL (Barbell/DB)",
+    "n": "RDL DB",
     "p": "Hinge",
     "scheme": "strength",
     "eq": [
@@ -556,7 +556,7 @@ const EXERCISES = [
     ],
     "m": "Hamstrings / Glute Max",
     "region": "lower",
-    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2022/01/Romanian-deadlift.gif?resize=600%2C600&ssl=1",
+    "gif": "https://i.pinimg.com/originals/3e/bb/77/3ebb776eb3b74fe1bdd21f6f078bd197.gif",
     "notes": "Slow eccentric.",
     "muscles": [
       {
@@ -610,7 +610,7 @@ const EXERCISES = [
     ],
     "m": "Hamstrings / Glute Max",
     "region": "lower",
-    "gif": "https://drive.google.com/file/d/1Mu2iz695B6BP6Lppw9ghobB7XXYeDd8R/view?usp=sharing",
+    "gif": "https://www.strengthlog.com/wp-content/uploads/2020/03/Trap-Bar-Deadlift-With-Low-Handles.gif",
     "notes": "3-set ramp. Brace evenly.",
     "muscles": [
       {
@@ -1467,7 +1467,7 @@ const EXERCISES = [
     ],
     "m": "Chest / Triceps",
     "region": "upper",
-    "gif": "",
+    "gif": "https://media.tenor.com/oh8ByjWxsqcAAAAM/streetlifting-weighted-dips.gif",
     "notes": "",
     "muscles": [
       {
@@ -1494,7 +1494,7 @@ const EXERCISES = [
     ],
     "m": "Chest / Front Delts",
     "region": "upper",
-    "gif": "",
+    "gif": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Lever-Incline-Chest-Press.gif",
     "notes": "",
     "muscles": [
       {
@@ -1793,7 +1793,7 @@ const EXERCISES = [
     ],
     "m": "Rear Delts / Upper Back",
     "region": "upper",
-    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/05/face-pull.gif?resize=600%2C600&ssl=1",
+    "gif": "https://i.makeagif.com/media/6-10-2024/C3Qe4o.gif",
     "notes": "Elbows high.",
     "muscles": [
       {
@@ -1919,27 +1919,6 @@ const EXERCISES = [
       }
     ]
   },
-  {
-    "id": "DB_ROW_2ARM",
-    "n": "DB Bent-Over Row (2-arm)",
-    "p": "Pull Horizontal",
-    "scheme": "strength",
-    "eq": [
-      "dumbbell"
-    ],
-    "m": "Upper Back / Biceps",
-    "region": "upper",
-    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/03/Dumbbell-Row.gif?resize=600%2C600&ssl=1",
-    "notes": "",
-    "muscles": [
-      {
-        "id": "lats",
-        "w": 3
-      },
-      {
-        "id": "rhomboids",
-        "w": 2
-      },
       {
         "id": "biceps",
         "w": 1
@@ -1973,28 +1952,6 @@ const EXERCISES = [
       }
     ]
   },
-  {
-    "id": "DB_ROW_STAGGER",
-    "n": "DB Long Staggered Stance Row",
-    "p": "Pull Horizontal",
-    "scheme": "strength",
-    "eq": [
-      "kettlebell",
-      "dumbbell"
-    ],
-    "m": "Upper Back / Biceps",
-    "region": "upper",
-    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/03/Dumbbell-Row.gif?resize=600%2C600&ssl=1",
-    "notes": "",
-    "muscles": [
-      {
-        "id": "lats",
-        "w": 3
-      },
-      {
-        "id": "rhomboids",
-        "w": 2
-      },
       {
         "id": "biceps",
         "w": 1
@@ -2002,8 +1959,8 @@ const EXERCISES = [
     ]
   },
   {
-    "id": "FACE_PULL",
-    "n": "Face Pull / Band Pull-Apart",
+    "id": "PULL_APART",
+    "n": "Band Pull-Apart",
     "p": "Pull Horizontal",
     "scheme": "hypertrophy",
     "eq": [
@@ -2013,7 +1970,7 @@ const EXERCISES = [
     ],
     "m": "Rear Delts / Upper Back",
     "region": "upper",
-    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/05/face-pull.gif?resize=600%2C600&ssl=1",
+    "gif": "https://indoorcardiopro.com/wp-content/uploads/2024/01/63fba2693efb724a114a7e24_bandpullapart-1480689234.gif",
     "notes": "Light, clean reps.",
     "muscles": [
       {
@@ -2937,7 +2894,7 @@ const EXERCISES = [
     ],
     "m": "Abs / Hip Flexors",
     "region": "upper",
-    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/03/cable-crunch.gif?resize=600%2C600&ssl=1",
+    "gif": "https://fitliferegime.com/wp-content/uploads/2023/09/Standing-Cable-Crunch.gif",
     "notes": "",
     "muscles": [
       {
@@ -3003,7 +2960,7 @@ const EXERCISES = [
   },
   {
     "id": "HANG_KNEE_RAISE",
-    "n": "Hanging Knee Raise (PPT Focus)",
+    "n": "Hanging Knee Raise",
     "p": "Core / Carry",
     "scheme": "hypertrophy",
     "eq": [
@@ -3189,7 +3146,7 @@ const EXERCISES = [
     ],
     "m": "Hip Flexors / Abs",
     "region": "upper",
-    "gif": "",
+    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2025/03/l-sit.gif?resize=600%2C600&ssl=1",
     "notes": "Support on hands/parallettes or floor, legs extended straight out in front, hold. Bend knees to regress if needed.",
     "muscles": [
       {
@@ -3729,7 +3686,7 @@ const EXERCISES = [
     ],
     "m": "Calves / Tibialis Anterior",
     "region": "upper",
-    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/03/calf-raise-standing.gif?resize=600%2C600&ssl=1",
+    "gif": "https://cdn.jefit.com/assets/img/exercises/gifs/1236.gif",
     "notes": "Per leg. Full ROM.",
     "muscles": [
       {
@@ -3929,8 +3886,8 @@ const EXERCISES = [
     ]
   },
   {
-    "id": "DB_TRICEPS_OH_EXT",
-    "n": "DB Overhead Triceps Extension",
+    "id": "TRICEPS_OH_EXT",
+    "n": "Overhead Triceps Extension",
     "p": "Isolation",
     "scheme": "hypertrophy",
     "eq": [
@@ -4145,7 +4102,7 @@ const EXERCISES = [
     ],
     "m": "Side Delts / Upper Traps",
     "region": "upper",
-    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2020/12/Dumbbell-Lateral-Raise.gif?resize=600%2C600&ssl=1",
+    "gif": "https://fitnessprogramer.com/wp-content/uploads/2021/09/Dumbbell-Side-Lying-Rear-Delt-Raise.gif",
     "notes": "Side-lying; small DB, raise in arc slightly forward, no shoulder pinch.",
     "muscles": [
       {
@@ -4376,7 +4333,7 @@ const EXERCISES = [
     ],
     "m": "Teres Major / Lats",
     "region": "upper",
-    "gif": "https://fitnessprogramer.com/wp-content/uploads/2021/05/Cable-Straight-Arm-Pulldown.gif",
+    "gif": "https://workoutlabs.com/train/wp-content/uploads/2023/05/Straight_Arm_Pulldown_F_WorkoutLabs_anim-c.gif",
     "notes": "Wide grip, straight arms, drive elbows down and back to bias teres major over lats.",
     "muscles": [
       {
@@ -4662,7 +4619,7 @@ const EXERCISES = [
     ],
     "m": "Hip Flexors / Quads",
     "region": "lower",
-    "gif": "https://drive.google.com/file/d/1ioo3RmQ_pLidyOW9BVWyADEY2GZrBuDC/view?usp=sharing",
+    "gif": "legcurl.gif",
     "notes": "Reposition on a leg curl or leg extension machine so the pad rests against the thigh, then drive the knee upward into it (hip flexion) instead of the machine's normal knee flexion/extension path.",
     "muscles": [
       {
