@@ -32,14 +32,7 @@
   .grr-section-label { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); padding: 12px 16px 6px; font-weight: 700; }
   .grr-equip-row { display:flex; flex-wrap:wrap; gap:6px; padding: 0 16px 10px; }
   .grr-chip { border:1px solid var(--line); background:var(--surface); color:var(--muted); font-size:12px; font-weight:700; padding:6px 10px; border-radius:999px; cursor:pointer; user-select:none; white-space:nowrap; }
-  /* ---- CHIP COLOR RULE (applies everywhere .grr-chip is used: equipment/pattern filters, day
-     pickers, scheme picker, weight-type toggle, band-level picker, station/family swap pickers) ----
-     Steel-blue = "this is the selected option among alternatives" (a plain choice, no urgency).
-     Brand-red is reserved for a different meaning — "happening right now / needs your attention"
-     (Save buttons, the circuit tick's Max! state, plateau/advancement callouts) — never for a
-     plain selected chip. Keeping these visually distinct is what makes brand-red meaningful when
-     it does show up. */
-  .grr-chip.active { background:var(--steel); color:#fff; border-color:var(--steel); }
+  .grr-chip.active { background:var(--brand); color:#fff; border-color:var(--brand); }
   .grr-chip-all.active { background:var(--steel); color:#fff; border-color:var(--steel); }
   .grr-list { padding: 4px 16px 8px; display:flex; flex-direction:column; gap:8px; }
   .grr-card { background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--steel); border-radius:4px; padding:10px 12px; cursor:pointer; }
@@ -85,17 +78,7 @@
   .grr-toggle button.on-yes { background:var(--green); color:#111; border-color:var(--green); }
   .grr-toggle button.on-no { background:var(--red); color:#111; border-color:var(--red); }
   .grr-save-btn { width:100%; background:var(--brand); color:#fff; border:none; font-weight:800; font-size:14px; text-transform:uppercase; letter-spacing:.04em; padding:12px; border-radius:6px; margin-top:6px; cursor:pointer; }
-  /* ---- SAVE / CALLOUT MESSAGE STYLES ----
-     A routine "saved" confirmation and a message that represents real progress (a rung advanced, a
-     weight bumped, a plateau flagged) used to look identical: one small line of green text below the
-     Save button. `.grr-msg-milestone` gives the latter its own visually distinct treatment — a bordered
-     card in brand-red — reused by both the post-save milestone message and the pre-existing plateau
-     callout (Reference Weight / Isolation ceiling-streak notes), so the same visual language means the
-     same thing everywhere it appears. */
-  .grr-save-msg { text-align:center; font-size:13px; font-weight:700; color:var(--green); margin-top:10px; min-height:18px; line-height:1.4; }
-  .grr-save-msg:empty { min-height:0; margin-top:0; }
-  .grr-msg-milestone { background:var(--surface); border:1px solid var(--brand); border-radius:6px; padding:9px 12px; margin-bottom:10px; font-size:12.5px; color:var(--brand); font-weight:700; line-height:1.45; text-align:left; }
-  .grr-save-msg.grr-msg-milestone { margin-top:10px; margin-bottom:0; }
+  .grr-save-msg { text-align:center; font-size:12px; color:var(--green); margin-top:8px; min-height:16px; }
   .grr-superset-box { margin-top:16px; }
   .grr-superset-chip { display:inline-block; background:var(--surface-2); border:1px solid var(--line); color:var(--chalk); font-size:12px; padding:5px 9px; border-radius:6px; margin:0 6px 6px 0; cursor:pointer; }
   .grr-superset-chip:active { background:var(--brand); border-color:var(--brand); color:#fff; }
@@ -103,34 +86,11 @@
   .grr-history-row { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); padding:6px 0; border-bottom:1px solid var(--line); }
   .grr-history-row span:last-child { color:var(--chalk); }
 
-  /* ---- TARGET CARD ----
-     Groups the several small controls that describe "what you're trying to hit this session" —
-     weight/band type, weight or band level, rep range — into one bordered card with internal rows,
-     instead of a stack of separate same-sized boxes. Used on the Major Lift, ladder-rung, and
-     isolation-exercise detail views. */
-  .grr-target-card { background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:12px; margin-bottom:14px; }
-  .grr-target-card-title { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); font-weight:800; margin-bottom:2px; }
-  .grr-target-card-sub { font-size:11px; color:var(--muted); margin-bottom:8px; line-height:1.4; }
-  .grr-target-row { display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--line); gap:10px; flex-wrap:wrap; }
-  .grr-target-row:last-child { border-bottom:none; padding-bottom:0; }
-  .grr-target-row:first-child { padding-top:0; }
-  .grr-target-row-label { font-size:12.5px; color:var(--chalk); font-weight:700; flex-shrink:0; }
-  .grr-target-row-control { display:flex; gap:6px; align-items:center; }
-  .grr-target-row-control input[type=number] { background:var(--bg); border:1px solid var(--line); color:var(--chalk); font-size:15px; padding:6px 8px; border-radius:4px; text-align:center; width:60px; }
-  .grr-target-row .grr-equip-row { padding:0; margin:0; }
-
   .grr-export-btn { width:100%; background:var(--steel); color:#fff; border:none; font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.04em; padding:12px; border-radius:6px; cursor:pointer; margin-bottom:8px; }
   .grr-copy-btn { width:100%; background:var(--surface); color:var(--chalk); border:1px solid var(--line); font-weight:700; font-size:13px; padding:10px; border-radius:6px; cursor:pointer; margin-bottom:14px; }
   .grr-log-entry { background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:10px 12px; margin-bottom:8px; }
   .grr-log-entry-top { display:flex; justify-content:space-between; font-weight:700; font-size:13px; }
   .grr-log-entry-meta { font-size:11.5px; color:var(--muted); margin-top:2px; }
-
-  /* ---- CIRCUIT TICK BUTTON ----
-     Enlarged tap target (44px, up from 38px) for mid-set logging. The Max! state no longer relies on
-     color alone to read as "different" — it gets a white inset ring plus a star glyph so it's
-     distinguishable even without color vision. Done gets a check glyph for the same reason. */
-  .grr-tick-btn { flex:1; height:44px; border-radius:6px; border:none; color:#fff; font-weight:800; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px; }
-  .grr-tick-btn.tick-max { box-shadow: inset 0 0 0 2px #fff; }
 </style>
 
 <script src="exercises.js?v=2"></script>

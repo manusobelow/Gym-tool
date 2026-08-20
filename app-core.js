@@ -42,32 +42,6 @@ if (typeof EXERCISES === 'undefined') {
   let SCHEME_OVERRIDE = {}; // { exId: 'main'|'strength'|'hypertrophy'|'mobility' } — overrides exercises.js default
   let REP_OVERRIDE = {};    // { exId: {mainReps, hypLow, hypHigh} } — overrides hardcoded rep targets
 
-  // ---------- SAVE / MILESTONE MESSAGE HELPERS ----------
-  // A routine "saved" confirmation and a message that represents real progress (a rung advanced, a
-  // weight bumped, a stage/set count changed) or something that needs attention (a plateau flagged,
-  // "no plates available," the top of a ladder reached) used to be visually identical — one small
-  // line of green text below the Save button, easy to miss for exactly the messages that matter most.
-  // isMilestoneMsg() flags a message as one of those cases from its text (keyword-matched — no new
-  // per-message state needed); saveMsgHtml()/applySaveMsg() apply the `.grr-msg-milestone` treatment
-  // (index.html) consistently wherever a save-result message is rendered, whether that's through a
-  // template string (saveMsgHtml, used when the caller re-renders via render()) or a direct DOM write
-  // (applySaveMsg, used by the few handlers — Major Lift, Conditioning — that intentionally write
-  // straight to the message element without a following render(), per Gotcha #2 in PROJECT-SCHEMA.md).
-  function isMilestoneMsg(msg) {
-    return /bumped|advanced|moving to \d|raised to \d|consider increasing|no plates available|already the (top|heaviest)|no harder variation/i.test(msg || '');
-  }
-  function saveMsgHtml(msg, id) {
-    const idAttr = id ? ` id="${id}"` : '';
-    if (!msg) return `<div class="grr-save-msg"${idAttr}></div>`;
-    const cls = 'grr-save-msg' + (isMilestoneMsg(msg) ? ' grr-msg-milestone' : '');
-    return `<div class="${cls}"${idAttr}>${msg}</div>`;
-  }
-  function applySaveMsg(el, msg) {
-    if (!el) return;
-    el.textContent = msg || '';
-    el.classList.toggle('grr-msg-milestone', isMilestoneMsg(msg));
-  }
-
   // ---------- HOME WORKOUT STATE ----------
   let HOME = { majorDay: 'A', circuitDay: 1, equip: HOME_DATA_LOADED ? new Set(HOME_EQUIPMENT) : new Set() };
   let PLATE_INVENTORY = HOME_DATA_LOADED ? {...DEFAULT_PLATE_INVENTORY} : {};

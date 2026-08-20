@@ -191,7 +191,7 @@
         ${buildSchemePickerHtml(x, 'mobility')}
         ${weightBlockHtml}
         <button class="grr-save-btn" id="grr-save">Mark Done Today</button>
-        ${saveMsgHtml(state.saveMsg)}
+        <div class="grr-save-msg">${state.saveMsg}</div>
         <div class="grr-section-label" style="padding-left:0;">Recent history</div>
         <div class="grr-history">${histHtml}</div>
       </div>
@@ -306,8 +306,8 @@
       const sec = parseFloat(document.getElementById('grr-cond-sec').value) || 0;
       const timeSec = min * 60 + sec;
       const msgEl = root.querySelector('#grr-cond-msg');
-      if (!(lapLength > 0) || !(targetDistance > 0)) { applySaveMsg(msgEl, 'Enter a lap length and target distance first.'); return; }
-      if (!(timeSec > 0)) { applySaveMsg(msgEl, 'Enter the time it took you.'); return; }
+      if (!(lapLength > 0) || !(targetDistance > 0)) { msgEl.textContent = 'Enter a lap length and target distance first.'; return; }
+      if (!(timeSec > 0)) { msgEl.textContent = 'Enter the time it took you.'; return; }
       const laps = Math.ceil(targetDistance / lapLength);
       const paceSecPerKm = timeSec / (targetDistance / 1000);
       const entry = {date: todayLocal(), exercise: x.n, pattern: x.p, exId: x.id, logId: newLogId(),
@@ -316,7 +316,8 @@
       if (!LOGS[x.id]) LOGS[x.id] = [];
       LOGS[x.id].push(entry); saveLogs();
       CONDITIONING_DEFAULTS[x.id] = {lapLength, targetDistance}; saveConditioningDefaults();
-      applySaveMsg(msgEl, `Saved — ${targetDistance}m in ${formatMinSec(timeSec)} (${formatMinSec(paceSecPerKm)}/km pace).`);
+      msgEl.textContent = `Saved — ${targetDistance}m in ${formatMinSec(timeSec)} (${formatMinSec(paceSecPerKm)}/km pace).`;
+      render();
     };
   }
   function renderDetail() {
@@ -428,7 +429,7 @@
 
         <div id="grr-sets">${setsHtml}</div>
         <button class="grr-save-btn" id="grr-save">Save Today's Log</button>
-        ${saveMsgHtml(state.saveMsg)}
+        <div class="grr-save-msg">${state.saveMsg}</div>
 
         <div class="grr-collapse" id="grr-superset-collapse" style="margin:10px 0 14px;">
           <div class="grr-collapse-head">Goes well with ▾</div>

@@ -101,11 +101,7 @@
   // on a raw DOM classList.toggle() — the latter would silently re-collapse Major Lift/Mobility/
   // Circuit on every single tap inside them, since render() rebuilds root.innerHTML from scratch on
   // nearly every interaction in this app (see PROJECT-SCHEMA.md §3 Gotcha #2).
-  // Defaults: Plate Inventory and Mobility/Rehab start closed (Mobility/Rehab is filler work between
-  // Major Lift sets, not the primary action most visits are for — collapsing it by default trims a
-  // meaningful chunk of scroll depth off the page without removing access, one tap reopens it).
-  // Major Lift and Circuit stay open since they're what most visits are actually here to do.
-  let HOME_COLLAPSE = { plate: false, major: true, mobility: false, circuit: true };
+  let HOME_COLLAPSE = { plate: false, major: true, mobility: true, circuit: true };
   // Confirmation message shown under the Mobility / Rehab "Save" button — same non-persisted
   // convention as state.homeMsg, just scoped to this section so the two messages don't clobber
   // each other when both live on the page at once.
@@ -236,21 +232,8 @@
     if (!mlState.repTarget) mlState.repTarget = P.repCeiling; // back-compat for state saved before this field existed
     if (!mlState.repFloor) mlState.repFloor = P.repFloor; // back-compat for state saved before this field existed
     const ceiling = mlState.repTarget;
-    // Weight + rep range grouped into one "Your Target" card instead of two separate boxes — the
-    // two numbers together are what defines what a successful set looks like this session.
-    let html = `<div class="grr-target-card">
-      <div class="grr-target-card-title">Your Target</div>
-      <div class="grr-target-card-sub">Stage: ${mlState.sets} sets. Floor is informational; ceiling drives stage advancement.</div>
-      <div class="grr-target-row">
-        <div class="grr-target-row-label">Weight (lb, incl. 20lb bar)</div>
-        <div class="grr-target-row-control"><input type="number" id="grr-ml-weight" value="${mlState.weight||''}" placeholder="e.g. 70"/></div>
-      </div>
-      <div class="grr-target-row">
-        <div class="grr-target-row-label">Rep range</div>
-        <div class="grr-target-row-control"><input type="number" id="grr-ml-floor" value="${mlState.repFloor}"/><span style="color:var(--muted);font-size:11px;">–</span><input type="number" id="grr-ml-ceiling" value="${ceiling}"/></div>
-      </div>
-    </div>`;
-    html += `<div class="grr-section-label" style="padding-left:0;">Log this session</div>`;
+    let html = `<div class="grr-tm-box" style="margin-bottom:10px;"><div><label>Weight (lb, total incl. 20lb bar)</label><div style="font-size:11px;color:var(--muted);margin-top:2px;">Stage: ${mlState.sets} sets</div></div><input type="number" id="grr-ml-weight" value="${mlState.weight||''}" placeholder="e.g. 70"/></div>`;
+    html += `<div class="grr-tm-box" style="margin-bottom:10px;"><div><label>Rep range</label><div style="font-size:11px;color:var(--muted);margin-top:2px;">Floor is informational; ceiling drives stage advancement.</div></div><div style="display:flex;gap:6px;align-items:center;"><input type="number" id="grr-ml-floor" value="${mlState.repFloor}" style="width:52px;"/><span style="color:var(--muted);font-size:11px;">–</span><input type="number" id="grr-ml-ceiling" value="${ceiling}" style="width:52px;"/></div></div>`;
     for (let i=1;i<=mlState.sets;i++) {
       const isAmrap = i===mlState.sets;
       html += `<div class="grr-set-row"><div class="grr-set-row-top"><span>Set ${i}${isAmrap?' (AMRAP)':''}</span><span>${isAmrap?`beat last: ${mlState.lastAmrap??'—'}`:`target ${ceiling}`}</span></div><div class="grr-set-inputs"><input type="number" class="grr-ml-reps" data-i="${i}" placeholder="reps" style="width:70px;"/><span class="grr-unit">reps</span></div></div>`;
@@ -263,7 +246,7 @@
     container.querySelector('#grr-save-major').onclick = () => {
       const reps = [...container.querySelectorAll('.grr-ml-reps')].map(inp => parseInt(inp.value,10)||0);
       const msgEl = container.querySelector('#'+msgElId);
-      if (reps.some(r=>r<=0)) { applySaveMsg(msgEl, 'Enter a rep count for every set first.'); return; }
+      if (reps.some(r=>r<=0)) { msgEl.textContent = 'Enter a rep count for every set first.'; return; }
       const amrapReps = reps[reps.length-1];
       const allHit = reps.every(r => r >= ceiling);
       let msg;
@@ -299,7 +282,7 @@
         allSuccess: allHit, tmAction: msg.includes('bumped') ? 'increase' : 'none'};
       if (!LOGS[majorDay.lift]) LOGS[majorDay.lift]=[];
       LOGS[majorDay.lift].push(entry); saveLogs();
-      applySaveMsg(msgEl, msg);
+      msgEl.textContent = msg;
     };
   }
   function renderHome() {
@@ -343,7 +326,7 @@
             <div style="font-size:11px;color:var(--muted);margin:0 0 8px;line-height:1.5;">Done during rest between Major Lift sets. Tap to cycle rounds — 1 → 2 → 3 → back to none. Swap any slot for a different mobility exercise with the dropdown.</div>
             <div id="grr-daily-superset-block" style="margin-bottom:10px;"></div>
             <button class="grr-save-btn" id="grr-save-mobility">Save Mobility / Rehab</button>
-            ${saveMsgHtml(HOME_MOBILITY_MSG, 'grr-mobility-msg')}
+            <div class="grr-save-msg" id="grr-mobility-msg">${HOME_MOBILITY_MSG||''}</div>
           </div>
         </div>
 
@@ -353,7 +336,7 @@
             <div style="font-size:11px;color:var(--muted);margin:0 0 10px;line-height:1.5;"><b style="color:var(--steel);">Done</b> = completed the round, did not hit ceiling. <b style="color:var(--brand);">Max!</b> = Completes and hit max ceiling. Core and Isolation stations can be swapped with the chips above each one.</div>
             <div id="grr-circuit-block"></div>
             <button class="grr-save-btn" id="grr-save-circuit">Save Circuit Session</button>
-            ${saveMsgHtml(state.homeMsg, 'grr-home-msg')}
+            <div class="grr-save-msg" id="grr-home-msg">${state.homeMsg||''}</div>
           </div>
         </div>
       </div>
@@ -531,17 +514,12 @@
         tickRow.style.cssText = 'display:flex;gap:6px;margin-top:8px;';
         for (let round = 0; round < P.startSets; round++) {
           const tick = ticks[round] || 0;
-          // Enlarged tap target (44px via .grr-tick-btn, up from 38px) and a shape/icon cue for the
-          // Max! state (a white inset ring via the .tick-max class, plus a star glyph) so the "this
-          // round hit the ceiling" state doesn't rely on color alone to read as different from Done.
-          const tickState = tick === 2 ? 'max' : tick === 1 ? 'done' : 'blank';
-          const tickLabel = tickState === 'max' ? '★ Max!' : tickState === 'done' ? '✓ Done' : `Log R${round+1}`;
-          const tickColor = tickState === 'max' ? 'var(--brand)' : tickState === 'done' ? 'var(--steel)' : 'var(--line)';
           const tickBtn = document.createElement('button');
           tickBtn.type = 'button';
+          const tickLabel = tick === 2 ? 'Max!' : tick === 1 ? 'Done' : `Log R${round+1}`;
+          const tickColor = tick === 2 ? 'var(--brand)' : tick === 1 ? 'var(--steel)' : 'var(--line)';
           tickBtn.textContent = tickLabel;
-          tickBtn.className = 'grr-tick-btn' + (tickState === 'max' ? ' tick-max' : '');
-          tickBtn.style.background = tickColor;
+          tickBtn.style.cssText = `flex:1;height:38px;border-radius:6px;border:none;background:${tickColor};color:#fff;font-weight:800;font-size:12.5px;cursor:pointer;`;
           tickBtn.onclick = () => {
             const arr = CIRCUIT_TICKS[exId] || [];
             arr[round] = ((arr[round]||0) + 1) % 3;
@@ -650,6 +628,7 @@
       for (let i=1; i<=P.startSets; i++) {
         setsHtml += `<div class="grr-set-row"><div class="grr-set-row-top"><span>Round ${i}</span><span>target ${P.repCeiling}, floor ${P.repFloor}</span></div><div class="grr-set-inputs"><input type="number" class="grr-hd-reps" data-i="${i}" placeholder="reps" style="width:70px;"/><span class="grr-unit">reps</span></div></div>`;
       }
+      const repRangeEditorHtml = `<div class="grr-tm-box"><div><label>Rep range</label><div style="font-size:11px;color:var(--muted);margin-top:2px;">Shared by every rung on ${ladder.label}. Floor is informational; ceiling drives rung advancement.</div></div><div style="display:flex;gap:6px;align-items:center;"><input type="number" id="grr-hd-rep-floor" value="${P.repFloor}" style="width:52px;"/><span style="color:var(--muted);font-size:11px;">–</span><input type="number" id="grr-hd-rep-ceiling" value="${P.repCeiling}" style="width:52px;"/></div></div>`;
       // Reference weight (item 8) — only shown for rungs with a loaded/weighted variation. Purely
       // informational: never affects round success/failure or rung-advancement, just flags a plateau.
       // Can be tracked as either a numeric plate weight or a band strength level — see the WEIGHT
@@ -657,30 +636,13 @@
       const showRefWeight = !isBodyweightOnly(x);
       const refState = REF_WEIGHT[x.id] || {weight: null, lastCeilingWeight: null, ceilingStreak: 0, type: defaultWeightType(x)};
       if (!refState.type) refState.type = defaultWeightType(x); // back-compat for state saved before this field existed
-      // Rep range + (if applicable) reference weight/band grouped into one "Target" card instead of
-      // several separate boxes — everything here describes "what a successful round looks like",
-      // whereas the rung list above and the round inputs/save below are the two things you actually
-      // interact with mid-set.
-      const targetCardHtml = `
-        <div class="grr-target-card">
-          <div class="grr-target-card-title">Target</div>
-          <div class="grr-target-card-sub">Shared by every rung on ${ladder.label}. Floor is informational; ceiling drives rung advancement.</div>
-          <div class="grr-target-row">
-            <div class="grr-target-row-label">Rep range</div>
-            <div class="grr-target-row-control"><input type="number" id="grr-hd-rep-floor" value="${P.repFloor}"/><span style="color:var(--muted);font-size:11px;">–</span><input type="number" id="grr-hd-rep-ceiling" value="${P.repCeiling}"/></div>
-          </div>
-          ${showRefWeight ? `
-          <div class="grr-target-row">
-            <div class="grr-target-row-label">Reference weight type</div>
-            <div class="grr-target-row-control">${weightTypeToggleHtml('grr-hd-ref', refState.type)}</div>
-          </div>
-          <div class="grr-target-row">
-            <div class="grr-target-row-label">${refState.type === 'band' ? 'Band level (reference)' : 'Weight (lb, reference)'}</div>
-            <div class="grr-target-row-control">${refState.type === 'band' ? bandPickerHtml('grr-hd-ref', refState.weight || 'light') : `<input type="number" id="grr-hd-ref-weight" value="${refState.weight||''}" placeholder="e.g. 20"/>`}</div>
-          </div>` : ''}
-        </div>
-        ${showRefWeight && refState.ceilingStreak >= 2 ? `<div class="grr-msg-milestone">Hit the ceiling twice at ${formatWeightValue(refState.type, refState.lastCeilingWeight)} — consider increasing it.</div>` : ''}
-      `;
+      const refWeightHtml = showRefWeight ? `
+        ${weightTypeToggleHtml('grr-hd-ref', refState.type)}
+        ${refState.type === 'band'
+          ? `<div style="font-size:11px;color:var(--muted);margin:-2px 0 6px;">Reference band level only — doesn't affect success or rung advancement.</div>${bandPickerHtml('grr-hd-ref', refState.weight || 'light')}`
+          : `<div class="grr-tm-box"><div><label>Weight (lb, reference only)</label><div style="font-size:11px;color:var(--muted);margin-top:2px;">Doesn't affect success or rung advancement — just here so a plateau is easy to spot.</div></div><input type="number" id="grr-hd-ref-weight" value="${refState.weight||''}" placeholder="e.g. 20"/></div>`}
+        ${refState.ceilingStreak >= 2 ? `<div style="background:var(--surface);border:1px solid var(--brand);border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:12.5px;color:var(--brand);font-weight:700;">Hit the ceiling twice at ${formatWeightValue(refState.type, refState.lastCeilingWeight)} — consider increasing it.</div>` : ''}
+      ` : '';
       root.innerHTML = `
         <div class="grr-detail">
           ${backButtonHtml()}
@@ -690,11 +652,11 @@
           ${x.notes ? `<div class="grr-notes">${x.notes}</div>` : ''}
           <div class="grr-section-label" style="padding-left:0;">${ladder.label} — tap any rung to jump there (forward or back)</div>
           <div id="grr-rung-list" style="margin-bottom:14px;">${rungListHtml}</div>
-          ${targetCardHtml}
-          <div class="grr-section-label" style="padding-left:0;">Log this round</div>
+          ${repRangeEditorHtml}
+          ${refWeightHtml}
           <div id="grr-hd-sets">${setsHtml}</div>
           <button class="grr-save-btn" id="grr-hd-save">Save Round(s)</button>
-          ${saveMsgHtml(HOME_DETAIL_MSG, 'grr-hd-msg')}
+          <div class="grr-save-msg" id="grr-hd-msg">${HOME_DETAIL_MSG||''}</div>
           <div class="grr-section-label" style="padding-left:0;">Recent history</div>
           <div class="grr-history">${histHtml}</div>
         </div>
@@ -738,7 +700,7 @@
       }
       root.querySelector('#grr-hd-save').onclick = () => {
         const reps = [...root.querySelectorAll('.grr-hd-reps')].map(inp => parseInt(inp.value,10)||0);
-        if (reps.some(r=>r<=0)) { applySaveMsg(root.querySelector('#grr-hd-msg'), 'Enter reps for every round first.'); return; }
+        if (reps.some(r=>r<=0)) { root.querySelector('#grr-hd-msg').textContent = 'Enter reps for every round first.'; return; }
         const allHit = reps.every(r => r >= P.repCeiling);
         const entry = {date: todayLocal(), exercise: x.n, pattern: x.p, exId: x.id, logId: newLogId(),
           sets: reps.map((r,i)=>({target:'Round '+(i+1), weight:null, reps:r, success: r>=P.repCeiling})), allSuccess: allHit, tmAction:'none'};
@@ -790,27 +752,10 @@
       for (let i=1; i<=P.startSets; i++) {
         setsHtml += `<div class="grr-set-row"><div class="grr-set-row-top"><span>Round ${i}</span><span>target ${P.repCeiling}, floor ${P.repFloor}</span></div><div class="grr-set-inputs"><input type="number" class="grr-hd-reps" data-i="${i}" placeholder="reps" style="width:70px;"/><span class="grr-unit">reps</span></div></div>`;
       }
-      // Weight type/value + rep range grouped into one "Target" card — see the ladder branch above
-      // for the same rationale.
-      const targetCardHtml = `
-        <div class="grr-target-card">
-          <div class="grr-target-card-title">Target</div>
-          <div class="grr-target-card-sub">Floor is informational; ceiling drives the weight-bump progression.</div>
-          <div class="grr-target-row">
-            <div class="grr-target-row-label">Weight type</div>
-            <div class="grr-target-row-control">${weightTypeToggleHtml('grr-hd-iso', iState.type)}</div>
-          </div>
-          <div class="grr-target-row">
-            <div class="grr-target-row-label">${iState.type === 'band' ? 'Band level' : 'Weight (lb)'}</div>
-            <div class="grr-target-row-control">${iState.type === 'band' ? bandPickerHtml('grr-hd-iso', iState.weight || 'light') : `<input type="number" id="grr-hd-iso-weight" value="${iState.weight||''}" placeholder="e.g. 20"/>`}</div>
-          </div>
-          <div class="grr-target-row">
-            <div class="grr-target-row-label">Rep range</div>
-            <div class="grr-target-row-control"><input type="number" id="grr-hd-rep-floor" value="${P.repFloor}"/><span style="color:var(--muted);font-size:11px;">–</span><input type="number" id="grr-hd-rep-ceiling" value="${P.repCeiling}"/></div>
-          </div>
-        </div>
-      `;
-      const plateauHtml = iState.ceilingStreak >= 2 ? `<div class="grr-msg-milestone">Hit the ceiling twice at ${formatWeightValue(iState.type, iState.lastCeilingWeight)} — ${iState.type==='band' ? 'the band will bump on next save (unless already at X-Heavy).' : 'weight will bump on next save (or the rep target rises if no plates are available).'}</div>` : '';
+      const repRangeEditorHtml = `<div class="grr-tm-box"><div><label>Rep range</label><div style="font-size:11px;color:var(--muted);margin-top:2px;">Floor is informational; ceiling drives the weight-bump progression.</div></div><div style="display:flex;gap:6px;align-items:center;"><input type="number" id="grr-hd-rep-floor" value="${P.repFloor}" style="width:52px;"/><span style="color:var(--muted);font-size:11px;">–</span><input type="number" id="grr-hd-rep-ceiling" value="${P.repCeiling}" style="width:52px;"/></div></div>`;
+      const weightBlockHtml = iState.type === 'band'
+        ? `${weightTypeToggleHtml('grr-hd-iso', iState.type)}${bandPickerHtml('grr-hd-iso', iState.weight || 'light')}`
+        : `${weightTypeToggleHtml('grr-hd-iso', iState.type)}<div class="grr-tm-box"><div><label>Weight (lb)</label></div><input type="number" id="grr-hd-iso-weight" value="${iState.weight||''}" placeholder="e.g. 20"/></div>`;
       root.innerHTML = `
         <div class="grr-detail">
           ${backButtonHtml()}
@@ -818,12 +763,12 @@
           <div class="grr-detail-meta">${x.p} · ${x.m} · Isolation — ${P.startSets} rounds, weight is the only progression axis</div>
           ${gifBlock(x)}
           ${x.notes ? `<div class="grr-notes">${x.notes}</div>` : ''}
-          ${targetCardHtml}
-          ${plateauHtml}
-          <div class="grr-section-label" style="padding-left:0;">Log this round</div>
+          ${weightBlockHtml}
+          ${repRangeEditorHtml}
+          ${iState.ceilingStreak >= 2 ? `<div style="background:var(--surface);border:1px solid var(--brand);border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:12.5px;color:var(--brand);font-weight:700;">Hit the ceiling twice at ${formatWeightValue(iState.type, iState.lastCeilingWeight)} — ${iState.type==='band' ? 'the band will bump on next save (unless already at X-Heavy).' : 'weight will bump on next save (or the rep target rises if no plates are available).'}</div>` : ''}
           <div id="grr-hd-sets">${setsHtml}</div>
           <button class="grr-save-btn" id="grr-hd-save">Save</button>
-          ${saveMsgHtml(HOME_DETAIL_MSG, 'grr-hd-msg')}
+          <div class="grr-save-msg" id="grr-hd-msg">${HOME_DETAIL_MSG||''}</div>
           <div class="grr-section-label" style="padding-left:0;">Recent history</div>
           <div class="grr-history">${histHtml}</div>
         </div>
@@ -852,7 +797,7 @@
       root.querySelector('#grr-hd-rep-ceiling').onchange = (e) => { setRepRange('iso', x.id, P.repFloor, parseInt(e.target.value,10) || base.repCeiling); render(); };
       root.querySelector('#grr-hd-save').onclick = () => {
         const reps = [...root.querySelectorAll('.grr-hd-reps')].map(inp => parseInt(inp.value,10)||0);
-        if (reps.some(r=>r<=0)) { applySaveMsg(root.querySelector('#grr-hd-msg'), 'Enter reps for every round first.'); return; }
+        if (reps.some(r=>r<=0)) { root.querySelector('#grr-hd-msg').textContent = 'Enter reps for every round first.'; return; }
         const allHit = reps.every(r => r >= P.repCeiling);
         const updated = trackWeightCeilingStreak(ISOLATION_STATE, x.id, iState.weight, allHit);
         updated.type = iState.type;
