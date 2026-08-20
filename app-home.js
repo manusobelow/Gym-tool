@@ -656,6 +656,7 @@
           <div class="grr-detail-meta">Step ${MAJOR_FOCUS.stepIndex+1} of ${steps.length} · ${majorDay.label}</div>
           <div class="grr-detail-name">${ex.n} — Set ${step.setIndex}${step.isAmrap?' (AMRAP)':''}</div>
           <div class="grr-detail-meta">${step.isAmrap ? `Beat last AMRAP: ${mlState.lastAmrap??'—'}` : `Target ${ceiling} reps`}${mlState.weight?` · ${mlState.weight} lb`:''}</div>
+          ${gifBlock(ex)}
           <div class="grr-set-inputs" style="margin-bottom:16px;">
             <input type="number" id="grr-mf-reps" placeholder="reps" style="width:90px;height:48px;font-size:20px;"/>
             <span class="grr-unit">reps</span>
@@ -723,10 +724,10 @@
 
         <div class="grr-collapse${HOME_COLLAPSE.major?' open':''}" id="grr-major-collapse" style="margin:10px 0 14px;">
           <div class="grr-collapse-head" id="grr-major-lift-header">
-            <span id="grr-major-toggle-label">${majorDay.label}: ${EX_BY_ID[majorDay.lift] ? EX_BY_ID[majorDay.lift].n : majorDay.lift} + Mobility/Rehab ▾</span>
-            <span style="display:flex;gap:10px;flex-shrink:0;">
-              <span id="grr-major-focus-link" style="color:var(--brand);font-size:11px;cursor:pointer;font-weight:800;">▶ Focus Mode</span>
+            <span id="grr-major-toggle-label">${majorDay.label}: ${EX_BY_ID[majorDay.lift] ? EX_BY_ID[majorDay.lift].n : majorDay.lift} ▾</span>
+            <span style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
               <span id="grr-major-view-link" style="color:var(--steel);font-size:11px;cursor:pointer;">(view exercise →)</span>
+              <span id="grr-major-focus-link" style="color:var(--green);font-size:11px;cursor:pointer;font-weight:800;margin-left:12px;">▶ Focus Mode</span>
             </span>
           </div>
           <div class="grr-collapse-body" id="grr-major-lift-block" style="padding:0 0 12px;">
@@ -737,8 +738,8 @@
 
         <div class="grr-collapse${HOME_COLLAPSE.circuit?' open':''}" id="grr-circuit-collapse" style="margin:10px 0 14px;">
           <div class="grr-collapse-head" id="grr-circuit-header">
-            <span>${circuitDay.label} — ${P.startSets} rounds each, tap to log each round as you go ▾</span>
-            <span id="grr-circuit-start-link" style="color:var(--brand);font-size:11px;cursor:pointer;font-weight:800;">▶ Start Focus Mode</span>
+            <span>${circuitDay.label} ▾</span>
+            <span id="grr-circuit-start-link" style="color:var(--green);font-size:11px;cursor:pointer;font-weight:800;margin-left:12px;">▶ Focus Mode</span>
           </div>
           <div class="grr-collapse-body" id="grr-circuit-wrap" style="padding:0 0 12px;">
             <div style="font-size:11px;color:var(--muted);margin:0 0 10px;line-height:1.5;"><b style="color:var(--steel);">Done</b> = completed the round, did not hit ceiling. <b style="color:var(--brand);">Max!</b> = Completes and hit max ceiling. Core and Isolation stations can be swapped with the chips above each one. Prefer one exercise at a time? Use Focus Mode above — it walks the whole circuit for you and auto-advances after each round.</div>
