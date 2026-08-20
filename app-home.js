@@ -814,11 +814,19 @@
       const fam = isLadder ? null : ISOLATION_FAMILIES[famKey];
       const exIds = isLadder ? [currentRungId(ladderKey)] : (fam ? fam.exercises : []);
 
+      // Core and Isolation stations get a distinct color accent (green / amber) so they read as a
+      // different category from the ladder stations at a glance, not just via their swap-picker —
+      // applied to both the picker chip row and every exercise row belonging to that station.
+      const isCoreStation = station.pattern === 'Core';
+      const isIsolationStation = !isLadder;
+      const stationAccent = isCoreStation ? 'var(--green)' : (isIsolationStation ? 'var(--amber)' : null);
+      const stationTint = isCoreStation ? 'var(--core-tint)' : (isIsolationStation ? 'var(--iso-tint)' : 'var(--surface)');
+
       const showLadderSwap = isLadder && station.pattern === 'Core';
       const showFamilySwap = !isLadder;
       if (showLadderSwap || showFamilySwap) {
         const pickerWrap = document.createElement('div');
-        pickerWrap.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;';
+        pickerWrap.style.cssText = `display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;padding:6px 8px;border-radius:6px;background:${stationTint};border-left:3px solid ${stationAccent};`;
         const options = showLadderSwap
           ? CORE_LADDER_KEYS.map(k => ({key:k, label: LADDERS[k].label}))
           : Object.keys(ISOLATION_FAMILIES).map(k => ({key:k, label: ISOLATION_FAMILIES[k].label}));
@@ -845,7 +853,9 @@
         const stationP = {...baseP, repFloor: rr.floor, repCeiling: rr.ceiling};
         const ticks = CIRCUIT_TICKS[exId] || [];
         const row = document.createElement('div');
-        row.style.cssText = 'padding:10px;margin-bottom:6px;border-radius:6px;background:var(--surface);border:1px solid var(--line);';
+        row.style.cssText = stationAccent
+          ? `padding:10px;margin-bottom:6px;border-radius:6px;background:${stationTint};border:1px solid var(--line);border-left:4px solid ${stationAccent};`
+          : 'padding:10px;margin-bottom:6px;border-radius:6px;background:var(--surface);border:1px solid var(--line);';
         const topRow = document.createElement('div');
         topRow.style.cssText = 'display:flex;align-items:center;gap:8px;';
         const nameSpan = document.createElement('div');

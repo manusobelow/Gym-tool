@@ -827,7 +827,7 @@ const EXERCISES = [
     ],
     "m": "Hamstrings",
     "region": "lower",
-    "gif": "",
+    "gif": "assitednordic.MOV",
     "notes": "Rung 1 of Nordic Curl Progression. Anchor ankles, use a band anchored in front (or a partner's hands) to assist the lowering phase.",
     "muscles": [
       {
@@ -1919,12 +1919,6 @@ const EXERCISES = [
       }
     ]
   },
-      {
-        "id": "biceps",
-        "w": 1
-      }
-    ]
-  },
   {
     "id": "DB_ROW_CHESTSUP",
     "n": "Chest-Supported Dumbbell Row",
@@ -1946,12 +1940,6 @@ const EXERCISES = [
         "id": "rhomboids",
         "w": 2
       },
-      {
-        "id": "biceps",
-        "w": 1
-      }
-    ]
-  },
       {
         "id": "biceps",
         "w": 1
@@ -2856,7 +2844,7 @@ const EXERCISES = [
       }
     ]
   },
-  // ---------- CORE / CARRY (29) ----------
+  // ---------- CORE / CARRY (31) ----------
   {
     "id": "AB_WHEEL_KNEE",
     "n": "Ab Wheel Roll-Out (From Knees)",
@@ -3147,7 +3135,53 @@ const EXERCISES = [
     "m": "Hip Flexors / Abs",
     "region": "upper",
     "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2025/03/l-sit.gif?resize=600%2C600&ssl=1",
-    "notes": "Support on hands/parallettes or floor, legs extended straight out in front, hold. Bend knees to regress if needed.",
+    "notes": "Also Rung 3 (\"Full L-Sit\") of the L-Sit Progression (Core 4). Support on hands/parallettes or floor, legs extended straight out in front, hold. Bend knees to regress if needed.",
+    "muscles": [
+      {
+        "id": "hip-flexors",
+        "w": 3
+      },
+      {
+        "id": "abs",
+        "w": 2
+      }
+    ]
+  },
+  {
+    "id": "LSIT_R1",
+    "n": "One-Leg L-Sit",
+    "p": "Core / Carry",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Hip Flexors / Abs",
+    "region": "upper",
+    "gif": "https://antranik.org/wp-content/uploads/2024/09/antranik-demonstrating-a-ONE-foot-supported-l-sit.jpg",
+    "notes": "Rung 1 of L-Sit Progression. Support on hands/parallettes or floor with one leg extended straight out, the other tucked or foot resting down for support.",
+    "muscles": [
+      {
+        "id": "hip-flexors",
+        "w": 3
+      },
+      {
+        "id": "abs",
+        "w": 2
+      }
+    ]
+  },
+  {
+    "id": "LSIT_R2",
+    "n": "Tuck L-Sit",
+    "p": "Core / Carry",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Hip Flexors / Abs",
+    "region": "upper",
+    "gif": "https://antranik.org/wp-content/uploads/2024/09/antranik-demonstrating-a-less-tucked-L-sit.jpg",
+    "notes": "Rung 2 of L-Sit Progression. Support on hands/parallettes or floor, knees tucked toward the chest, hold.",
     "muscles": [
       {
         "id": "hip-flexors",
@@ -4398,7 +4432,7 @@ const EXERCISES = [
     ],
     "m": "Hamstrings",
     "region": "lower",
-    "gif": "",
+    "gif": "fullrangenordic.MOV",
     "notes": "Also Rung 3 (\"Full-Range Nordic Curl\") of the Nordic Curl Progression used on Circuit C's Hinge station. Anchor ankles, lower torso under control as far as possible, push back up. Regress with hand assist if needed.",
     "muscles": [
       {

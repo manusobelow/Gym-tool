@@ -71,6 +71,12 @@ const LADDERS = {
   core3: {
     label: "Lateral Flexion Progression",
     rungs: ["SIDEBEND_R1","SIDEBEND_R2","SIDEBEND_R3","SIDEBEND_R4"]
+  },
+  core4: {
+    label: "L-Sit Progression",
+    // Rung 3 ("Full L-Sit") reuses the existing L_SIT gym exercise instead of a duplicate — same
+    // dual-purpose pattern as nordicCurl's rung 3 (NORDIC_CURL) above.
+    rungs: ["LSIT_R1","LSIT_R2","L_SIT"]
   }
 };
 
@@ -92,7 +98,7 @@ const ISOLATION_FAMILIES = {
   },
   tricepsLat: {
     label: "Triceps / Lateral Delts",
-    exercises: ["DB_TRICEPS_OH_EXT","BAND_LATERAL_RAISE"]
+    exercises: ["TRICEPS_OH_EXT","BAND_LATERAL_RAISE"]
   },
   rearDelt: {
     label: "Rear Delts / External Rotators",
@@ -125,7 +131,7 @@ const CIRCUIT_PARAMS = {
 // doubles as the registry of ladders that are Core-family alternatives to each other — this is the
 // list the Home page's Core station swap-picker offers. Add a key here for any future core-style
 // ladder that should both default to the wide rep range AND be selectable as a Core station.
-const CORE_LADDER_KEYS = ["core","core2","core3"];
+const CORE_LADDER_KEYS = ["core","core2","core3","core4"];
 function ladderParamsFor(ladderKey) {
   return CORE_LADDER_KEYS.includes(ladderKey) ? CIRCUIT_PARAMS.ladderCore : CIRCUIT_PARAMS.ladder;
 }
