@@ -194,7 +194,7 @@
         chip.style.background = color;
         chip.style.color = (tally[m]||0) === 0 ? '#1a1a1a' : '#fff';
         chip.style.border = state.muscleMapTarget === m ? '2px solid var(--chalk)' : 'none';
-        chip.textContent = `${MUSCLE_LABELS[m]} \u00b7 ${se.toFixed(1)} (${lm.mav[0]}\u2013${lm.mav[1]})`;
+        chip.textContent = `${MUSCLE_LABELS[m]} · ${se.toFixed(1)} (${lm.mav[0]}–${lm.mav[1]})`;
         chip.onclick = () => { state.muscleMapTarget = (state.muscleMapTarget === m) ? null : m; render(); };
         muscleRow.appendChild(chip);
       });
