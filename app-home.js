@@ -814,19 +814,22 @@
       const fam = isLadder ? null : ISOLATION_FAMILIES[famKey];
       const exIds = isLadder ? [currentRungId(ladderKey)] : (fam ? fam.exercises : []);
 
-      // Core and Isolation stations get a distinct color accent (green / amber) so they read as a
-      // different category from the ladder stations at a glance, not just via their swap-picker —
-      // applied to both the picker chip row and every exercise row belonging to that station.
-      const isCoreStation = station.pattern === 'Core';
-      const isIsolationStation = !isLadder;
-      const stationAccent = isCoreStation ? 'var(--green)' : (isIsolationStation ? 'var(--amber)' : null);
-      const stationTint = isCoreStation ? 'var(--core-tint)' : (isIsolationStation ? 'var(--iso-tint)' : 'var(--surface)');
-
       const showLadderSwap = isLadder && station.pattern === 'Core';
       const showFamilySwap = !isLadder;
       if (showLadderSwap || showFamilySwap) {
+        // Swap-picker panel — visually set apart from the plain station rows below it (distinct
+        // background + a colored top label) so it reads as "this is a control, not just another
+        // row," using colors already established elsewhere in the app rather than introducing new
+        // ones: --steel is the app's existing color for secondary/interactive affordances (links,
+        // "view exercise", badges), reused here as the panel's accent.
+        const pickerBox = document.createElement('div');
+        pickerBox.style.cssText = 'margin-bottom:8px;padding:8px 10px 10px;border-radius:8px;background:var(--surface-2);border:1px solid var(--steel);';
+        const pickerLabel = document.createElement('div');
+        pickerLabel.style.cssText = 'font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--steel);margin-bottom:6px;';
+        pickerLabel.textContent = showLadderSwap ? 'Switch Core Variant' : 'Switch Isolation Pair';
+        pickerBox.appendChild(pickerLabel);
         const pickerWrap = document.createElement('div');
-        pickerWrap.style.cssText = `display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;padding:6px 8px;border-radius:6px;background:${stationTint};border-left:3px solid ${stationAccent};`;
+        pickerWrap.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;';
         const options = showLadderSwap
           ? CORE_LADDER_KEYS.map(k => ({key:k, label: LADDERS[k].label}))
           : Object.keys(ISOLATION_FAMILIES).map(k => ({key:k, label: ISOLATION_FAMILIES[k].label}));
@@ -842,7 +845,8 @@
           };
           pickerWrap.appendChild(chip);
         });
-        circBlock.appendChild(pickerWrap);
+        pickerBox.appendChild(pickerWrap);
+        circBlock.appendChild(pickerBox);
       }
 
       exIds.forEach(exId => {
@@ -853,9 +857,7 @@
         const stationP = {...baseP, repFloor: rr.floor, repCeiling: rr.ceiling};
         const ticks = CIRCUIT_TICKS[exId] || [];
         const row = document.createElement('div');
-        row.style.cssText = stationAccent
-          ? `padding:10px;margin-bottom:6px;border-radius:6px;background:${stationTint};border:1px solid var(--line);border-left:4px solid ${stationAccent};`
-          : 'padding:10px;margin-bottom:6px;border-radius:6px;background:var(--surface);border:1px solid var(--line);';
+        row.style.cssText = 'padding:10px;margin-bottom:6px;border-radius:6px;background:var(--surface);border:1px solid var(--line);';
         const topRow = document.createElement('div');
         topRow.style.cssText = 'display:flex;align-items:center;gap:8px;';
         const nameSpan = document.createElement('div');
