@@ -710,12 +710,10 @@
       <div class="grr-detail">
         <span class="grr-back" id="grr-back">← Back to list</span>
         <div class="grr-detail-name">Home Workout</div>
-        <div class="grr-detail-meta">Today's session — pick your Major Lift day and Circuit day below.</div>
+        <div class="grr-detail-meta">Today's session — pick your Major Lift day below (each day's circuit is paired to it automatically).</div>
 
         <div class="grr-section-label" style="padding-left:0;">Major Lift day</div>
         <div class="grr-equip-row" id="grr-major-day-row"></div>
-        <div class="grr-section-label" style="padding-left:0;">Circuit day</div>
-        <div class="grr-equip-row" id="grr-circuit-day-row"></div>
 
         <div class="grr-collapse${HOME_COLLAPSE.plate?' open':''}" id="grr-plate-collapse" style="margin:10px 0 14px;">
           <div class="grr-collapse-head" id="grr-plate-header">Plate Inventory & Pool ▾</div>
@@ -778,16 +776,10 @@
       const chip = document.createElement('div');
       chip.className = 'grr-chip' + (HOME.majorDay === d ? ' active' : '');
       chip.textContent = 'Day ' + d;
-      chip.onclick = () => { HOME.majorDay = d; state.homeMsg = ''; saveHome(); render(); };
+      // Circuits are now paired 1:1 with the Major Lift day — picking a Major Lift day also picks
+      // its circuit, so there's no separate Circuit day picker anymore.
+      chip.onclick = () => { HOME.majorDay = d; HOME.circuitDay = d; state.homeMsg = ''; saveHome(); render(); };
       majorRow.appendChild(chip);
-    });
-    const circuitRow = root.querySelector('#grr-circuit-day-row');
-    [1,2].forEach(d => {
-      const chip = document.createElement('div');
-      chip.className = 'grr-chip' + (HOME.circuitDay === d ? ' active' : '');
-      chip.textContent = 'Circuit ' + d;
-      chip.onclick = () => { HOME.circuitDay = d; state.homeMsg = ''; saveHome(); render(); };
-      circuitRow.appendChild(chip);
     });
 
     // Plate inventory + pool — just the raw pool total. No auto-derivation from the Major Lift

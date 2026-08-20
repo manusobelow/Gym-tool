@@ -4,7 +4,7 @@
 // can be overridden per-exercise inside the app itself, saved locally, without editing this file.
 // scheme:"circuit" = Home Workout exercises only — excluded from normal gym browsing, only reachable via the Home Workout page.
 // eq (equipment array — includes "rings" for Home Workout), m (muscle text, display label), region (lower|upper),
-// gif (image/video URL, optional — supports direct .gif/.jpg, Google Drive links, and .mp4 video), notes (optional),
+// gif (image/video URL, optional — supports direct .gif/.jpg, Google Drive links, and .mp4/.webm/.mov video), notes (optional),
 // muscles (weighted body-map targets: [{id, w}], w=3 primary/2 secondary/1 tertiary, id matches the muscle SVG taxonomy)
 //
 // ---------- ADDING A NEW EXERCISE ----------
@@ -330,7 +330,7 @@ const EXERCISES = [
       }
     ]
   },
-  // ---------- HINGE (18) ----------
+  // ---------- HINGE (21) ----------
   {
     "id": "BACK_EXT_45",
     "n": "45° Back / Hip Extension",
@@ -800,7 +800,7 @@ const EXERCISES = [
     "m": "Hamstrings / Spinal Erectors",
     "region": "lower",
     "gif": "",
-    "notes": "Home Major Lift C. Minimal knee bend, more restrictive ROM than an RDL.",
+    "notes": "Home Major Lift B (\"RDL day\"). Minimal knee bend, more restrictive ROM than an RDL.",
     "muscles": [
       {
         "id": "hamstrings",
@@ -816,7 +816,78 @@ const EXERCISES = [
       }
     ]
   },
-  // ---------- LUNGE (11) ----------
+  {
+    "id": "NORDIC_R1",
+    "n": "Assisted Nordic Curl",
+    "p": "Hinge",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight",
+      "band"
+    ],
+    "m": "Hamstrings",
+    "region": "lower",
+    "gif": "",
+    "notes": "Rung 1 of Nordic Curl Progression. Anchor ankles, use a band anchored in front (or a partner's hands) to assist the lowering phase.",
+    "muscles": [
+      {
+        "id": "hamstrings",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "NORDIC_R2",
+    "n": "Eccentric Nordic Curl",
+    "p": "Hinge",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Hamstrings",
+    "region": "lower",
+    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2024/05/nordic-hamstrings-eccentric.gif?fit=600%2C600&ssl=1",
+    "notes": "Rung 2 of Nordic Curl Progression. Lower under control as far as possible, then use hands on the floor to push back up to the top.",
+    "muscles": [
+      {
+        "id": "hamstrings",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "NORDIC_R4",
+    "n": "Weighted Nordic Curl",
+    "p": "Hinge",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight",
+      "dumbbell"
+    ],
+    "m": "Hamstrings",
+    "region": "lower",
+    "gif": "",
+    "notes": "Rung 4 of Nordic Curl Progression. Hold a plate or dumbbell against the chest for added resistance on a full-range Nordic curl.",
+    "muscles": [
+      {
+        "id": "hamstrings",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 1
+      }
+    ]
+  },
+  // ---------- LUNGE (14) ----------
   {
     "id": "BB_LUNGE",
     "n": "Barbell Lunge",
@@ -1111,6 +1182,87 @@ const EXERCISES = [
       },
       {
         "id": "quads",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "STEPUP_R1",
+    "n": "Standard Step-Up, Bodyweight",
+    "p": "Lunge",
+    "scheme": "circuit",
+    "eq": [
+      "bodyweight"
+    ],
+    "m": "Quads / Glute Max",
+    "region": "lower",
+    "gif": "https://i.pinimg.com/originals/46/11/dc/4611dc800f3501090fb1c38861a1963c.gif",
+    "notes": "Rung 1 of Step-Up Progression. Full step onto a knee-height box or bench, drive through the lead heel.",
+    "muscles": [
+      {
+        "id": "quads",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "adductors",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "STEPUP_R2",
+    "n": "Dumbbell Step-Up",
+    "p": "Lunge",
+    "scheme": "circuit",
+    "eq": [
+      "dumbbell"
+    ],
+    "m": "Quads / Glute Max",
+    "region": "lower",
+    "gif": "https://i.pinimg.com/originals/1c/88/eb/1c88ebbc4c4c05f7e108a8339f6c22fd.gif",
+    "notes": "Rung 2 of Step-Up Progression. Same box height, now loaded with DBs at the sides.",
+    "muscles": [
+      {
+        "id": "quads",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "adductors",
+        "w": 1
+      }
+    ]
+  },
+  {
+    "id": "STEPUP_R3",
+    "n": "Deficit Step-Up",
+    "p": "Lunge",
+    "scheme": "circuit",
+    "eq": [
+      "dumbbell"
+    ],
+    "m": "Quads / Glute Max",
+    "region": "lower",
+    "gif": "",
+    "notes": "Rung 3 of Step-Up Progression. Same DB load as rung 2, standing on a small deficit/plate to increase the range of motion.",
+    "muscles": [
+      {
+        "id": "quads",
+        "w": 3
+      },
+      {
+        "id": "glute-max",
+        "w": 2
+      },
+      {
+        "id": "adductors",
         "w": 1
       }
     ]
@@ -4290,7 +4442,7 @@ const EXERCISES = [
     "m": "Hamstrings",
     "region": "lower",
     "gif": "",
-    "notes": "Anchor ankles, lower torso under control as far as possible, push back up. Regress with hand assist if needed.",
+    "notes": "Also Rung 3 (\"Full-Range Nordic Curl\") of the Nordic Curl Progression used on Circuit C's Hinge station. Anchor ankles, lower torso under control as far as possible, push back up. Regress with hand assist if needed.",
     "muscles": [
       {
         "id": "hamstrings",

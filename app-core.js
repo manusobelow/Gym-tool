@@ -43,7 +43,7 @@ if (typeof EXERCISES === 'undefined') {
   let REP_OVERRIDE = {};    // { exId: {mainReps, hypLow, hypHigh} } — overrides hardcoded rep targets
 
   // ---------- HOME WORKOUT STATE ----------
-  let HOME = { majorDay: 'A', circuitDay: 1, equip: HOME_DATA_LOADED ? new Set(HOME_EQUIPMENT) : new Set() };
+  let HOME = { majorDay: 'A', circuitDay: 'A', equip: HOME_DATA_LOADED ? new Set(HOME_EQUIPMENT) : new Set() };
   let PLATE_INVENTORY = HOME_DATA_LOADED ? {...DEFAULT_PLATE_INVENTORY} : {};
   let RUNG_STATE = {};   // { ladderKey: { rungIndex: 0, streak: 0 } }
   let CIRCUIT_TICKS = {}; // { exId: 0|1|2 } — 0=blank, 1=partial (didn't hit ceiling), 2=full success (hit ceiling)
@@ -109,6 +109,11 @@ if (typeof EXERCISES === 'undefined') {
     try { const v = JSON.parse(localStorage.getItem('gym-scheme-override')); if (v) SCHEME_OVERRIDE = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-rep-override')); if (v) REP_OVERRIDE = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-home-state')); if (v) HOME = {...HOME, ...v, equip: new Set(v.equip || [])}; } catch(e){}
+    // Migration safety: circuits used to be independently selectable (1/2); they're now paired 1:1
+    // with the Major Lift day, so force circuitDay to mirror majorDay on every load. This self-heals
+    // any old saved state that still has a numeric circuitDay pointing at a now-nonexistent
+    // CIRCUIT_DAYS[1]/CIRCUIT_DAYS[2] key.
+    HOME.circuitDay = HOME.majorDay;
     try { const v = JSON.parse(localStorage.getItem('gym-plate-inventory')); if (v) PLATE_INVENTORY = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-rung-state')); if (v) RUNG_STATE = v; } catch(e){}
     try { const v = JSON.parse(localStorage.getItem('gym-circuit-ticks')); if (v) CIRCUIT_TICKS = v; } catch(e){}
@@ -173,7 +178,7 @@ if (typeof EXERCISES === 'undefined') {
       const fileId = driveMatch[1];
       return `<iframe class="grr-gif grr-gif-frame" src="https://drive.google.com/file/d/${fileId}/preview" allow="autoplay" loading="lazy"></iframe>`;
     }
-    if (/\.mp4(\?|$)/i.test(x.gif)) {
+    if (/\.(mp4|webm|mov)(\?|$)/i.test(x.gif)) {
       return `<video class="grr-gif" src="${x.gif}" autoplay loop muted playsinline onerror="this.style.display='none'"></video>`;
     }
     return `<img class="grr-gif" src="${x.gif}" alt="${x.n} demo" loading="lazy" onerror="this.style.display='none'"/>`;

@@ -42,6 +42,18 @@ const LADDERS = {
     label: "Single-Leg RDL Progression",
     rungs: ["SLRDL_R2","SL_RDL_DB","SLRDL_R4"]
   },
+  stepUp: {
+    label: "Step-Up Progression",
+    rungs: ["STEPUP_R1","STEPUP_R2","STEPUP_R3"]
+  },
+  nordicCurl: {
+    label: "Nordic Curl Progression",
+    // Rung 3 ("Full-Range Nordic Curl") reuses the existing NORDIC_CURL gym exercise instead of a
+    // duplicate — it stays classified p:"Isolation"/scheme:"hypertrophy" in exercises.js for normal
+    // gym browsing, and becomes dual-purpose automatically via findLadderForExercise (app-home.js)
+    // once referenced here. No extra code needed for the routing to work.
+    rungs: ["NORDIC_R1","NORDIC_R2","NORDIC_CURL","NORDIC_R4"]
+  },
   core: {
     label: "Core Progression (Flexion / Anti-Extension)",
     rungs: ["REVERSE_CRUNCH","STANDARD_CRUNCH","CORE_R3","AB_WHEEL_KNEE","AB_WHEEL_TOES"]
@@ -141,27 +153,42 @@ const MAJOR_LIFT_DAYS = {
 // will; app-home.js's DAILY_SUPERSET_OVERRIDE stores the per-day customization and falls back to
 // these defaults when nothing's been swapped.
 
+// Circuits are now paired 1:1 with Major Lift days (A/B/C) rather than independently selectable —
+// HOME.circuitDay always mirrors HOME.majorDay (see app-core.js loadAll() migration line and
+// app-home.js's major-day chip handler). Station order: Vertical Push/Pull → Horizontal Push/Pull →
+// Lunge → Hinge → Core → Isolation.
 const CIRCUIT_DAYS = {
-  1: {
-    label: "Circuit 1",
+  A: {
+    label: "Circuit A — Zercher",
     stations: [
       { pattern: "Vertical Push",   ladder: "handstand" },
       { pattern: "Horizontal Pull", ladder: "row" },
-      { pattern: "Lunge",           ladder: "splitSquat" },
       { pattern: "Hinge",           ladder: "hipThrust" },
+      { pattern: "Lunge",           ladder: "lateralLunge" },
       { pattern: "Core",            ladder: "core" },
       { pattern: "Isolation",       family: "calfTib" }
     ]
   },
-  2: {
-    label: "Circuit 2",
+  B: {
+    label: "Circuit B — RDL",
     stations: [
       { pattern: "Horizontal Push", ladder: "pushup" },
       { pattern: "Vertical Pull",   ladder: "pullup" },
-      { pattern: "Lunge",           ladder: "lateralLunge" },
+      { pattern: "Lunge",           ladder: "stepUp" },
       { pattern: "Hinge",           ladder: "singleLegRDL" },
       { pattern: "Core",            ladder: "core" },
       { pattern: "Isolation",       family: "tricepsLat" }
+    ]
+  },
+  C: {
+    label: "Circuit C — Barbell Row",
+    stations: [
+      { pattern: "Vertical Push",   ladder: "handstand" },
+      { pattern: "Horizontal Push", ladder: "pushup" },
+      { pattern: "Lunge",           ladder: "splitSquat" },
+      { pattern: "Hinge",           ladder: "nordicCurl" },
+      { pattern: "Core",            ladder: "core" },
+      { pattern: "Isolation",       family: "armCurls" }
     ]
   }
 };
