@@ -211,5 +211,7 @@ if (typeof EXERCISES === 'undefined') {
     else if (state.view === 'log') renderLog();
     else if (state.view === 'muscles') renderMuscles();
     else if (state.view === 'home') renderHome();
+    else if (state.view === 'circuitFocus') renderCircuitFocus();
+    else if (state.view === 'majorFocus') renderMajorFocus();
     else renderList();
   }

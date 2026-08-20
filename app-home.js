@@ -98,22 +98,21 @@
   // Plain in-memory UI state (not persisted — same convention as state.homeMsg) tracking which of
   // the Home page's collapsible sections are expanded. Kept as its own top-level var, driven from
   // the render itself (the .open class is computed from this on every render()) rather than relying
-  // on a raw DOM classList.toggle() — the latter would silently re-collapse Major Lift/Mobility/
-  // Circuit on every single tap inside them, since render() rebuilds root.innerHTML from scratch on
-  // nearly every interaction in this app (see PROJECT-SCHEMA.md §3 Gotcha #2).
-  let HOME_COLLAPSE = { plate: false, major: true, mobility: false, circuit: true };
-  // Confirmation message shown under the Mobility / Rehab "Save" button — same non-persisted
-  // convention as state.homeMsg, just scoped to this section so the two messages don't clobber
-  // each other when both live on the page at once.
-  let HOME_MOBILITY_MSG = '';
+  // on a raw DOM classList.toggle() — the latter would silently re-collapse Major Lift/Circuit on
+  // every single tap inside them, since render() rebuilds root.innerHTML from scratch on nearly
+  // every interaction in this app (see PROJECT-SCHEMA.md §3 Gotcha #2).
+  // NOTE: `major` now covers the MERGED Major Lift + Mobility/Rehab section (§6.4/§6.9) — the two
+  // used to be separate collapses (`major`, `mobility`); `mobility` was retired when they merged
+  // into one box, since there's no longer a separate section to collapse independently.
+  let HOME_COLLAPSE = { plate: false, major: true, circuit: true };
   // Result message for renderHomeDetail's ladder/isolation Save button. Pre-existing bug, fixed
   // alongside the collapse work: the ladder and isolation save handlers used to write the message
   // straight onto the #grr-hd-msg DOM node and then call render() in the same breath — but render()
   // rebuilds the whole detail page from scratch (PROJECT-SCHEMA.md §3 Gotcha #2), so the message was
   // wiped the instant it was set and never actually visible. Routing it through this field (read by
-  // the template, same pattern as state.homeMsg/HOME_MOBILITY_MSG) fixes that. HOME_DETAIL_LAST_ID
-  // tracks which exercise it belongs to, so navigating to a different exercise's detail page clears
-  // any stale leftover message instead of it bleeding into the new exercise's card.
+  // the template, same pattern as state.homeMsg) fixes that. HOME_DETAIL_LAST_ID tracks which
+  // exercise it belongs to, so navigating to a different exercise's detail page clears any stale
+  // leftover message instead of it bleeding into the new exercise's card.
   let HOME_DETAIL_MSG = '';
   let HOME_DETAIL_LAST_ID = null;
 
@@ -223,14 +222,278 @@
   function mobilityPoolExercises() {
     return EX.filter(x => x.scheme === 'mobility').sort((a,b) => a.n.localeCompare(b.n));
   }
+  // Builds one Mobility/Rehab slot row (name → own exercise page, round-tick button, swap dropdown)
+  // as a DOM node. Shared by the merged Major Lift + Mobility/Rehab box (§6.4/§6.10) — used both for
+  // the rows interleaved between sets ("during rest") and any leftover slots with no rest window this
+  // session. Pulled out of the old standalone Mobility/Rehab block so both places use one
+  // implementation instead of two copies of the same swap/round-tick wiring drifting apart.
+  function buildMobilitySlotRow(dayKey, slotIdx, opts) {
+    const supersetIds = getDailySuperset(dayKey);
+    const exId = supersetIds[slotIdx];
+    const ex = EX_BY_ID[exId];
+    const row = document.createElement('div');
+    if (!ex) return row;
+    const rounds = mobilityRoundsToday(exId);
+    const mobilityPool = mobilityPoolExercises();
+    row.style.cssText = 'margin:6px 0 10px;padding:8px 10px;border-radius:6px;background:var(--surface-2);border:1px dashed var(--steel);';
+    if (opts && opts.label) {
+      const label = document.createElement('div');
+      label.style.cssText = 'font-size:10px;color:var(--steel);text-transform:uppercase;letter-spacing:.05em;font-weight:800;margin-bottom:4px;';
+      label.textContent = opts.label;
+      row.appendChild(label);
+    }
+    const topRow = document.createElement('div');
+    topRow.style.cssText = 'display:flex;align-items:center;gap:8px;';
+    const nameSpan = document.createElement('div');
+    nameSpan.style.cssText = 'flex:1;cursor:pointer;font-size:13px;font-weight:700;';
+    nameSpan.textContent = ex.n;
+    nameSpan.onclick = () => { state.cameFrom = {view:'home'}; state.view = 'detail'; state.activeId = exId; state.saveMsg = ''; render(); };
+    const roundBtn = document.createElement('button');
+    roundBtn.type = 'button';
+    roundBtn.textContent = rounds > 0 ? `✓ ${rounds} round${rounds>1?'s':''}` : 'Mark Done';
+    roundBtn.style.cssText = `flex-shrink:0;border:none;border-radius:6px;padding:7px 12px;font-size:11.5px;font-weight:800;cursor:pointer;background:${rounds>0 ? 'var(--green)' : 'var(--surface)'};color:${rounds>0 ? '#111' : 'var(--chalk)'};`;
+    roundBtn.onclick = () => { setMobilityRounds(exId, ex, (rounds+1) % 4); render(); };
+    topRow.appendChild(nameSpan); topRow.appendChild(roundBtn);
+    row.appendChild(topRow);
+    const swapSelect = document.createElement('select');
+    swapSelect.style.cssText = 'margin-top:6px;width:100%;background:var(--bg);border:1px solid var(--line);color:var(--chalk);padding:5px;border-radius:4px;font-size:11px;';
+    // Safety: if this slot's currently-assigned exercise had its scheme changed away from
+    // "mobility" on its own exercise card, it would otherwise fall out of mobilityPool and
+    // vanish from this dropdown entirely (while still being the active assignment for this
+    // slot) — always keep it selectable so the dropdown never shows a blank/mismatched slot.
+    const poolForThisSlot = mobilityPool.some(px => px.id === exId)
+      ? mobilityPool
+      : [...mobilityPool, ex].sort((a,b) => a.n.localeCompare(b.n));
+    poolForThisSlot.forEach(px => {
+      const opt = document.createElement('option');
+      opt.value = px.id; opt.textContent = px.n;
+      if (px.id === exId) opt.selected = true;
+      swapSelect.appendChild(opt);
+    });
+    swapSelect.onchange = () => { setDailySupersetSlot(dayKey, slotIdx, swapSelect.value); render(); };
+    row.appendChild(swapSelect);
+    return row;
+  }
 
-  function renderMajorLiftLogger(container, dayKey, msgElId) {
+  // ---------- CIRCUIT FOCUS MODE ----------
+  // A distraction-free "one exercise at a time" view of the circuit — requested to cut clutter for
+  // people who just want to know what to do right now, instead of scanning all 6 stations at once.
+  // Deliberately has NO separate persisted state of its own — the current step is derived live from
+  // CIRCUIT_TICKS (the same store the full Home page circuit checklist already writes to), so Focus
+  // Mode and the regular checklist stay in sync no matter which one is used, and reloading mid-session
+  // resumes at the right step instead of losing your place. Toggling between Focus Mode and the
+  // regular checklist is safe at any time for the same reason.
+  //
+  // Sequencing: round-robin, not "both rounds of station A, then move on" — round 1 of every station
+  // (in CIRCUIT_DAYS order), then round 2 of every station. This maximizes rest between the two
+  // rounds of the same exercise (5 other stations happen in between before you're back), and
+  // CIRCUIT_DAYS's station order already alternates muscle groups/patterns (Vertical Push →
+  // Horizontal Pull → Lunge → Hinge → Core → Isolation — antagonist upper patterns adjacent, lower
+  // patterns grouped but on different chains, small stuff last) so recovery is spread as evenly as a
+  // 6-station, 2-round circuit can manage without a person having to think about exercise order
+  // themselves.
+  //
+  // The Isolation station's two family exercises are treated as ONE step in the sequence — both are
+  // shown and ticked together — since in practice they're done as a single station, not two.
+  function focusSteps(dayKey) {
+    const circuitDay = CIRCUIT_DAYS[dayKey];
+    const steps = [];
+    for (let round = 0; round < CIRCUIT_PARAMS.ladder.startSets; round++) {
+      circuitDay.stations.forEach(station => {
+        const isLadder = !!station.ladder;
+        const ladderKey = isLadder ? resolvedLadderKey(dayKey, station) : null;
+        const famKey = isLadder ? null : resolvedIsolationFamily(dayKey, station);
+        const fam = isLadder ? null : ISOLATION_FAMILIES[famKey];
+        const exIds = isLadder ? [currentRungId(ladderKey)] : (fam ? fam.exercises : []);
+        if (!exIds.length) return;
+        const baseP = isLadder ? ladderParamsFor(ladderKey) : CIRCUIT_PARAMS.isolation;
+        const rr = isLadder ? getRepRange('ladder', ladderKey, baseP.repFloor, baseP.repCeiling) : getRepRange('iso', exIds[0], baseP.repFloor, baseP.repCeiling);
+        steps.push({ round, pattern: station.pattern, exIds, isLadder, ladderKey, repFloor: rr.floor, repCeiling: rr.ceiling });
+      });
+    }
+    return steps;
+  }
+  function stepIsDone(step) {
+    return step.exIds.every(exId => ((CIRCUIT_TICKS[exId] || [])[step.round] || 0) > 0);
+  }
+  // First not-yet-ticked step, or steps.length if every step across both rounds is already ticked
+  // (i.e. the circuit is complete and ready to save).
+  function currentFocusStepIndex(dayKey) {
+    const steps = focusSteps(dayKey);
+    const idx = steps.findIndex(s => !stepIsDone(s));
+    return idx === -1 ? steps.length : idx;
+  }
+  function logCircuitSet(exId, ticks, expectedRounds) {
+    const ex = EX_BY_ID[exId];
+    const sets = ticks.map((t,i) => ({target: 'Round '+(i+1), weight:null, reps:null, success: t===2}));
+    const allSuccess = ticks.length === expectedRounds && ticks.every(t => t===2);
+    const entry = {date: todayLocal(), exercise: ex.n, pattern: ex.p, exId, logId: newLogId(), sets, allSuccess, tmAction:'none'};
+    if (!LOGS[exId]) LOGS[exId] = [];
+    LOGS[exId].push(entry);
+    return allSuccess;
+  }
+  // Shared by the Home page's "Save Circuit Session" button and Focus Mode's completion screen —
+  // logs every ticked exercise, advances any rung/isolation weight that hit its ceiling twice in a
+  // row, and clears CIRCUIT_TICKS for the next session. Returns the summary message to show.
+  function saveCircuitSession() {
+    const circuitDay = CIRCUIT_DAYS[HOME.circuitDay];
+    let anySaved = false;
+    let topOfLadderNotes = [];
+    circuitDay.stations.forEach(station => {
+      if (!station.ladder) {
+        const famKey = resolvedIsolationFamily(HOME.circuitDay, station);
+        const fam = ISOLATION_FAMILIES[famKey];
+        if (!fam) return;
+        fam.exercises.forEach(exId => {
+          const ticks = CIRCUIT_TICKS[exId] || [];
+          if (ticks.some(t => t > 0) && EX_BY_ID[exId]) { logCircuitSet(exId, ticks, CIRCUIT_PARAMS.isolation.startSets); anySaved = true; }
+        });
+        return;
+      }
+      const ladderKey = resolvedLadderKey(HOME.circuitDay, station);
+      const exId = currentRungId(ladderKey);
+      const ticks = CIRCUIT_TICKS[exId] || [];
+      if (!ticks.some(t => t > 0)) return;
+      const stationP = ladderParamsFor(ladderKey);
+      const allSuccess = logCircuitSet(exId, ticks, stationP.startSets);
+      anySaved = true;
+      const st = RUNG_STATE[ladderKey] || {rungIndex:0, streak:0};
+      const ladder = LADDERS[ladderKey];
+      if (allSuccess) {
+        st.streak = (st.streak||0) + 1;
+        if (st.streak >= 2) {
+          if (st.rungIndex < ladder.rungs.length - 1) { st.rungIndex++; st.streak = 0; }
+          else { st.streak = 0; topOfLadderNotes.push(`${ladder.label} has hit its ceiling twice at the top rung — no harder variation defined yet. Might be time to add one.`); }
+        }
+      } else {
+        st.streak = 0;
+      }
+      RUNG_STATE[ladderKey] = st;
+    });
+    saveRungState();
+    saveLogs();
+    CIRCUIT_TICKS = {};
+    saveCircuitTicks();
+    let msg = anySaved
+      ? 'Circuit session saved. Any rung that hit its ceiling on every round, twice in a row, has advanced.'
+      : 'Nothing ticked yet — tap at least one round before saving.';
+    if (topOfLadderNotes.length) msg += ' ' + topOfLadderNotes.join(' ');
+    return msg;
+  }
+  function renderCircuitFocus() {
+    const dayKey = HOME.circuitDay;
+    const circuitDay = CIRCUIT_DAYS[dayKey];
+    const steps = focusSteps(dayKey);
+    const idx = currentFocusStepIndex(dayKey);
+
+    if (idx >= steps.length) {
+      root.innerHTML = `
+        <div class="grr-detail">
+          <span class="grr-back" id="grr-back">← Back to Home Workout</span>
+          <div class="grr-detail-name">${circuitDay.label} — Circuit Complete</div>
+          <div class="grr-detail-meta">All ${steps.length} rounds logged. Save to lock in any advancement.</div>
+          <button class="grr-save-btn" id="grr-focus-save">Save Circuit Session</button>
+          <div class="grr-save-msg" id="grr-focus-msg">${state.homeMsg||''}</div>
+        </div>
+      `;
+      root.querySelector('#grr-back').onclick = () => { state.view = 'home'; render(); };
+      root.querySelector('#grr-focus-save').onclick = () => { state.homeMsg = saveCircuitSession(); state.view = 'home'; render(); };
+      return;
+    }
+
+    const step = steps[idx];
+    const exObjs = step.exIds.map(id => EX_BY_ID[id]).filter(Boolean);
+    const namesHtml = exObjs.map(x => x.n).join(' + ');
+    const gifHtml = exObjs.length === 1 ? gifBlock(exObjs[0]) : '';
+
+    root.innerHTML = `
+      <div class="grr-detail">
+        <span class="grr-back" id="grr-back">← Exit Focus Mode</span>
+        <div class="grr-detail-meta">Step ${idx+1} of ${steps.length} · ${circuitDay.label}</div>
+        <div class="grr-detail-meta">Round ${step.round+1} of ${CIRCUIT_PARAMS.ladder.startSets}</div>
+        <div class="grr-detail-name">${step.pattern}</div>
+        <div class="grr-detail-meta">${namesHtml}</div>
+        ${gifHtml}
+        <div style="font-size:12.5px;color:var(--muted);margin:8px 0 16px;">Target ${step.repCeiling} reps, floor ${step.repFloor}.</div>
+        <div style="display:flex;gap:10px;">
+          <button id="grr-focus-done" style="flex:1;height:56px;border-radius:8px;border:none;background:var(--steel);color:#fff;font-weight:800;font-size:15px;cursor:pointer;">Done</button>
+          <button id="grr-focus-max" style="flex:1;height:56px;border-radius:8px;border:none;background:var(--brand);color:#fff;font-weight:800;font-size:15px;cursor:pointer;">Max!</button>
+        </div>
+      </div>
+    `;
+    root.querySelector('#grr-back').onclick = () => { state.view = 'home'; render(); };
+    function markAndAdvance(val) {
+      step.exIds.forEach(exId => {
+        const arr = CIRCUIT_TICKS[exId] || [];
+        arr[step.round] = val;
+        CIRCUIT_TICKS[exId] = arr;
+      });
+      saveCircuitTicks();
+      render();
+    }
+    root.querySelector('#grr-focus-done').onclick = () => markAndAdvance(1);
+    root.querySelector('#grr-focus-max').onclick = () => markAndAdvance(2);
+  }
+
+  // ---------- MAJOR LIFT SAVE (shared by the inline merged box and Major Lift Focus Mode) ----------
+  // Factored out of what used to be the inline `#grr-save-major` onclick body so both entry points —
+  // the regular Home page box and Major Lift Focus Mode's finish screen (§6.10) — run one copy of the
+  // stage-advancement/AMRAP/logging logic instead of two copies that could drift apart, mirroring why
+  // saveCircuitSession() was factored out for the circuit (§6.9). `reps` is a plain array, one entry
+  // per set in order (set 1 first, AMRAP/last set last).
+  function saveMajorLiftSets(dayKey, reps) {
     const majorDay = MAJOR_LIFT_DAYS[dayKey];
     const ex = EX_BY_ID[majorDay.lift];
     const P = CIRCUIT_PARAMS.majorLift;
+    const mlState = MAJOR_LIFT_STATE[dayKey] || {sets: P.startSets, weight: null, streak: 0, lastAmrap: null, repTarget: P.repCeiling, repFloor: P.repFloor};
+    if (!mlState.repTarget) mlState.repTarget = P.repCeiling;
+    if (!mlState.repFloor) mlState.repFloor = P.repFloor;
+    const ceiling = mlState.repTarget;
+    const amrapReps = reps[reps.length-1];
+    const allHit = reps.every(r => r >= ceiling);
+    let msg;
+    if (allHit) {
+      mlState.streak = (mlState.streak||0)+1;
+      if (mlState.streak >= 2) {
+        if (mlState.sets < P.maxSets) {
+          mlState.sets += 1; mlState.streak = 0;
+          msg = `All sets hit ${ceiling} twice in a row — moving to ${mlState.sets} sets next session.`;
+        } else {
+          const jump = smallestPlateJump();
+          mlState.sets = P.startSets; mlState.streak = 0;
+          if (jump > 0) {
+            mlState.weight = (mlState.weight||0) + jump;
+            mlState.repTarget = P.repCeiling;
+            msg = `All ${P.maxSets} sets hit ${ceiling} twice in a row — weight bumped to ${mlState.weight} lb, back to ${mlState.sets} sets.`;
+          } else {
+            mlState.repTarget = 12;
+            msg = `All ${P.maxSets} sets hit ${ceiling} twice in a row, but no plates available to add — rep target raised to 12 instead, back to ${mlState.sets} sets.`;
+          }
+        }
+      } else { msg = `All sets hit ${ceiling} — one more session like this and you'll advance.`; }
+    } else {
+      mlState.streak = 0;
+      msg = amrapReps > (mlState.lastAmrap||0) ? `Didn't hit ${ceiling} on every set, but the AMRAP improved (${amrapReps} vs ${mlState.lastAmrap}).` : 'Saved — not every set hit the ceiling, no stage change.';
+    }
+    mlState.lastAmrap = amrapReps;
+    MAJOR_LIFT_STATE[dayKey] = mlState; saveMajorLiftState();
+    const entry = {date: todayLocal(), exercise: ex.n, pattern: ex.p, exId: majorDay.lift, logId: newLogId(),
+      sets: reps.map((r,i)=>({target: i===reps.length-1?'AMRAP':'Set '+(i+1), weight: mlState.weight, reps:r, success: r>=ceiling})),
+      allSuccess: allHit, tmAction: msg.includes('bumped') ? 'increase' : 'none'};
+    if (!LOGS[majorDay.lift]) LOGS[majorDay.lift]=[];
+    LOGS[majorDay.lift].push(entry); saveLogs();
+    return msg;
+  }
+  // Standalone Major Lift logger with NO interleaved mobility — used only by renderHomeDetail when
+  // viewing the major lift exercise's own page (e.g. tapping "(view exercise →)" from the Home page,
+  // or browsing to Zercher Squat directly). The Home page itself uses the merged
+  // renderMajorLiftAndMobility() below instead (§6.4/§6.10).
+  function renderMajorLiftLogger(container, dayKey, msgElId) {
+    const majorDay = MAJOR_LIFT_DAYS[dayKey];
+    const P = CIRCUIT_PARAMS.majorLift;
     const mlState = MAJOR_LIFT_STATE[dayKey] || {sets: P.startSets, weight: null, streak: 0, lastAmrap: null, repTarget: P.repCeiling};
-    if (!mlState.repTarget) mlState.repTarget = P.repCeiling; // back-compat for state saved before this field existed
-    if (!mlState.repFloor) mlState.repFloor = P.repFloor; // back-compat for state saved before this field existed
+    if (!mlState.repTarget) mlState.repTarget = P.repCeiling;
+    if (!mlState.repFloor) mlState.repFloor = P.repFloor;
     const ceiling = mlState.repTarget;
     let html = `<div class="grr-tm-box" style="margin-bottom:10px;"><div><label>Weight (lb, total incl. 20lb bar)</label><div style="font-size:11px;color:var(--muted);margin-top:2px;">Stage: ${mlState.sets} sets</div></div><input type="number" id="grr-ml-weight" value="${mlState.weight||''}" placeholder="e.g. 70"/></div>`;
     html += `<div class="grr-tm-box" style="margin-bottom:10px;"><div><label>Rep range</label><div style="font-size:11px;color:var(--muted);margin-top:2px;">Floor is informational; ceiling drives stage advancement.</div></div><div style="display:flex;gap:6px;align-items:center;"><input type="number" id="grr-ml-floor" value="${mlState.repFloor}" style="width:52px;"/><span style="color:var(--muted);font-size:11px;">–</span><input type="number" id="grr-ml-ceiling" value="${ceiling}" style="width:52px;"/></div></div>`;
@@ -247,44 +510,190 @@
       const reps = [...container.querySelectorAll('.grr-ml-reps')].map(inp => parseInt(inp.value,10)||0);
       const msgEl = container.querySelector('#'+msgElId);
       if (reps.some(r=>r<=0)) { msgEl.textContent = 'Enter a rep count for every set first.'; return; }
-      const amrapReps = reps[reps.length-1];
-      const allHit = reps.every(r => r >= ceiling);
-      let msg;
-      if (allHit) {
-        mlState.streak = (mlState.streak||0)+1;
-        if (mlState.streak >= 2) {
-          if (mlState.sets < P.maxSets) {
-            // Stage 1 → Stage 2
-            mlState.sets += 1; mlState.streak = 0;
-            msg = `All sets hit ${ceiling} twice in a row — moving to ${mlState.sets} sets next session.`;
-          } else {
-            // Stage 2 → Stage 3: add the smallest available plate jump, or fall back to a higher rep target
-            const jump = smallestPlateJump();
-            mlState.sets = P.startSets; mlState.streak = 0;
-            if (jump > 0) {
-              mlState.weight = (mlState.weight||0) + jump;
-              mlState.repTarget = P.repCeiling; // reset to Stage 1 at the new weight
-              msg = `All ${P.maxSets} sets hit ${ceiling} twice in a row — weight bumped to ${mlState.weight} lb, back to ${mlState.sets} sets.`;
-            } else {
-              mlState.repTarget = 12;
-              msg = `All ${P.maxSets} sets hit ${ceiling} twice in a row, but no plates available to add — rep target raised to 12 instead, back to ${mlState.sets} sets.`;
-            }
-          }
-        } else { msg = `All sets hit ${ceiling} — one more session like this and you'll advance.`; }
-      } else {
-        mlState.streak = 0;
-        msg = amrapReps > (mlState.lastAmrap||0) ? `Didn't hit ${ceiling} on every set, but the AMRAP improved (${amrapReps} vs ${mlState.lastAmrap}).` : 'Saved — not every set hit the ceiling, no stage change.';
-      }
-      mlState.lastAmrap = amrapReps;
-      MAJOR_LIFT_STATE[dayKey] = mlState; saveMajorLiftState();
-      const entry = {date: todayLocal(), exercise: ex.n, pattern: ex.p, exId: majorDay.lift, logId: newLogId(),
-        sets: reps.map((r,i)=>({target: i===reps.length-1?'AMRAP':'Set '+(i+1), weight: mlState.weight, reps:r, success: r>=ceiling})),
-        allSuccess: allHit, tmAction: msg.includes('bumped') ? 'increase' : 'none'};
-      if (!LOGS[majorDay.lift]) LOGS[majorDay.lift]=[];
-      LOGS[majorDay.lift].push(entry); saveLogs();
-      msgEl.textContent = msg;
+      msgEl.textContent = saveMajorLiftSets(dayKey, reps);
     };
   }
+  // ---------- MERGED MAJOR LIFT + MOBILITY/REHAB BOX (Home page) ----------
+  // Combines what used to be two separate collapsible sections into one, with Mobility/Rehab slots
+  // physically positioned between the Major Lift set rows they're meant to fill — set 1, then the
+  // mobility exercise for the rest window right after it, then set 2, and so on. This mirrors how the
+  // workout is actually done (mobility work fills the rest between sets) instead of making the person
+  // manage two disconnected boxes themselves.
+  //
+  // Slot-to-rest-window mapping: Major Lift set count is variable (3 sets in Stage 1, 4 in Stage 2/3 —
+  // §6.1), so the number of rest windows (sets - 1) is too — but Mobility/Rehab always has exactly 4
+  // fixed slots (§6.4). Only `sets - 1` slots get a rest window this session (slot 1 after set 1, slot
+  // 2 after set 2, ...); this was an explicit choice over always cycling all 4 regardless of set count,
+  // so the flow stays strictly tied to windows that actually exist today. Any slot(s) beyond that
+  // (there's always at least one, since max rest windows is maxSets-1=3 but there are 4 slots) are NOT
+  // silently hidden — they're still shown below the sets, under "Additional Mobility/Rehab", fully
+  // tappable/swappable, just not framed as "during rest N" since there's no such window today. This
+  // keeps every slot reachable every session even though not every slot maps to a rest window yet.
+  function renderMajorLiftAndMobility(container, dayKey, msgElId) {
+    const majorDay = MAJOR_LIFT_DAYS[dayKey];
+    const P = CIRCUIT_PARAMS.majorLift;
+    const mlState = MAJOR_LIFT_STATE[dayKey] || {sets: P.startSets, weight: null, streak: 0, lastAmrap: null, repTarget: P.repCeiling};
+    if (!mlState.repTarget) mlState.repTarget = P.repCeiling;
+    if (!mlState.repFloor) mlState.repFloor = P.repFloor;
+    const ceiling = mlState.repTarget;
+    const supersetIds = getDailySuperset(dayKey);
+    const usedSlotCount = mlState.sets - 1;
+
+    let html = `<div class="grr-tm-box" style="margin-bottom:10px;"><div><label>Weight (lb, total incl. 20lb bar)</label><div style="font-size:11px;color:var(--muted);margin-top:2px;">Stage: ${mlState.sets} sets</div></div><input type="number" id="grr-ml-weight" value="${mlState.weight||''}" placeholder="e.g. 70"/></div>`;
+    html += `<div class="grr-tm-box" style="margin-bottom:10px;"><div><label>Rep range</label><div style="font-size:11px;color:var(--muted);margin-top:2px;">Floor is informational; ceiling drives stage advancement.</div></div><div style="display:flex;gap:6px;align-items:center;"><input type="number" id="grr-ml-floor" value="${mlState.repFloor}" style="width:52px;"/><span style="color:var(--muted);font-size:11px;">–</span><input type="number" id="grr-ml-ceiling" value="${ceiling}" style="width:52px;"/></div></div>`;
+    for (let i=1;i<=mlState.sets;i++) {
+      const isAmrap = i===mlState.sets;
+      html += `<div class="grr-set-row"><div class="grr-set-row-top"><span>Set ${i}${isAmrap?' (AMRAP)':''}</span><span>${isAmrap?`beat last: ${mlState.lastAmrap??'—'}`:`target ${ceiling}`}</span></div><div class="grr-set-inputs"><input type="number" class="grr-ml-reps" data-i="${i}" placeholder="reps" style="width:70px;"/><span class="grr-unit">reps</span></div></div>`;
+      if (i < mlState.sets && (i-1) < supersetIds.length) html += `<div id="grr-ml-mobility-${i-1}"></div>`;
+    }
+    html += `<button class="grr-save-btn" id="grr-save-major">Save Major Lift</button><div class="grr-save-msg" id="${msgElId}"></div>`;
+    if (supersetIds.length > usedSlotCount) {
+      html += `<div class="grr-section-label" style="padding-left:0;">Additional Mobility / Rehab (no rest window today)</div><div id="grr-ml-mobility-extra"></div>`;
+    }
+    container.innerHTML = html;
+
+    container.querySelector('#grr-ml-weight').onchange = (e) => { mlState.weight = parseFloat(e.target.value)||null; MAJOR_LIFT_STATE[dayKey]=mlState; saveMajorLiftState(); };
+    container.querySelector('#grr-ml-floor').onchange = (e) => { mlState.repFloor = parseInt(e.target.value,10) || P.repFloor; MAJOR_LIFT_STATE[dayKey]=mlState; saveMajorLiftState(); render(); };
+    container.querySelector('#grr-ml-ceiling').onchange = (e) => { mlState.repTarget = parseInt(e.target.value,10) || P.repCeiling; MAJOR_LIFT_STATE[dayKey]=mlState; saveMajorLiftState(); render(); };
+
+    for (let i=0;i<usedSlotCount;i++) {
+      if (i >= supersetIds.length) continue;
+      const holder = container.querySelector(`#grr-ml-mobility-${i}`);
+      if (holder) holder.appendChild(buildMobilitySlotRow(dayKey, i, {label:'During rest — Mobility / Rehab'}));
+    }
+    if (supersetIds.length > usedSlotCount) {
+      const extraHolder = container.querySelector('#grr-ml-mobility-extra');
+      for (let slotIdx = usedSlotCount; slotIdx < supersetIds.length; slotIdx++) {
+        extraHolder.appendChild(buildMobilitySlotRow(dayKey, slotIdx));
+      }
+    }
+
+    container.querySelector('#grr-save-major').onclick = () => {
+      const reps = [...container.querySelectorAll('.grr-ml-reps')].map(inp => parseInt(inp.value,10)||0);
+      const msgEl = container.querySelector('#'+msgElId);
+      if (reps.some(r=>r<=0)) { msgEl.textContent = 'Enter a rep count for every set first.'; return; }
+      msgEl.textContent = saveMajorLiftSets(dayKey, reps);
+    };
+  }
+
+  // ---------- MAJOR LIFT FOCUS MODE ----------
+  // A simple guided screen for Major Lift + Mobility/Rehab, same spirit as Circuit Focus Mode (§6.9)
+  // but for the set/rest cycle: Set 1 → log reps → mobility exercise for that rest window → Done →
+  // Set 2 → log reps → mobility → ... → last set (AMRAP) → log reps → Finish & Save.
+  //
+  // Unlike Circuit Focus Mode, this DOES need a small transient state store (MAJOR_FOCUS) — the
+  // Major Lift save logic (saveMajorLiftSets) needs every set's reps together to decide stage
+  // advancement, and reps aren't captured anywhere persisted until that save happens, so there's no
+  // existing store to derive "current step" from the way Circuit Focus Mode derives it from
+  // CIRCUIT_TICKS. MAJOR_FOCUS is deliberately NOT persisted to localStorage (same convention as
+  // HOME_COLLAPSE/HOME_MOBILITY_MSG) — a reload mid-session loses in-progress-but-unsaved set reps,
+  // which is an accepted tradeoff for keeping this simple; nothing is lost that a normal Save would
+  // have committed anyway.
+  let MAJOR_FOCUS = { dayKey: null, stepIndex: 0, repsBySet: {} };
+  function resetMajorFocusIfNeeded(dayKey) {
+    if (MAJOR_FOCUS.dayKey !== dayKey) MAJOR_FOCUS = { dayKey, stepIndex: 0, repsBySet: {} };
+  }
+  function enterMajorFocus() {
+    resetMajorFocusIfNeeded(HOME.majorDay);
+    state.view = 'majorFocus';
+    render();
+  }
+  // Ordered step list for one Major Lift Focus Mode session: a 'set' step for every set, with a
+  // 'mobility' step inserted after every set except the last (there's no rest window after the final/
+  // AMRAP set). Only uses up to `sets - 1` Mobility/Rehab slots, same slot-to-rest-window mapping as
+  // the merged inline box above.
+  function majorFocusSteps(dayKey) {
+    const majorDay = MAJOR_LIFT_DAYS[dayKey];
+    const P = CIRCUIT_PARAMS.majorLift;
+    const mlState = MAJOR_LIFT_STATE[dayKey] || {sets: P.startSets};
+    const supersetIds = getDailySuperset(dayKey);
+    const steps = [];
+    for (let i = 1; i <= mlState.sets; i++) {
+      steps.push({ type: 'set', setIndex: i, isAmrap: i === mlState.sets });
+      if (i < mlState.sets && (i-1) < supersetIds.length) {
+        steps.push({ type: 'mobility', exId: supersetIds[i-1], slotIdx: i-1 });
+      }
+    }
+    return steps;
+  }
+  function renderMajorFocus() {
+    const dayKey = HOME.majorDay;
+    resetMajorFocusIfNeeded(dayKey);
+    const majorDay = MAJOR_LIFT_DAYS[dayKey];
+    const ex = EX_BY_ID[majorDay.lift];
+    const P = CIRCUIT_PARAMS.majorLift;
+    const mlState = MAJOR_LIFT_STATE[dayKey] || {sets: P.startSets, weight: null, streak: 0, lastAmrap: null, repTarget: P.repCeiling};
+    if (!mlState.repTarget) mlState.repTarget = P.repCeiling;
+    const ceiling = mlState.repTarget;
+    const steps = majorFocusSteps(dayKey);
+
+    if (MAJOR_FOCUS.stepIndex >= steps.length) {
+      const orderedReps = steps.filter(s => s.type === 'set').map(s => MAJOR_FOCUS.repsBySet[s.setIndex] || 0);
+      root.innerHTML = `
+        <div class="grr-detail">
+          <span class="grr-back" id="grr-back">← Back to Home Workout</span>
+          <div class="grr-detail-name">${majorDay.label} — Finish</div>
+          <div class="grr-detail-meta">${ex.n} · all ${orderedReps.length} sets logged: ${orderedReps.join(', ')} reps.</div>
+          <button class="grr-save-btn" id="grr-major-focus-save">Save Major Lift</button>
+          <div class="grr-save-msg" id="grr-major-focus-msg">${state.homeMsg||''}</div>
+        </div>
+      `;
+      root.querySelector('#grr-back').onclick = () => { state.view = 'home'; render(); };
+      root.querySelector('#grr-major-focus-save').onclick = () => {
+        state.homeMsg = saveMajorLiftSets(dayKey, orderedReps);
+        MAJOR_FOCUS = { dayKey: null, stepIndex: 0, repsBySet: {} };
+        state.view = 'home';
+        render();
+      };
+      return;
+    }
+
+    const step = steps[MAJOR_FOCUS.stepIndex];
+    if (step.type === 'set') {
+      root.innerHTML = `
+        <div class="grr-detail">
+          <span class="grr-back" id="grr-back">← Exit Focus Mode</span>
+          <div class="grr-detail-meta">Step ${MAJOR_FOCUS.stepIndex+1} of ${steps.length} · ${majorDay.label}</div>
+          <div class="grr-detail-name">${ex.n} — Set ${step.setIndex}${step.isAmrap?' (AMRAP)':''}</div>
+          <div class="grr-detail-meta">${step.isAmrap ? `Beat last AMRAP: ${mlState.lastAmrap??'—'}` : `Target ${ceiling} reps`}${mlState.weight?` · ${mlState.weight} lb`:''}</div>
+          <div class="grr-set-inputs" style="margin-bottom:16px;">
+            <input type="number" id="grr-mf-reps" placeholder="reps" style="width:90px;height:48px;font-size:20px;"/>
+            <span class="grr-unit">reps</span>
+          </div>
+          <button class="grr-save-btn" id="grr-mf-log-set">Log Set${step.setIndex < mlState.sets ? ' & Continue' : ''}</button>
+          <div class="grr-save-msg" id="grr-mf-msg"></div>
+        </div>
+      `;
+      root.querySelector('#grr-back').onclick = () => { state.view = 'home'; render(); };
+      root.querySelector('#grr-mf-log-set').onclick = () => {
+        const v = parseInt(document.getElementById('grr-mf-reps').value, 10);
+        if (!(v > 0)) { root.querySelector('#grr-mf-msg').textContent = 'Enter a rep count first.'; return; }
+        MAJOR_FOCUS.repsBySet[step.setIndex] = v;
+        MAJOR_FOCUS.stepIndex++;
+        render();
+      };
+    } else {
+      const mex = EX_BY_ID[step.exId];
+      const gifHtml = mex ? gifBlock(mex) : '';
+      root.innerHTML = `
+        <div class="grr-detail">
+          <span class="grr-back" id="grr-back">← Exit Focus Mode</span>
+          <div class="grr-detail-meta">Step ${MAJOR_FOCUS.stepIndex+1} of ${steps.length} · ${majorDay.label}</div>
+          <div class="grr-detail-meta">During rest — Mobility / Rehab</div>
+          <div class="grr-detail-name">${mex ? mex.n : step.exId}</div>
+          ${gifHtml}
+          <button class="grr-save-btn" id="grr-mf-mobility-done">Done</button>
+        </div>
+      `;
+      root.querySelector('#grr-back').onclick = () => { state.view = 'home'; render(); };
+      root.querySelector('#grr-mf-mobility-done').onclick = () => {
+        if (mex) setMobilityRounds(step.exId, mex, Math.min(mobilityRoundsToday(step.exId) + 1, 3));
+        MAJOR_FOCUS.stepIndex++;
+        render();
+      };
+    }
+  }
+
   function renderHome() {
     if (!HOME_DATA_LOADED) {
       root.innerHTML = `<div class="grr-detail"><span class="grr-back" id="grr-back">← Back to list</span><div class="grr-empty">Couldn't load home-workouts.js — make sure it's uploaded in the same folder as index.html.</div></div>`;
@@ -314,26 +723,25 @@
 
         <div class="grr-collapse${HOME_COLLAPSE.major?' open':''}" id="grr-major-collapse" style="margin:10px 0 14px;">
           <div class="grr-collapse-head" id="grr-major-lift-header">
-            <span id="grr-major-toggle-label">${majorDay.label}: ${EX_BY_ID[majorDay.lift] ? EX_BY_ID[majorDay.lift].n : majorDay.lift} ▾</span>
-            <span id="grr-major-view-link" style="color:var(--steel);font-size:11px;cursor:pointer;">(view exercise →)</span>
+            <span id="grr-major-toggle-label">${majorDay.label}: ${EX_BY_ID[majorDay.lift] ? EX_BY_ID[majorDay.lift].n : majorDay.lift} + Mobility/Rehab ▾</span>
+            <span style="display:flex;gap:10px;flex-shrink:0;">
+              <span id="grr-major-focus-link" style="color:var(--brand);font-size:11px;cursor:pointer;font-weight:800;">▶ Focus Mode</span>
+              <span id="grr-major-view-link" style="color:var(--steel);font-size:11px;cursor:pointer;">(view exercise →)</span>
+            </span>
           </div>
-          <div class="grr-collapse-body" id="grr-major-lift-block" style="padding:0 0 12px;"></div>
-        </div>
-
-        <div class="grr-collapse${HOME_COLLAPSE.mobility?' open':''}" id="grr-mobility-collapse" style="margin:10px 0 14px;">
-          <div class="grr-collapse-head" id="grr-mobility-header">Mobility / Rehab ▾</div>
-          <div class="grr-collapse-body" id="grr-mobility-wrap" style="padding:0 0 12px;">
-            <div style="font-size:11px;color:var(--muted);margin:0 0 8px;line-height:1.5;">Done during rest between Major Lift sets. Tap to cycle rounds — 1 → 2 → 3 → back to none. Swap any slot for a different mobility exercise with the dropdown.</div>
-            <div id="grr-daily-superset-block" style="margin-bottom:10px;"></div>
-            <button class="grr-save-btn" id="grr-save-mobility">Save Mobility / Rehab</button>
-            <div class="grr-save-msg" id="grr-mobility-msg">${HOME_MOBILITY_MSG||''}</div>
+          <div class="grr-collapse-body" id="grr-major-lift-block" style="padding:0 0 12px;">
+            <div style="font-size:11px;color:var(--muted);margin:0 0 8px;line-height:1.5;">Mobility/Rehab exercises are shown right after the set they follow — that's your rest window. Prefer one thing at a time? Use Focus Mode above.</div>
+            <div id="grr-major-mobility-block"></div>
           </div>
         </div>
 
         <div class="grr-collapse${HOME_COLLAPSE.circuit?' open':''}" id="grr-circuit-collapse" style="margin:10px 0 14px;">
-          <div class="grr-collapse-head" id="grr-circuit-header">${circuitDay.label} — ${P.startSets} rounds each, tap to log each round as you go ▾</div>
+          <div class="grr-collapse-head" id="grr-circuit-header">
+            <span>${circuitDay.label} — ${P.startSets} rounds each, tap to log each round as you go ▾</span>
+            <span id="grr-circuit-start-link" style="color:var(--brand);font-size:11px;cursor:pointer;font-weight:800;">▶ Start Focus Mode</span>
+          </div>
           <div class="grr-collapse-body" id="grr-circuit-wrap" style="padding:0 0 12px;">
-            <div style="font-size:11px;color:var(--muted);margin:0 0 10px;line-height:1.5;"><b style="color:var(--steel);">Done</b> = completed the round, did not hit ceiling. <b style="color:var(--brand);">Max!</b> = Completes and hit max ceiling. Core and Isolation stations can be swapped with the chips above each one.</div>
+            <div style="font-size:11px;color:var(--muted);margin:0 0 10px;line-height:1.5;"><b style="color:var(--steel);">Done</b> = completed the round, did not hit ceiling. <b style="color:var(--brand);">Max!</b> = Completes and hit max ceiling. Core and Isolation stations can be swapped with the chips above each one. Prefer one exercise at a time? Use Focus Mode above — it walks the whole circuit for you and auto-advances after each round.</div>
             <div id="grr-circuit-block"></div>
             <button class="grr-save-btn" id="grr-save-circuit">Save Circuit Session</button>
             <div class="grr-save-msg" id="grr-home-msg">${state.homeMsg||''}</div>
@@ -341,20 +749,27 @@
         </div>
       </div>
     `;
-    root.querySelector('#grr-back').onclick = () => { state.homeMsg = ''; HOME_MOBILITY_MSG = ''; state.view = 'list'; render(); };
+    root.querySelector('#grr-back').onclick = () => { state.homeMsg = ''; state.view = 'list'; render(); };
 
     // ---- Section collapse toggles — click the header to expand/collapse; state persists across
     // render() calls via HOME_COLLAPSE so ticking a round or editing a rep range doesn't snap the
     // section shut again. ----
     root.querySelector('#grr-plate-header').onclick = () => { HOME_COLLAPSE.plate = !HOME_COLLAPSE.plate; render(); };
     root.querySelector('#grr-major-lift-header').onclick = () => { HOME_COLLAPSE.major = !HOME_COLLAPSE.major; render(); };
-    root.querySelector('#grr-mobility-header').onclick = () => { HOME_COLLAPSE.mobility = !HOME_COLLAPSE.mobility; render(); };
     root.querySelector('#grr-circuit-header').onclick = () => { HOME_COLLAPSE.circuit = !HOME_COLLAPSE.circuit; render(); };
-    // "(view exercise →)" sits inside the Major Lift header — stop the click from also toggling
-    // the collapse it's nested in.
+    // "(view exercise →)" and "▶ Focus Mode" sit inside the Major Lift header — stop the click from
+    // also toggling the collapse it's nested in. Same pattern for the Circuit header's start link.
     root.querySelector('#grr-major-view-link').onclick = (e) => {
       e.stopPropagation();
       state.cameFrom = {view:'home'}; state.homeMode = true; state.view = 'detail'; state.activeId = majorDay.lift; state.saveMsg=''; render();
+    };
+    root.querySelector('#grr-major-focus-link').onclick = (e) => {
+      e.stopPropagation();
+      enterMajorFocus();
+    };
+    root.querySelector('#grr-circuit-start-link').onclick = (e) => {
+      e.stopPropagation();
+      state.view = 'circuitFocus'; render();
     };
 
     const majorRow = root.querySelector('#grr-major-day-row');
@@ -362,7 +777,7 @@
       const chip = document.createElement('div');
       chip.className = 'grr-chip' + (HOME.majorDay === d ? ' active' : '');
       chip.textContent = 'Day ' + d;
-      chip.onclick = () => { HOME.majorDay = d; state.homeMsg = ''; HOME_MOBILITY_MSG = ''; saveHome(); render(); };
+      chip.onclick = () => { HOME.majorDay = d; state.homeMsg = ''; saveHome(); render(); };
       majorRow.appendChild(chip);
     });
     const circuitRow = root.querySelector('#grr-circuit-day-row');
@@ -392,62 +807,9 @@
       inp.onchange = () => { PLATE_INVENTORY[inp.dataset.size] = parseInt(inp.value,10) || 0; savePlateInventory(); render(); };
     });
 
-    // Major Lift — shared logger, filling the collapse body set up above
-    renderMajorLiftLogger(root.querySelector('#grr-major-lift-block'), HOME.majorDay, 'grr-major-msg-inline');
-
-    // Mobility / Rehab — name area opens the exercise's own page (gif/notes/history); a round-cycle
-    // button logs how many rounds you got through today (1/2/3, 4th tap resets to none); a dropdown
-    // per slot swaps in a different scheme:"mobility" exercise for that slot. The Save button below
-    // doesn't do any additional persistence work (every tap/swap already saves itself immediately)
-    // — it exists to give the same explicit confirmation the Major Lift and Circuit sections give.
-    const dsBlock = root.querySelector('#grr-daily-superset-block');
-    const supersetIds = getDailySuperset(HOME.majorDay);
-    const mobilityPool = mobilityPoolExercises();
-    supersetIds.forEach((exId, slotIdx) => {
-      const ex = EX_BY_ID[exId];
-      if (!ex) return;
-      const rounds = mobilityRoundsToday(exId);
-      const row = document.createElement('div');
-      row.style.cssText = 'margin-bottom:8px;padding:8px 10px;border-radius:6px;background:var(--surface);border:1px solid var(--line);';
-      const topRow = document.createElement('div');
-      topRow.style.cssText = 'display:flex;align-items:center;gap:8px;';
-      const nameSpan = document.createElement('div');
-      nameSpan.style.cssText = 'flex:1;cursor:pointer;font-size:13px;font-weight:700;';
-      nameSpan.textContent = ex.n;
-      nameSpan.onclick = () => { state.cameFrom = {view:'home'}; state.view = 'detail'; state.activeId = exId; state.saveMsg = ''; render(); };
-      const roundBtn = document.createElement('button');
-      roundBtn.type = 'button';
-      roundBtn.textContent = rounds > 0 ? `✓ ${rounds} round${rounds>1?'s':''}` : 'Mark Done';
-      roundBtn.style.cssText = `flex-shrink:0;border:none;border-radius:6px;padding:7px 12px;font-size:11.5px;font-weight:800;cursor:pointer;background:${rounds>0 ? 'var(--green)' : 'var(--surface-2)'};color:${rounds>0 ? '#111' : 'var(--chalk)'};`;
-      roundBtn.onclick = () => { setMobilityRounds(exId, ex, (rounds+1) % 4); render(); };
-      topRow.appendChild(nameSpan); topRow.appendChild(roundBtn);
-      row.appendChild(topRow);
-      const swapSelect = document.createElement('select');
-      swapSelect.style.cssText = 'margin-top:6px;width:100%;background:var(--bg);border:1px solid var(--line);color:var(--chalk);padding:5px;border-radius:4px;font-size:11px;';
-      // Safety: if this slot's currently-assigned exercise had its scheme changed away from
-      // "mobility" on its own exercise card, it would otherwise fall out of mobilityPool and
-      // vanish from this dropdown entirely (while still being the active assignment for this
-      // slot) — always keep it selectable so the dropdown never shows a blank/mismatched slot.
-      const poolForThisSlot = mobilityPool.some(px => px.id === exId)
-        ? mobilityPool
-        : [...mobilityPool, ex].sort((a,b) => a.n.localeCompare(b.n));
-      poolForThisSlot.forEach(px => {
-        const opt = document.createElement('option');
-        opt.value = px.id; opt.textContent = px.n;
-        if (px.id === exId) opt.selected = true;
-        swapSelect.appendChild(opt);
-      });
-      swapSelect.onchange = () => { setDailySupersetSlot(HOME.majorDay, slotIdx, swapSelect.value); render(); };
-      row.appendChild(swapSelect);
-      dsBlock.appendChild(row);
-    });
-    root.querySelector('#grr-save-mobility').onclick = () => {
-      const marked = supersetIds.filter(exId => mobilityRoundsToday(exId) > 0).length;
-      HOME_MOBILITY_MSG = marked > 0
-        ? `Mobility / Rehab saved — ${marked} of ${supersetIds.length} slot${supersetIds.length===1?'':'s'} marked for today.`
-        : 'Nothing marked yet — tap a slot at least once before saving.';
-      render();
-    };
+    // Major Lift + Mobility/Rehab — merged logger, filling the collapse body set up above. Mobility
+    // slots are interleaved between set rows (§6.4/§6.10) instead of living in their own section.
+    renderMajorLiftAndMobility(root.querySelector('#grr-major-mobility-block'), HOME.majorDay, 'grr-major-msg-inline');
 
     // Circuit block — one row per station (Core/Isolation get a swap-picker chip row above them),
     // with a prev-rung button and one tick per round (P.startSets rounds).
@@ -533,59 +895,8 @@
       });
     });
 
-    function logCircuitSet(exId, ticks, expectedRounds) {
-      const ex = EX_BY_ID[exId];
-      const sets = ticks.map((t,i) => ({target: 'Round '+(i+1), weight:null, reps:null, success: t===2}));
-      const allSuccess = ticks.length === expectedRounds && ticks.every(t => t===2);
-      const entry = {date: todayLocal(), exercise: ex.n, pattern: ex.p, exId, logId: newLogId(), sets, allSuccess, tmAction:'none'};
-      if (!LOGS[exId]) LOGS[exId] = [];
-      LOGS[exId].push(entry);
-      return allSuccess;
-    }
-
     root.querySelector('#grr-save-circuit').onclick = () => {
-      let anySaved = false;
-      let topOfLadderNotes = [];
-      circuitDay.stations.forEach(station => {
-        if (!station.ladder) {
-          const famKey = resolvedIsolationFamily(HOME.circuitDay, station);
-          const fam = ISOLATION_FAMILIES[famKey];
-          if (!fam) return;
-          fam.exercises.forEach(exId => {
-            const ticks = CIRCUIT_TICKS[exId] || [];
-            if (ticks.some(t => t > 0) && EX_BY_ID[exId]) { logCircuitSet(exId, ticks, CIRCUIT_PARAMS.isolation.startSets); anySaved = true; }
-          });
-          return;
-        }
-        const ladderKey = resolvedLadderKey(HOME.circuitDay, station);
-        const exId = currentRungId(ladderKey);
-        const ticks = CIRCUIT_TICKS[exId] || [];
-        if (!ticks.some(t => t > 0)) return;
-        const stationP = ladderParamsFor(ladderKey);
-        const allSuccess = logCircuitSet(exId, ticks, stationP.startSets);
-        anySaved = true;
-        const st = RUNG_STATE[ladderKey] || {rungIndex:0, streak:0};
-        const ladder = LADDERS[ladderKey];
-        if (allSuccess) {
-          st.streak = (st.streak||0) + 1;
-          if (st.streak >= 2) {
-            if (st.rungIndex < ladder.rungs.length - 1) { st.rungIndex++; st.streak = 0; }
-            else { st.streak = 0; topOfLadderNotes.push(`${ladder.label} has hit its ceiling twice at the top rung — no harder variation defined yet. Might be time to add one.`); }
-          }
-        } else {
-          st.streak = 0;
-        }
-        RUNG_STATE[ladderKey] = st;
-      });
-      saveRungState();
-      saveLogs();
-      CIRCUIT_TICKS = {};
-      saveCircuitTicks();
-      let msg = anySaved
-        ? 'Circuit session saved. Any rung that hit its ceiling on every round, twice in a row, has advanced.'
-        : 'Nothing ticked yet — tap at least one round before saving.';
-      if (topOfLadderNotes.length) msg += ' ' + topOfLadderNotes.join(' ');
-      state.homeMsg = msg;
+      state.homeMsg = saveCircuitSession();
       render();
     };
   }
