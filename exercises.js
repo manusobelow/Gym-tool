@@ -92,7 +92,7 @@ const EXERCISES = [
   },
   {
     "id": "COSSACK",
-    "n": "Cossack Squat",
+    "n": "Bodyweight Cossack Squat",
     "p": "Squat",
     "scheme": "hypertrophy",
     "eq": [
@@ -575,7 +575,7 @@ const EXERCISES = [
   },
   {
     "id": "SL_RDL_DB",
-    "n": "Single-Leg Romanian Deadlift",
+    "n": "Single-Leg RDL, Opposite-Side DB",
     "p": "Hinge",
     "scheme": "strength",
     "eq": [
@@ -583,7 +583,7 @@ const EXERCISES = [
     ],
     "m": "Hamstrings / Glute Max",
     "region": "lower",
-    "gif": "https://i0.wp.com/www.strengthlog.com/wp-content/uploads/2023/01/Single-leg-romanian-deadlift.gif?resize=600%2C600&ssl=1",
+    "gif": "https://fitnessprogramer.com/wp-content/uploads/2021/05/Kettlebell-Single-Leg-Deadlift.gif",
     "notes": "Opposite-hand DB; hips square, hinge to hamstring stretch, balance-focused.",
     "muscles": [
       {
@@ -637,7 +637,7 @@ const EXERCISES = [
     ],
     "m": "Glute Max / Hamstrings",
     "region": "lower",
-    "gif": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQC8bKnZctuW85eo7YzE_-Hh4tHD8JSnhobMhgZdTUZA&s=10",
+    "gif": "https://media0.giphy.com/media/v1.Y2lkPTZjMDliOTUyanJvaGxteHkwejlxN25wN3B2bGFjM250YjJwM3R1dmRrbmdmOWZxZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/krmA7YIhRvwjJYbmrG/200w.gif",
     "notes": "Rung 1 of Hip Thrust Progression.",
     "muscles": [
       {
@@ -982,7 +982,7 @@ const EXERCISES = [
   },
   {
     "id": "SPLITSQ_R2",
-    "n": "BW Split Squat",
+    "n": "Bodyweight Split Squat",
     "p": "Lunge",
     "scheme": "circuit",
     "eq": [
@@ -1009,7 +1009,7 @@ const EXERCISES = [
   },
   {
     "id": "SPLITSQ_R3",
-    "n": "BW Bulgarian Split Squat",
+    "n": "Bodyweight Bulgarian Split Squat",
     "p": "Lunge",
     "scheme": "circuit",
     "eq": [
@@ -1044,7 +1044,7 @@ const EXERCISES = [
     ],
     "m": "Quads / Glute Max",
     "region": "lower",
-    "gif": "https://liftmanual.com/wp-content/uploads/2023/04/dumbbell-goblet-split-squat.jpg",
+    "gif": "https://cdn.shopify.com/s/files/1/0449/8453/3153/files/Bulgarian_Split_Squat.gif?v=1725590318",
     "notes": "Rung 4 of Split Squat Progression. Rear foot elevated, same as rung 3, now goblet-loaded.",
     "muscles": [
       {
@@ -2078,7 +2078,7 @@ const EXERCISES = [
     ],
     "m": "Lats / Rhomboids",
     "region": "upper",
-    "gif": "https://i.makeagif.com/media/9-23-2016/oCNSiL.gif",
+    "gif": "https://i.makeagif.com/media/5-11-2020/oCXEzv.gif",
     "notes": "Rung 3 of Row Progression. Feet on ottoman.",
     "muscles": [
       {
@@ -2404,7 +2404,7 @@ const EXERCISES = [
     ],
     "m": "Front Delts / Triceps",
     "region": "upper",
-    "gif": "https://fitnessprogramer.com/wp-content/uploads/2023/07/wall-supported-handstand-push-up.gif",
+    "gif": "https://www.strengthlog.com/wp-content/uploads/2025/02/HSPU.gif",
     "notes": "Rung 4 of Handstand Progression. Back to the wall — deeper, more advanced ROM.",
     "muscles": [
       {
@@ -2423,7 +2423,7 @@ const EXERCISES = [
   },
   {
     "id": "HSPU_R5",
-    "n": "Wall HSPU — Deficit",
+    "n": "Wall Handstand Push-Up — Deficit",
     "p": "Push Vertical",
     "scheme": "circuit",
     "eq": [
@@ -2450,7 +2450,7 @@ const EXERCISES = [
   },
   {
     "id": "HSPU_R6",
-    "n": "Freestanding HSPU",
+    "n": "Freestanding Handstand Push-Up",
     "p": "Push Vertical",
     "scheme": "circuit",
     "eq": [
@@ -2477,7 +2477,7 @@ const EXERCISES = [
   },
   {
     "id": "HSPU_R7",
-    "n": "Weighted Wall HSPU",
+    "n": "Weighted Wall Handstand Push-Up",
     "p": "Push Vertical",
     "scheme": "circuit",
     "eq": [
@@ -3786,7 +3786,7 @@ const EXERCISES = [
     ],
     "m": "Triceps / Front Delts",
     "region": "upper",
-    "gif": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRzAtRzPVnCRBO0hrxy5rsC3GNvT6SgcElH5WzbKKe_Iw&s=10",
+    "gif": "https://i.pinimg.com/originals/d0/e3/e3/d0e3e321ca8963db035dbb2ab098ce49.gif",
     "notes": "Isolation Slot C (part 1, alongside Band Lateral Raise).",
     "muscles": [
       {
@@ -3809,7 +3809,7 @@ const EXERCISES = [
     ],
     "m": "Side Delts",
     "region": "upper",
-    "gif": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Band-Lateral-Raise.gif",
+    "gif": "https://fitnessprogramer.com/wp-content/uploads/2022/07/Band-Front-Lateral-Raise.gif",
     "notes": "Isolation Slot C (part 2, alongside DB Overhead Triceps Extension). Stand on band, raise to shoulder height, controlled reps.",
     "muscles": [
       {
