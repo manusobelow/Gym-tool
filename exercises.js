@@ -3489,7 +3489,7 @@ const EXERCISES = [
     ],
     "m": "Abs / Hip Flexors",
     "region": "upper",
-    "gif": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdfTmwWTmmHoMx9HpRx1f7sH3goLQItmJDQXeNSvwUhM2pEgUEq7La7wg&s=10",
+    "gif": "fullrangestraightleg.png",
     "notes": "Rung 6 of Straight-Leg Raise Progression. Hanging straight-leg raise taken to full range — legs to the bar/beyond parallel, controlled descent.",
     "muscles": [
       {
