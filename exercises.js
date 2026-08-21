@@ -583,7 +583,7 @@ const EXERCISES = [
     ],
     "m": "Hamstrings / Glute Max",
     "region": "lower",
-    "gif": "https://fitnessprogramer.com/wp-content/uploads/2021/05/Kettlebell-Single-Leg-Deadlift.gif",
+    "gif": "singlelegrdlbody.png",
     "notes": "Opposite-hand DB; hips square, hinge to hamstring stretch, balance-focused.",
     "muscles": [
       {
